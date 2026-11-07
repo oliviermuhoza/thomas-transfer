@@ -1,12 +1,21 @@
 /* Login and create-account forms. Loaded only on /account. */
 (function () {
+  function ensureCsrf() {
+    if (window.ttCsrf) { return Promise.resolve(window.ttCsrf); }
+    return fetch('/api/csrf').then(function (r) { return r.json(); }).then(function (j) {
+      if (j && j.csrf_token) { window.ttCsrf = j.csrf_token; }
+      return window.ttCsrf;
+    }).catch(function () { return window.ttCsrf; });
+  }
   function post(url, data) {
-    var headers = {'Content-Type': 'application/json'};
-    if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-    return fetch(url, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(data || {})
+    return ensureCsrf().then(function () {
+      var headers = {'Content-Type': 'application/json'};
+      if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
+      return fetch(url, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data || {})
+      });
     }).then(async function (res) {
       var json = {};
       try { json = await res.json(); } catch (e) {}
