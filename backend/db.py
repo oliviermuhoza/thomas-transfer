@@ -82,12 +82,12 @@ def close_db(exc=None):
         connection.close()
 
 
-def init_db(admin_password=None, production=False):
+def init_db(admin_password=None, production=False, ephemeral=False):
     """Create missing tables and seed the fleet plus the first admin account."""
     db = get_db()
     db.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     _seed_cars(db)
-    _seed_admin(db, admin_password, production=production)
+    _seed_admin(db, admin_password, production=production, ephemeral=ephemeral)
     db.commit()
 
 
@@ -100,13 +100,22 @@ def _seed_cars(db):
     )
 
 
-def _seed_admin(db, password=None, production=False):
+def _seed_admin(db, password=None, production=False, ephemeral=False):
     if db.execute("SELECT 1 FROM users WHERE is_admin = 1 LIMIT 1").fetchone():
         return
 
     email = os.environ.get("TT_ADMIN_EMAIL", "admin@thomastransfer.com").strip().lower()
     provided = password or os.environ.get("TT_ADMIN_PASSWORD")
     if production and not provided:
+        if ephemeral:
+            print(
+                "\n  No admin account created: TT_ADMIN_PASSWORD is not set and the "
+                "database is ephemeral (serverless). Set TT_ADMIN_PASSWORD to enable "
+                "admin login; the public site will still work.\n",
+                file=sys.stderr,
+                flush=True,
+            )
+            return None
         raise RuntimeError(
             "No admin account exists and TT_ADMIN_PASSWORD is not set. "
             "In production, set TT_ADMIN_PASSWORD (and optionally TT_ADMIN_EMAIL) "

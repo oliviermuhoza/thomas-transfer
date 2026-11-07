@@ -8,6 +8,7 @@ Run with `python -m backend.app` (development) or point a WSGI server at
 import os
 import re
 import secrets
+import tempfile
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
@@ -63,23 +64,14 @@ def create_app(database=None, secret_key=None, admin_password=None, production=N
         if production is None
         else bool(production)
     )
-    database = database or os.environ.get("TT_DATABASE")
-    if database:
-        data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
-    else:
-        data_dir = PACKAGE_DIR / "data"
-        try:
-            data_dir.mkdir(exist_ok=True)
-        except OSError:  # read-only filesystem (e.g., Vercel)
-            import tempfile
+    # Vercel's filesystem is read-only except for /tmp. Resolve to a writable
+    # database path instead of crashing the function at import time.
+    database = _resolve_database(database or os.environ.get("TT_DATABASE"))
+    ephemeral = _truthy_env("VERCEL") or _is_ephemeral_db(database)
+    data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
 
-            data_dir = Path(tempfile.gettempdir()) / "thomas-transfer-data"
-            data_dir.mkdir(parents=True, exist_ok=True)
-        database = str(data_dir / "thomas.db")
-    if database != ":memory:":
-        Path(database).parent.mkdir(parents=True, exist_ok=True)
-
-    cookie_secure = _truthy_env("TT_COOKIE_SECURE")
+    # Vercel serves the app over HTTPS, so secure cookies are the correct default.
+    cookie_secure = _truthy_env("TT_COOKIE_SECURE") or _truthy_env("VERCEL")
     if production and not cookie_secure:
         raise RuntimeError(
             "TT_COOKIE_SECURE=1 is required in production (HTTPS). "
@@ -91,7 +83,8 @@ def create_app(database=None, secret_key=None, admin_password=None, production=N
     app.config.update(
         PRODUCTION=production,
         DATABASE=database,
-        SECRET_KEY=secret_key or _load_secret_key(data_dir, production=production),
+        SECRET_KEY=secret_key
+        or _load_secret_key(data_dir, production=production, allow_ephemeral=ephemeral),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=cookie_secure,
@@ -128,7 +121,7 @@ def create_app(database=None, secret_key=None, admin_password=None, production=N
     app.teardown_appcontext(close_db)
 
     with app.app_context():
-        init_db(admin_password, production=production)
+        init_db(admin_password, production=production, ephemeral=ephemeral)
 
     register_routes(app)
     app.register_blueprint(pages)
@@ -185,10 +178,16 @@ def create_app(database=None, secret_key=None, admin_password=None, production=N
 
     @app.errorhandler(Exception)
     def unexpected_errors(err):
+        app.logger.exception("Unhandled error")
         if request.path.startswith("/api/"):
-            app.logger.exception("Unhandled API error")
             return error("Something went wrong. Please try again.", 500)
-        raise err
+        return (
+            "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
+            "<title>Something went wrong — Thomas Transfer</title></head>"
+            "<body><h1>Something went wrong</h1><p>Please try again.</p></body></html>",
+            500,
+            {"Content-Type": "text/html; charset=utf-8"},
+        )
 
     @app.after_request
     def security_headers(response):
@@ -204,16 +203,62 @@ def _truthy_env(name):
     return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
 
 
-def _load_secret_key(data_dir, production=False):
+def _probe_writable(directory):
+    """Return True when files can be created in ``directory``."""
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        probe = directory / ".tt-write-probe"
+        probe.write_text("ok", encoding="utf-8")
+        probe.unlink()
+        return True
+    except OSError:
+        return False
+
+
+def _is_ephemeral_db(database):
+    if database == ":memory:":
+        return True
+    try:
+        return Path(database).resolve().is_relative_to(
+            Path(tempfile.gettempdir()).resolve()
+        )
+    except (OSError, ValueError):
+        return False
+
+
+def _resolve_database(requested):
+    """Pick the first writable database path.
+
+    Serverless platforms (Vercel) mount the project read-only and only allow
+    writes under ``/tmp``. A misconfigured ``TT_DATABASE`` must not take the
+    whole function down at import time.
+    """
+    if requested == ":memory:":
+        return requested
+    candidates = []
+    if requested:
+        candidates.append(Path(requested))
+    candidates.append(PACKAGE_DIR / "data" / "thomas.db")
+    candidates.append(Path(tempfile.gettempdir()) / "thomas-transfer-data" / "thomas.db")
+    for candidate in candidates:
+        if _probe_writable(candidate.parent):
+            return str(candidate)
+    return ":memory:"
+
+
+def _load_secret_key(data_dir, production=False, allow_ephemeral=False):
     """Use SECRET_KEY when given, otherwise keep a generated key across restarts."""
     key = os.environ.get("SECRET_KEY")
     if key:
         return key
-    if production:
+    if production and not allow_ephemeral:
         raise RuntimeError("SECRET_KEY must be set in production.")
     path = data_dir / "secret_key"
-    if path.exists():
-        return path.read_text(encoding="utf-8").strip()
+    try:
+        if path.exists():
+            return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        pass
     key = secrets.token_hex(32)
     try:
         data_dir.mkdir(parents=True, exist_ok=True)

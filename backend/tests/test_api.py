@@ -6,6 +6,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+import backend.app as backend_app  # noqa: E402
 from backend.app import create_app  # noqa: E402
 
 ADMIN_EMAIL = "admin@thomastransfer.com"
@@ -298,3 +299,45 @@ def test_comments_contact_and_report(client):
     assert report["comments"]["average"] == 5.0
     assert report["messages"] == 1
     assert report["accounts"] == 1  # only the seeded admin exists in this test
+
+
+def test_unwritable_database_falls_back(monkeypatch, tmp_path):
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("x", encoding="utf-8")
+    monkeypatch.setattr(backend_app, "PACKAGE_DIR", tmp_path / "project")
+
+    app = create_app(
+        database=str(blocker / "thomas.db"),
+        secret_key="test-secret",
+        admin_password=ADMIN_PASSWORD,
+    )
+    assert app.config["DATABASE"] != str(blocker / "thomas.db")
+    assert app.test_client().get("/api/me").status_code == 200
+
+
+def test_vercel_production_boots_without_secret(monkeypatch, tmp_path):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("TT_ENV", "production")
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("TT_COOKIE_SECURE", raising=False)
+    monkeypatch.delenv("TT_ADMIN_PASSWORD", raising=False)
+
+    app = create_app(database=str(tmp_path / "vercel.db"), production=True)
+
+    assert app.config["PRODUCTION"] is True
+    assert app.config["SESSION_COOKIE_SECURE"] is True
+    assert app.config["SECRET_KEY"]
+    assert app.test_client().get("/api/me").status_code == 200
+
+
+def test_production_requires_secure_cookie(monkeypatch, tmp_path):
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.delenv("TT_COOKIE_SECURE", raising=False)
+
+    with pytest.raises(RuntimeError, match="TT_COOKIE_SECURE"):
+        create_app(
+            database=str(tmp_path / "prod.db"),
+            secret_key="test-secret",
+            admin_password=ADMIN_PASSWORD,
+            production=True,
+        )

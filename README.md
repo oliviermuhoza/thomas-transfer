@@ -246,3 +246,22 @@ In-memory rate limits are per-process; use `TT_RATE_LIMIT_BACKEND=redis` with
 `TT_REDIS_URL` (optional `redis` package) or enforce rate limiting at the
 edge/WAF. Keep `backend/data/` on a persistent disk (or set `TT_DATABASE` to a
 writable path outside the deployment folder) and back up the SQLite file regularly.
+
+### Vercel
+
+Vercel detects Flask from the root `requirements.txt` and uses the root `app.py`
+entrypoint (`app` = the Flask app). `vercel.json` intentionally has no rewrites:
+the framework preset routes every request to the Flask app, so `api/index.py`
+(legacy file-based function) is no longer used.
+
+The deployment filesystem is read-only except for `/tmp`. The backend picks the
+first writable database location at startup (`TT_DATABASE`, then
+`backend/data/`, then `/tmp/thomas-transfer-data/`), so a bad `TT_DATABASE`
+value no longer crashes the function. SQLite data on Vercel is ephemeral and is
+recreated on cold starts; use a managed database for persistence.
+
+Recommended Vercel environment variables: `SECRET_KEY` (stable sessions),
+`TT_ADMIN_PASSWORD` (enables admin login), and optionally `TT_ADMIN_EMAIL`.
+`TT_ENV=production` works on Vercel without extra settings: secure cookies are
+enabled automatically because Vercel serves HTTPS, and the app boots even when
+`TT_ADMIN_PASSWORD` is missing (the admin account is simply not created).
