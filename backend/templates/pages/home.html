@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+{% block content %}
+<section id="home" class="page" style="padding:0">
+  <div class="hero">
+    <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+      <source src="/assets/video/kigali.mp4" type="video/mp4">
+    </video>
+    <div class="hero-video-overlay" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1>Your ride is ready when you are.</h1>
+        <p>Thomas Transfer takes you from the airport, the station or your front door to wherever you are going, on time and in comfort.</p>
+        <div class="hero-btns">
+          <a class="btn primary wa" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Book a taxi now</a>
+          <a class="btn secondary" href="tel:0783882549">Call Thomas Transfer</a>
+          <a class="btn tertiary" href="/cars">View our cars</a>
+          <a class="btn tertiary" href="/contact">Ask for a quote</a>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="ico navy">&#9632;</div><div><b>12</b><span>Vehicles ready</span></div></div>
+          <div class="tile"><div class="ico gold">&#9201;</div><div><b>24/7</b><span>Open every day</span></div></div>
+          <div class="tile"><div class="ico green">&#10003;</div><div><b>5</b><span>Vehicle types</span></div></div>
+          <div class="tile"><div class="ico red">&#9733;</div><div><b>Fixed</b><span>Prices, no hidden fees</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="road" aria-hidden="true">
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="container">
+      <span>Available 24 hours, 7 days a week</span>
+      <span>Fixed prices, no hidden fees</span>
+      <span>Licensed and insured drivers</span>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:50px;padding-bottom:70px">
+    <h2>What we do</h2>
+    <p class="lead">Pick the transfer that fits your trip. Choose a car, then contact us with your trip details.</p>
+    <div class="service-cards">
+      <article class="svc-card">
+        <div class="svc-photo"><img src="/assets/images/kigali-rides.jpg" alt="Kigali taxi rides" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">OUR SPECIALTY</span>
+          <h3>Kigali Taxi Rides</h3>
+          <p>Point-to-point rides anywhere in Kigali, day or night. Send your pickup and destination on WhatsApp — we confirm your fare upfront and your driver is on the way.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>Instant quote</b><span>Fare confirmed before pickup</span></div>
+            <a class="svc-book" href="/contact">Book</a>
+          </div>
+        </div>
+      </article>
+      <article class="svc-card">
+        <div class="svc-photo"><img src="/assets/images/airport.jpg" alt="Airport transfer" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">MOST BOOKED</span>
+          <h3>Airport Transfer</h3>
+          <p>Meet-and-greet at Kigali International Airport, flight tracking, and a smooth private ride to any address in the city — day or night.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>30,000 RWF</b><span>Per transfer</span></div>
+            <a class="svc-book" href="/contact">Book</a>
+          </div>
+        </div>
+      </article>
+      <article class="svc-card">
+        <div class="svc-photo"><img src="/assets/images/kigali-day.jpg" alt="Kigali all-day service" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">FULL DAY</span>
+          <h3>Kigali All-Day Service</h3>
+          <p>A dedicated car and driver at your disposal across Kigali from morning until 21:00 — meetings, markets, museums, dinners. One flat rate.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>150,000 RWF</b><span>Until 21:00</span></div>
+            <a class="svc-book" href="/contact">Book</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+  <div class="band white">
+    <div class="container">
+      <div class="band-head"><h2>Popular vehicles</h2><a class="link-more" href="/cars">See all cars</a></div>
+      <div class="dest-grid">
+        <a class="dest" href="/account#available" data-book="1">
+          <img src="/assets/images/cars/01-toyota-corolla-hybrid.jpg" alt="Toyota Corolla Hybrid" loading="lazy">
+          <span class="cap"><b>Toyota Corolla Hybrid</b><span>Sedan</span></span>
+        </a>
+        <a class="dest" href="/account#available" data-book="3">
+          <img src="/assets/images/cars/03-toyota-rav4.jpg" alt="Toyota RAV4" loading="lazy">
+          <span class="cap"><b>Toyota RAV4</b><span>SUV</span></span>
+        </a>
+        <a class="dest" href="/account#available" data-book="4">
+          <img src="/assets/images/cars/04-mercedes-benz-g-class.jpg" alt="Mercedes-Benz G-Class" loading="lazy">
+          <span class="cap"><b>Mercedes-Benz G-Class</b><span>Luxury SUV</span></span>
+        </a>
+        <a class="dest" href="/account#available" data-book="5">
+          <img src="/assets/images/cars/05-volkswagen-transporter.jpg" alt="Volkswagen Transporter" loading="lazy">
+          <span class="cap"><b>Volkswagen Transporter</b><span>Van</span></span>
+        </a>
+        <a class="dest" href="/account#available" data-book="6">
+          <img src="/assets/images/cars/06-mercedes-amg-gle-coupe.jpg" alt="Mercedes-AMG GLE Coupe" loading="lazy">
+          <span class="cap"><b>Mercedes-AMG GLE Coupe</b><span>Luxury SUV</span></span>
+        </a>
+        <a class="dest" href="/account#available" data-book="7">
+          <img src="/assets/images/cars/07-toyota-land-cruiser-prado-black.jpg" alt="Toyota Land Cruiser Prado, black" loading="lazy">
+          <span class="cap"><b>Toyota Land Cruiser Prado</b><span>Mid-size SUV</span></span>
+        </a>
+      </div>
+      <div class="rent-promo">
+        <div class="off">−30%</div>
+        <p>Prefer to drive yourself? Rent a RAV4 from 50,000 RWF/day — or a Tucson, Santa Fe, Prado or Land Cruiser V8 — with 30% off any rental of a week or longer.</p>
+        <a class="svc-book" href="/cars">View the fleet</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="container">
+      <h2 class="hiw-title">Airport transportation made easy</h2>
+      <div class="hiw-wrap">
+      <div class="hiw-list">
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 14h22l4 9H9z" class="hiw-blue"/><path d="M15.5 16.5h17l2.4 5H13.1z" fill="var(--hiw-win)"/><rect x="6" y="22" width="36" height="14" rx="4" class="hiw-blue"/><circle cx="13" cy="28.5" r="3" fill="var(--yellow)"/><circle cx="35" cy="28.5" r="3" fill="var(--yellow)"/><rect x="9" y="35" width="7" height="5" rx="1.5" class="hiw-blue"/><rect x="32" y="35" width="7" height="5" rx="1.5" class="hiw-blue"/></svg></span><div><h3>Booking your airport transfer</h3><p>Confirmation is immediate. If your plans change, you can cancel for free up to 24 hours before your pickup time.</p></div></div>
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="5" class="hiw-blue"/><path d="M17 17h14l1.5 15h-4.5l-1 13h-4l-1-13H15.5z" class="hiw-blue"/><rect x="7" y="22" width="34" height="6.5" fill="var(--yellow)"/></svg></span><div><h3>Meeting your driver</h3><p>We send you the meeting point as soon as you book. Your driver waits for you and adjusts if your flight is early or late.</p></div></div>
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 5h26v39H11z" class="hiw-blue"/><g fill="var(--hiw-win)"><rect x="16" y="10" width="4.5" height="4.5"/><rect x="21.8" y="10" width="4.5" height="4.5"/><rect x="27.6" y="10" width="4.5" height="4.5"/><rect x="16" y="17.5" width="4.5" height="4.5"/><rect x="21.8" y="17.5" width="4.5" height="4.5"/><rect x="27.6" y="17.5" width="4.5" height="4.5"/><rect x="16" y="25" width="4.5" height="4.5"/><rect x="21.8" y="25" width="4.5" height="4.5"/><rect x="27.6" y="25" width="4.5" height="4.5"/><rect x="21.8" y="34" width="4.5" height="10"/></g></svg></span><div><h3>Arriving at your destination</h3><p>Get there quickly and safely, with no waiting in line for a ride and no need to figure out public transport.</p></div></div>
+      </div>
+      <div class="hiw" role="img" aria-label="How it works: book online, receive confirmation, meet your driver, arrive at your destination, enjoy your trip">
+        <svg class="hiw-path" viewBox="0 0 480 480" aria-hidden="true"><path d="M62 56V96Q62 115 82 115H358H400Q440 115 440 150V240Q440 275 405 275H82Q62 275 62 295V392" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/></svg>
+        <div class="hiw-bubble">How does it work?</div>
+          <div class="hiw-node" style="left:39%;top:23.9%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="9" width="38" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M5 17h38" stroke="currentColor" stroke-width="3"/><circle cx="10" cy="13" r="1.6" fill="currentColor"/><circle cx="15" cy="13" r="1.6" fill="currentColor"/><circle cx="20" cy="13" r="1.6" fill="currentColor"/><path d="M14 34v-5.5l3-5h14l3 5V34z" class="hiw-blue"/><path d="M18.5 23.8h11l2 4h-15z" fill="var(--surface)"/><circle cx="18" cy="34" r="2.2" class="hiw-blue" stroke="var(--surface)" stroke-width="1.2"/><circle cx="30" cy="34" r="2.2" class="hiw-blue" stroke="var(--surface)" stroke-width="1.2"/></svg></span><span class="hiw-label">Book online</span></div>
+          <div class="hiw-node" style="left:70.4%;top:23.9%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="13" y="4" width="22" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18.5 22l4.2 4.2 7-8.6" fill="none" stroke="#1e9e4a" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="39" r="1.7" fill="currentColor"/></svg></span><span class="hiw-label">Receive confirmation</span></div>
+          <div class="hiw-node" style="left:70.4%;top:57.3%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="5" class="hiw-blue"/><path d="M17 17h14l1.5 15h-4.5l-1 13h-4l-1-13H15.5z" class="hiw-blue"/><rect x="7" y="22" width="34" height="6.5" fill="var(--yellow)"/></svg></span><span class="hiw-label">Meet your driver</span></div>
+          <div class="hiw-node" style="left:39%;top:57.3%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="11" y="5" width="26" height="39" fill="none" stroke="currentColor" stroke-width="3"/><g class="hiw-blue"><rect x="16" y="10" width="4.5" height="4.5"/><rect x="21.8" y="10" width="4.5" height="4.5"/><rect x="27.6" y="10" width="4.5" height="4.5"/><rect x="16" y="17.5" width="4.5" height="4.5"/><rect x="21.8" y="17.5" width="4.5" height="4.5"/><rect x="27.6" y="17.5" width="4.5" height="4.5"/><rect x="16" y="25" width="4.5" height="4.5"/><rect x="21.8" y="25" width="4.5" height="4.5"/><rect x="27.6" y="25" width="4.5" height="4.5"/><rect x="21.8" y="34" width="4.5" height="10"/></g></svg></span><span class="hiw-label">Arrive at your destination</span></div>
+        <span class="hiw-dot"></span>
+        <div class="hiw-end">Enjoy your trip!</div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band white">
+    <div class="container">
+      <section class="cta-ready" aria-labelledby="ready-title">
+        <img class="cta-ready-bg" src="/assets/images/ready-bg.jpg" alt="" loading="lazy">
+        <div class="cta-ready-inner">
+          <p class="eyebrow">Ready when you are</p>
+          <h2 id="ready-title">Your driver is one message away</h2>
+          <p>Landing tonight? Planning a safari for next month? Either way, the answer arrives in minutes.</p>
+          <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Chat with us now</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+{% endblock %}

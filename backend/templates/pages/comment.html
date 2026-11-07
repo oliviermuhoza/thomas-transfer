@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block content %}
+<section id="comment" class="page">
+  <div class="container">
+    <h2>Comment</h2>
+    <p class="lead">Tell us about your trip. Your comment is private and is read only by our team.</p>
+    <div class="layout3 wide">
+      <aside class="side left" aria-label="What to tell us">
+        <h3>What to tell us</h3>
+        <p>A few details help us improve your next trip.</p>
+        <ul class="side-points"><li>How was your driver?</li><li>How was the vehicle?</li><li>Was pick-up on time?</li><li>Was the price fair?</li></ul>
+      </aside>
+      <form id="comment-form" class="form-box wide">
+      <label for="m-name">Your name</label>
+      <input id="m-name" type="text" maxlength="100" required>
+      <label for="m-rate">Rating</label>
+      <select id="m-rate">
+        <option value="5 - Excellent">5 - Excellent</option>
+        <option value="4 - Good">4 - Good</option>
+        <option value="3 - Fair">3 - Fair</option>
+        <option value="2 - Poor">2 - Poor</option>
+        <option value="1 - Very poor">1 - Very poor</option>
+      </select>
+      <label for="m-text">Your comment</label>
+      <textarea id="m-text" maxlength="2000" required></textarea>
+      <button class="btn" type="submit">Submit</button>
+      <p id="comment-status" class="status" role="status"></p>
+    </form>
+      <aside class="side right" aria-label="Our promise">
+        <h3>Our promise</h3>
+        <p class="side-quote">Safe, on-time trips at a fair price.</p>
+        <p>We read every comment and use it to make Thomas Transfer better. Your comment is private and is never shown to other visitors.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/js/comment.js"></script>
+{% endblock %}

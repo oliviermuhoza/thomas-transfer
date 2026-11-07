@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thomas Transfer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/theme-init.js"></script>
+</head>
+<body>
+<!-- ================= HEADER + NAVBAR ================= -->
+<header>
+  <div class="container bar">
+    <div class="brand">
+      <div class="more">
+        <button id="more-btn" class="more-btn" type="button" aria-label="More options" aria-haspopup="true" aria-expanded="false" aria-controls="more-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="19" r="2.2" fill="currentColor"/></svg></button>
+        <div id="more-menu" class="menu">
+          <ul class="menu-list">
+            <li><a href="#car-list">List of cars</a></li>
+            <li><a href="#available">Available cars</a></li>
+            <li><a href="#bookings">Car bookings</a></li>
+            <li class="admin-only"><a href="#report">Report</a></li>
+          </ul>
+          <button id="support-toggle" class="menu-item" type="button" aria-expanded="false" aria-controls="support-panel"><span>Support</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div id="support-panel" class="settings-panel" hidden>
+            <ul class="menu-list support-list">
+              <li><a href="#contact">Contact</a></li>
+              <li><a href="#" id="open-message">Message</a></li>
+              <li><a href="mailto:info@thomastransfer.com">Email</a></li>
+            </ul>
+          </div>
+          <button id="settings-toggle" class="menu-item" type="button" aria-expanded="false" aria-controls="settings-panel"><span>Settings</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div id="settings-panel" class="settings-panel" hidden>
+          <button id="theme-toggle" class="tool-btn" type="button" aria-label="Dark mode"><svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg><svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="tool-label">Dark mode</span></button>
+          <p class="menu-label">Language</p>
+          <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
+          </div>
+        </div>
+      </div>
+    <div class="logo">
+      <img class="logo-img" src="assets/images/logo.png" alt="Thomas Transfer logo"> <span>Thomas Transfer</span>
+    </div>
+    </div>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#transport">Transport</a></li>
+        <li><a href="#tours">Tour packages</a></li>
+        <li><a href="#cars">Car rental</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#pay">Pay online</a></li>
+      </ul>
+      <a class="nav-wa" href="https://wa.me/250783882549" target="_blank" rel="noopener" aria-label="WhatsApp 0783882549"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg><span>0783882549</span></a>
+      <a class="nav-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= HOME ================= -->
+<section id="home" class="page" style="padding:0">
+  <div class="hero">
+    <video class="hero-video" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+      <source src="assets/video/kigali.mp4" type="video/mp4">
+    </video>
+    <div class="hero-video-overlay" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1>Your ride is ready when you are.</h1>
+        <p>Thomas Transfer takes you from the airport, the station or your front door to wherever you are going, on time and in comfort.</p>
+        <div class="hero-btns">
+          <a class="btn primary wa" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Book a taxi now</a>
+          <a class="btn secondary" href="tel:0783882549">Call Thomas Transfer</a>
+          <a class="btn tertiary" href="#cars">View our cars</a>
+          <a class="btn tertiary" href="#contact">Ask for a quote</a>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="ico navy">&#9632;</div><div><b>12</b><span>Vehicles ready</span></div></div>
+          <div class="tile"><div class="ico gold">&#9201;</div><div><b>24/7</b><span>Open every day</span></div></div>
+          <div class="tile"><div class="ico green">&#10003;</div><div><b>5</b><span>Vehicle types</span></div></div>
+          <div class="tile"><div class="ico red">&#9733;</div><div><b>Fixed</b><span>Prices, no hidden fees</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="road" aria-hidden="true">
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="container">
+      <span>Available 24 hours, 7 days a week</span>
+      <span>Fixed prices, no hidden fees</span>
+      <span>Licensed and insured drivers</span>
+    </div>
+  </div>
+
+  <div class="container" style="padding-top:50px;padding-bottom:70px">
+    <h2>What we do</h2>
+    <p class="lead">Pick the transfer that fits your trip. Choose a car, then contact us with your trip details.</p>
+    <div class="service-cards">
+      <article class="svc-card">
+        <div class="svc-photo"><img src="assets/images/kigali-rides.jpg" alt="Kigali taxi rides" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">OUR SPECIALTY</span>
+          <h3>Kigali Taxi Rides</h3>
+          <p>Point-to-point rides anywhere in Kigali, day or night. Send your pickup and destination on WhatsApp — we confirm your fare upfront and your driver is on the way.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>Instant quote</b><span>Fare confirmed before pickup</span></div>
+            <a class="svc-book" href="#contact">Book</a>
+          </div>
+        </div>
+      </article>
+      <article class="svc-card">
+        <div class="svc-photo"><img src="assets/images/airport.jpg" alt="Airport transfer" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">MOST BOOKED</span>
+          <h3>Airport Transfer</h3>
+          <p>Meet-and-greet at Kigali International Airport, flight tracking, and a smooth private ride to any address in the city — day or night.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>30,000 RWF</b><span>Per transfer</span></div>
+            <a class="svc-book" href="#contact">Book</a>
+          </div>
+        </div>
+      </article>
+      <article class="svc-card">
+        <div class="svc-photo"><img src="assets/images/kigali-day.jpg" alt="Kigali all-day service" loading="lazy"></div>
+        <div class="svc-body">
+          <span class="svc-tag">FULL DAY</span>
+          <h3>Kigali All-Day Service</h3>
+          <p>A dedicated car and driver at your disposal across Kigali from morning until 21:00 — meetings, markets, museums, dinners. One flat rate.</p>
+          <div class="svc-foot">
+            <div class="svc-price"><b>150,000 RWF</b><span>Until 21:00</span></div>
+            <a class="svc-book" href="#contact">Book</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+  <div class="band white">
+    <div class="container">
+      <div class="band-head"><h2>Popular vehicles</h2><a class="link-more" href="#cars">See all cars</a></div>
+      <div class="dest-grid">
+        <a class="dest" href="#available" data-book="1">
+          <img data-car="1" alt="Toyota Corolla Hybrid" loading="lazy">
+          <span class="cap"><b>Toyota Corolla Hybrid</b><span>Sedan</span></span>
+        </a>
+        <a class="dest" href="#available" data-book="3">
+          <img data-car="3" alt="Toyota RAV4" loading="lazy">
+          <span class="cap"><b>Toyota RAV4</b><span>SUV</span></span>
+        </a>
+        <a class="dest" href="#available" data-book="4">
+          <img data-car="4" alt="Mercedes-Benz G-Class" loading="lazy">
+          <span class="cap"><b>Mercedes-Benz G-Class</b><span>Luxury SUV</span></span>
+        </a>
+        <a class="dest" href="#available" data-book="5">
+          <img data-car="5" alt="Volkswagen Transporter" loading="lazy">
+          <span class="cap"><b>Volkswagen Transporter</b><span>Van</span></span>
+        </a>
+        <a class="dest" href="#available" data-book="10">
+          <img data-car="10" alt="Foton Traveller minibus" loading="lazy">
+          <span class="cap"><b>Foton Traveller minibus</b><span>Minibus</span></span>
+        </a>
+        <a class="dest" href="#available" data-book="12">
+          <img data-car="12" alt="Toyota Hilux Hybrid" loading="lazy">
+          <span class="cap"><b>Toyota Hilux Hybrid</b><span>Pickup</span></span>
+        </a>
+      </div>
+      <div class="rent-promo">
+        <div class="off">−30%</div>
+        <p>Prefer to drive yourself? Rent a RAV4 from 50,000 RWF/day — or a Tucson, Santa Fe, Prado or Land Cruiser V8 — with 30% off any rental of a week or longer.</p>
+        <a class="svc-book" href="#cars">View the fleet</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">
+    <div class="container">
+      <h2 class="hiw-title">Airport transportation made easy</h2>
+      <div class="hiw-wrap">
+      <div class="hiw-list">
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 14h22l4 9H9z" class="hiw-blue"/><path d="M15.5 16.5h17l2.4 5H13.1z" fill="var(--hiw-win)"/><rect x="6" y="22" width="36" height="14" rx="4" class="hiw-blue"/><circle cx="13" cy="28.5" r="3" fill="var(--yellow)"/><circle cx="35" cy="28.5" r="3" fill="var(--yellow)"/><rect x="9" y="35" width="7" height="5" rx="1.5" class="hiw-blue"/><rect x="32" y="35" width="7" height="5" rx="1.5" class="hiw-blue"/></svg></span><div><h3>Booking your airport transfer</h3><p>Confirmation is immediate. If your plans change, you can cancel for free up to 24 hours before your pickup time.</p></div></div>
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="5" class="hiw-blue"/><path d="M17 17h14l1.5 15h-4.5l-1 13h-4l-1-13H15.5z" class="hiw-blue"/><rect x="7" y="22" width="34" height="6.5" fill="var(--yellow)"/></svg></span><div><h3>Meeting your driver</h3><p>We send you the meeting point as soon as you book. Your driver waits for you and adjusts if your flight is early or late.</p></div></div>
+        <div class="hiw-item"><span class="hiw-ico"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M11 5h26v39H11z" class="hiw-blue"/><g fill="var(--hiw-win)"><rect x="16" y="10" width="4.5" height="4.5"/><rect x="21.8" y="10" width="4.5" height="4.5"/><rect x="27.6" y="10" width="4.5" height="4.5"/><rect x="16" y="17.5" width="4.5" height="4.5"/><rect x="21.8" y="17.5" width="4.5" height="4.5"/><rect x="27.6" y="17.5" width="4.5" height="4.5"/><rect x="16" y="25" width="4.5" height="4.5"/><rect x="21.8" y="25" width="4.5" height="4.5"/><rect x="27.6" y="25" width="4.5" height="4.5"/><rect x="21.8" y="34" width="4.5" height="10"/></g></svg></span><div><h3>Arriving at your destination</h3><p>Get there quickly and safely, with no waiting in line for a ride and no need to figure out public transport.</p></div></div>
+      </div>
+      <div class="hiw" role="img" aria-label="How it works: book online, receive confirmation, meet your driver, arrive at your destination, enjoy your trip">
+        <svg class="hiw-path" viewBox="0 0 480 480" aria-hidden="true"><path d="M62 56V96Q62 115 82 115H358H400Q440 115 440 150V240Q440 275 405 275H82Q62 275 62 295V392" fill="none" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10"/></svg>
+        <div class="hiw-bubble">How does it work?</div>
+          <div class="hiw-node" style="left:39%;top:23.9%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="9" width="38" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M5 17h38" stroke="currentColor" stroke-width="3"/><circle cx="10" cy="13" r="1.6" fill="currentColor"/><circle cx="15" cy="13" r="1.6" fill="currentColor"/><circle cx="20" cy="13" r="1.6" fill="currentColor"/><path d="M14 34v-5.5l3-5h14l3 5V34z" class="hiw-blue"/><path d="M18.5 23.8h11l2 4h-15z" fill="var(--surface)"/><circle cx="18" cy="34" r="2.2" class="hiw-blue" stroke="var(--surface)" stroke-width="1.2"/><circle cx="30" cy="34" r="2.2" class="hiw-blue" stroke="var(--surface)" stroke-width="1.2"/></svg></span><span class="hiw-label">Book online</span></div>
+          <div class="hiw-node" style="left:70.4%;top:23.9%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="13" y="4" width="22" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18.5 22l4.2 4.2 7-8.6" fill="none" stroke="#1e9e4a" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="39" r="1.7" fill="currentColor"/></svg></span><span class="hiw-label">Receive confirmation</span></div>
+          <div class="hiw-node" style="left:70.4%;top:57.3%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="9" r="5" class="hiw-blue"/><path d="M17 17h14l1.5 15h-4.5l-1 13h-4l-1-13H15.5z" class="hiw-blue"/><rect x="7" y="22" width="34" height="6.5" fill="var(--yellow)"/></svg></span><span class="hiw-label">Meet your driver</span></div>
+          <div class="hiw-node" style="left:39%;top:57.3%"><span class="hiw-circle"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="11" y="5" width="26" height="39" fill="none" stroke="currentColor" stroke-width="3"/><g class="hiw-blue"><rect x="16" y="10" width="4.5" height="4.5"/><rect x="21.8" y="10" width="4.5" height="4.5"/><rect x="27.6" y="10" width="4.5" height="4.5"/><rect x="16" y="17.5" width="4.5" height="4.5"/><rect x="21.8" y="17.5" width="4.5" height="4.5"/><rect x="27.6" y="17.5" width="4.5" height="4.5"/><rect x="16" y="25" width="4.5" height="4.5"/><rect x="21.8" y="25" width="4.5" height="4.5"/><rect x="27.6" y="25" width="4.5" height="4.5"/><rect x="21.8" y="34" width="4.5" height="10"/></g></svg></span><span class="hiw-label">Arrive at your destination</span></div>
+        <span class="hiw-dot"></span>
+        <div class="hiw-end">Enjoy your trip!</div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band white">
+    <div class="container">
+      <section class="cta-ready" aria-labelledby="ready-title">
+        <img class="cta-ready-bg" src="assets/images/ready-bg.jpg" alt="" loading="lazy">
+        <div class="cta-ready-inner">
+          <p class="eyebrow">Ready when you are</p>
+          <h2 id="ready-title">Your driver is one message away</h2>
+          <p>Landing tonight? Planning a safari for next month? Either way, the answer arrives in minutes.</p>
+          <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Chat with us now</a>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CARS ================= -->
+<section id="cars" class="page">
+  <div class="container">
+    <div class="page-banner page-banner--fleet">
+      <img src="assets/images/car-night-top.png" alt="Row of rental cars at night" loading="lazy">
+      <div class="fleet-content">
+        <p class="eyebrow banner-slide-up">Car rental</p>
+        <h2 class="banner-slide-up">Your keys to <em>a thousand hills</em></h2>
+        <p class="banner-slide-up">Well-maintained SUVs for city errands, upcountry roads and safari tracks — by the day, or 30% less by the week.</p>
+      </div>
+    </div>
+    <div class="rent-promo weekly-deal">
+      <div class="off">−30%</div>
+      <p><span class="deal-title">Rent for 7 days or longer and save 30% on every day of your rental.</span>
+      <span class="deal-sub">Weekly prices below already show your discount — no codes, no fine print.</span></p>
+    </div>
+    <div class="fleet-header">
+      <p class="eyebrow">The Fleet</p>
+      <h2>Choose your car</h2>
+      <p>Every vehicle is serviced, insured and delivered clean with a full tank agreement. Rent self-drive or add one of our professional drivers.</p>
+    </div>
+    <div class="cars">
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/01-toyota-corolla-hybrid.jpg" alt="Toyota Corolla Hybrid" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Economy sedan</span>
+          <h3>Toyota Corolla Hybrid</h3>
+          <p>Economical and comfortable for city rides and airport trips.</p>
+          <ul class="car-specs">
+            <li>5 seats · A/C · Hybrid</li>
+            <li>Excellent fuel economy</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">45,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">31,500 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%201." target="_blank" rel="noopener" data-book="1">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/02-toyota-land-cruiser.jpg" alt="Toyota Land Cruiser" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Large SUV</span>
+          <h3>Toyota Land Cruiser</h3>
+          <p>Strong and spacious for long distance and rough roads.</p>
+          <ul class="car-specs">
+            <li>7 seats · 4×4 · A/C</li>
+            <li>Built for rough roads</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">70,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">49,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%202." target="_blank" rel="noopener" data-book="2">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/03-toyota-rav4.jpg" alt="Toyota RAV4" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Compact SUV</span>
+          <h3>Toyota RAV4</h3>
+          <p>Modern, smooth and good for small families.</p>
+          <ul class="car-specs">
+            <li>4–5 seats · AWD · A/C</li>
+            <li>Great fuel economy</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">50,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">35,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%203." target="_blank" rel="noopener" data-book="3">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/04-mercedes-benz-g-class.jpg" alt="Mercedes-Benz G-Class" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Luxury SUV</span>
+          <h3>Mercedes-Benz G-Class</h3>
+          <p>A premium ride for special occasions and VIP guests.</p>
+          <ul class="car-specs">
+            <li>5 seats · AWD · A/C</li>
+            <li>VIP comfort and presence</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">150,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">105,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%204." target="_blank" rel="noopener" data-book="4">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/05-volkswagen-transporter.jpg" alt="Volkswagen Transporter" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Van</span>
+          <h3>Volkswagen Transporter</h3>
+          <p>Roomy and comfortable for groups with luggage.</p>
+          <ul class="car-specs">
+            <li>8–9 seats · A/C · large boot</li>
+            <li>Roomy for groups and luggage</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">120,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">84,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%205." target="_blank" rel="noopener" data-book="5">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/06-mercedes-amg-gle-coupe.jpg" alt="Mercedes-AMG GLE Coupe" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Luxury SUV</span>
+          <h3>Mercedes-AMG GLE Coupe</h3>
+          <p>A fast, stylish ride for executive travel.</p>
+          <ul class="car-specs">
+            <li>5 seats · AWD · A/C</li>
+            <li>Executive style and speed</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">150,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">105,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%206." target="_blank" rel="noopener" data-book="6">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/07-toyota-land-cruiser-prado-black.jpg" alt="Toyota Land Cruiser Prado, black" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Mid-size SUV</span>
+          <h3>Toyota Land Cruiser Prado, black</h3>
+          <p>A reliable all-round vehicle for family and business trips.</p>
+          <ul class="car-specs">
+            <li>7 seats · AWD · A/C</li>
+            <li>Family and business trips</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">70,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">49,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%207." target="_blank" rel="noopener" data-book="7">Reserve</a>
+          </div>
+        </div>
+      </div>
+      <div class="car-card">
+        <img class="car-photo" src="assets/images/cars/08-toyota-land-cruiser-prado-rear.jpg" alt="Toyota Land Cruiser Prado, black (rear view)" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Mid-size SUV</span>
+          <h3>Toyota Land Cruiser Prado, black (rear view)</h3>
+          <p>Large luggage space and comfortable seating.</p>
+          <ul class="car-specs">
+            <li>7 seats · large luggage space</li>
+            <li>Comfortable seating</li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price">70,000 RWF</span>
+              <span class="rate-per">Per day</span>
+              <span class="rate-week">49,000 RWF/day from 7 days</span>
+            </div>
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%208." target="_blank" rel="noopener" data-book="8">Reserve</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rent-steps">
+      <p class="eyebrow">Simple terms</p>
+      <h2>How renting works</h2>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <h3>Reserve on WhatsApp</h3>
+          <p>Tell us your car, dates and whether you want self-drive or a driver. We confirm availability the same hour.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <h3>Quick handover</h3>
+          <p>Bring a valid driving licence and ID or passport. We deliver the car to your address or the airport at no extra cost within Kigali.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <h3>Drive — and save weekly</h3>
+          <p>Keep the car 7 days or more and the 30% discount applies to your whole rental automatically.</p>
+        </div>
+      </div>
+      <p class="steps-note">All rentals include comprehensive insurance and 24/7 roadside assistance. A professional driver can be added to any rental for a small daily fee — ask us on WhatsApp.</p>
+    </div>
+    <div class="rent-cta">
+      <img class="rent-cta-bg" src="assets/images/ready-bg.jpg" alt="" loading="lazy">
+      <div class="rent-cta-inner">
+        <p class="eyebrow">On the road in hours</p>
+        <h2>Reserve your car today</h2>
+        <p>Availability moves fast in high season — secure your dates now and pay on handover.</p>
+        <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Check availability</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRANSPORT ================= -->
+<section id="transport" class="page">
+  <div class="container">
+    <div class="page-banner page-banner--hero">
+      <img src="assets/images/transport-kigali.jpg" alt="Kigali, Rwanda" loading="lazy">
+      <div class="page-banner-content">
+        <p class="eyebrow banner-slide-up">Transport services</p>
+        <h2 class="banner-slide-up">Arrive rested. <em>Every time.</em></h2>
+        <p class="banner-slide-up">Airport pickups, full-day city service and private intercity travel — fixed prices, immaculate cars, professional drivers.</p>
+      </div>
+    </div>
+    <div class="airport-feature">
+      <div class="af-media"><img src="assets/images/airport-night.jpg" alt="Kigali International Airport at night" loading="lazy"></div>
+      <div class="af-copy">
+        <p class="eyebrow">Kigali International Airport</p>
+        <h3>Airport Transfer</h3>
+        <p>Your driver monitors your flight, waits in arrivals with a name board, helps with luggage and takes you straight to your hotel or residence — anywhere in Kigali.</p>
+        <ul class="af-list">
+          <li>Available 24 hours a day, 7 days a week</li>
+          <li>Flight tracking — no extra charge for delays</li>
+          <li>Meet-and-greet in the arrivals hall</li>
+          <li>Air-conditioned car with bottled water</li>
+        </ul>
+        <div class="af-foot">
+          <div class="af-price">30,000 RWF<span>Per transfer</span></div>
+          <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Book transfer</a>
+        </div>
+      </div>
+    </div>
+    <div class="airport-feature airport-feature--reverse">
+      <div class="af-media"><img src="assets/images/kigali-city-day.jpg" alt="Aerial view of Kigali city centre" loading="lazy"></div>
+      <div class="af-copy">
+        <p class="eyebrow">The whole city, all day</p>
+        <h3>Kigali All-Day Service</h3>
+        <p>One car, one driver, one flat rate — from your first pickup in the morning until 21:00. Perfect for business days, shopping runs, family visits or a self-styled city tour of Africa’s cleanest capital.</p>
+        <ul class="af-list">
+          <li>Unlimited stops within Kigali city</li>
+          <li>Service runs until 21:00</li>
+          <li>Driver doubles as a knowledgeable city guide</li>
+          <li>Ideal for Kigali Genocide Memorial, Kimironko Market, Inema Arts &amp; more</li>
+        </ul>
+        <div class="af-foot">
+          <div class="af-price">150,000 RWF<span>Full day · until 21:00</span></div>
+          <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Book all-day car</a>
+        </div>
+      </div>
+    </div>
+    <div class="intercity">
+      <p class="eyebrow">Beyond the capital</p>
+      <h2>Intercity travel</h2>
+      <p class="lead">Private round-trip journeys from Kigali to Rwanda’s major towns. All prices are per vehicle, not per person — bring your companions along.</p>
+      <div class="route-table">
+        <div class="route-head"><span>Route</span><span>Price (to &amp; fro)</span><span></span></div>
+        <div class="route-row">
+          <div class="route-info"><b>Kigali <span class="ar">⇄</span> Musanze</b><span>Volcanoes NP gateway, Twin Lakes, Musanze caves · ±2 hrs each way</span></div>
+          <div class="route-price">30,000 RWF</div>
+          <a class="svc-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer%21%20I%20would%20like%20to%20book%20Kigali%20to%20Musanze%20-%2030%2C000%20RWF%20round%20trip%20per%20vehicle." target="_blank" rel="noopener">Book</a>
+        </div>
+        <div class="route-row">
+          <div class="route-info"><b>Kigali <span class="ar">⇄</span> Huye (Butare)</b><span>Ethnographic Museum, university town, coffee country · ±3 hrs each way</span></div>
+          <div class="route-price">30,000 RWF</div>
+          <a class="svc-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer%21%20I%20would%20like%20to%20book%20Kigali%20to%20Huye%20%28Butare%29%20-%2030%2C000%20RWF%20round%20trip%20per%20vehicle." target="_blank" rel="noopener">Book</a>
+        </div>
+        <div class="route-row">
+          <div class="route-info"><b>Kigali <span class="ar">⇄</span> Muhanga</b><span>Handicraft co-operatives &amp; southern hills · ±1 hr each way</span></div>
+          <div class="route-price">20,000 RWF</div>
+          <a class="svc-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer%21%20I%20would%20like%20to%20book%20Kigali%20to%20Muhanga%20-%2020%2C000%20RWF%20round%20trip%20per%20vehicle." target="_blank" rel="noopener">Book</a>
+        </div>
+        <div class="route-row">
+          <div class="route-info"><b>Kigali <span class="ar">⇄</span> Gisenyi (Rubavu)</b><span>Lake Kivu beaches &amp; hot springs · ±3.5 hrs each way</span></div>
+          <div class="route-price">50,000 RWF</div>
+          <a class="svc-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer%21%20I%20would%20like%20to%20book%20Kigali%20to%20Gisenyi%20%28Rubavu%29%20-%2050%2C000%20RWF%20round%20trip%20per%20vehicle." target="_blank" rel="noopener">Book</a>
+        </div>
+      </div>
+      <p class="note">All intercity prices are round-trip, per vehicle, and include fuel and driver. For one-way trips or custom multi-town itineraries, message us for a tailored quote.</p>
+    </div>
+    <div class="flex-cta">
+      <img src="assets/images/kigali-night.jpg" alt="Kigali Convention Centre at night" loading="lazy">
+      <div class="flex-cta-inner">
+        <p class="eyebrow">Flexible by design</p>
+        <h2>Need something in between?</h2>
+        <p>Half-days, early departures, multi-city loops — tell us your plan and we’ll shape the ride around it.</p>
+        <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Ask for a custom quote</a>
+      </div>
+    </div>
+    <div class="services">
+      <div class="card"><h3>Airport transfers</h3><p>We track your flight and your driver is waiting at arrivals.</p><span class="tag">From arrival to door</span></div>
+      <div class="card"><h3>City rides</h3><p>Fast, comfortable trips across town at a fixed price.</p><span class="tag">Book in minutes</span></div>
+      <div class="card"><h3>Long-distance travel</h3><p>Travel between cities in comfort with an experienced driver.</p><span class="tag">Anywhere in Rwanda</span></div>
+    </div>
+    <p style="margin-top:28px"><a class="btn" href="#available">Book now</a></p>
+  </div>
+</section>
+
+<!-- ================= TOUR PACKAGES ================= -->
+<section id="tours" class="page">
+  <div class="container">
+    <div class="page-banner page-banner--hero">
+      <img src="assets/images/Nyungwe-Forest-National-Park-740x450.jpg" alt="Nyungwe Forest National Park" loading="lazy" style="filter:brightness(0.55) contrast(1.1)">
+      <div class="page-banner-content">
+        <p class="eyebrow banner-slide-up">Tour Packages · 10% off all experiences</p>
+        <h2 class="banner-slide-up">Rwanda, remarkably close</h2>
+        <p class="banner-slide-up">Five signature journeys — savannah safaris, ancient rainforests, volcano country, lakeside calm and royal heritage. Private transport, expert driver-guides, effortless booking.</p>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 24px">
+      <button class="svc-book" type="button">ALL</button>
+      <button class="svc-book" type="button">Nation Parks</button>
+      <button class="svc-book" type="button">Lakes&Leisure</button>
+      <button class="svc-book" type="button">Culture&Heritage</button>
+    </div>
+    <div class="airport-feature">
+      <div class="af-media"><img src="assets/images/tour-kigali.jpg" alt="Tour" loading="lazy"></div>
+      <div class="af-copy">
+        <p class="eyebrow">Tour packages</p>
+        <h3>Discover Rwanda</h3>
+        <p>Private transport, expert driver-guides, effortless booking.</p>
+      </div>
+    </div>
+    <h2>Tour packages</h2>
+    <p class="lead">Discover Rwanda with a car and a driver who knows the roads.</p>
+    <div class="cars">
+      <article class="car-card">
+        <div class="car-info">
+          <span class="car-badge">Full-day safari · Eastern Province</span>
+          <h3>Akagera National Park</h3>
+          <p>Rwanda's only Big Five park — lions, leopards, elephants, rhinos and buffalo roam a landscape of lakes, papyrus swamps and rolling savannah just 2.5 hours from Kigali.</p>
+          <ul class="tour-itinerary">
+            <li><time>05:30</time><span>Private pickup from your Kigali hotel; scenic drive east</span></li>
+            <li><time>08:00</time><span>Enter through the south gate — morning game drive (lions, elephants, giraffes, zebras)</span></li>
+            <li><time>12:30</time><span>Picnic lunch overlooking Lake Ihema</span></li>
+            <li><time>14:00</time><span>Optional boat safari among hippos &amp; crocodiles (bookable on request)</span></li>
+            <li><time>16:00</time><span>Afternoon drive toward the northern plains — best rhino territory</span></li>
+            <li><time>19:30</time><span>Return to Kigali</span></li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price"><span class="tour-price-old">$390</span>$350</span>
+              <span class="rate-per">Per person</span>
+            </div>
+            <a class="reserve-btn" href="#contact">Book</a>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="services">
+      <div class="card"><h3>City tours</h3><p>Kigali city tours, markets and cultural sites in one day.</p><span class="tag">Half day or full day</span></div>
+      <div class="card"><h3>National parks</h3><p>Trips to Akagera, Volcanoes and Nyungwe in a comfortable vehicle.</p><span class="tag">Multi-day trips</span></div>
+      <div class="card"><h3>Custom tours</h3><p>Tell us your plan and we will build the trip around you.</p><span class="tag">Made for you</span></div>
+    </div>
+    <p style="margin-top:28px"><a class="btn" href="#contact">Request a tour</a></p>
+  </div>
+</section>
+
+<!-- ================= LIST OF CARS ================= -->
+<section id="car-list" class="page">
+  <div class="container">
+    <h2>List of cars</h2>
+    <p class="lead">All our vehicles and whether they are free now.</p>
+    <div class="table-wrap"><table class="data" id="car-table"></table></div>
+    <p id="car-list-status" class="status" role="status"></p>
+  </div>
+</section>
+
+<!-- ================= AVAILABLE CARS + BOOKING ================= -->
+<section id="available" class="page">
+  <div class="container">
+    <h2>Available cars</h2>
+    <p class="lead">Pick a car that is free now and send your booking.</p>
+    <div class="auth-in">
+      <form id="booking-form" class="form-box wide">
+        <h3>Book a car</h3>
+        <label for="bk-car">Car</label>
+        <select id="bk-car" required></select>
+        <div class="row">
+          <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" required></div>
+          <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" required></div>
+        </div>
+        <div class="row">
+          <div><label for="bk-when">Date and time</label><input id="bk-when" type="datetime-local" required></div>
+          <div><label for="bk-pax">Passengers</label><input id="bk-pax" type="number" min="1" max="60" value="1" required></div>
+        </div>
+        <label for="bk-notes">Notes (optional)</label>
+        <textarea id="bk-notes" maxlength="500" style="min-height:80px"></textarea>
+        <button class="btn" type="submit">Book now</button>
+        <p id="booking-status" class="status" role="status"></p>
+      </form>
+    </div>
+    <div class="auth-out form-box login-note">
+      <p>Please login to book a car.</p>
+      <a class="btn" href="#login">Login</a>
+    </div>
+    <div class="cars" id="available-cars"></div>
+    <p id="available-empty" class="status" role="status"></p>
+  </div>
+</section>
+
+<!-- ================= CAR BOOKINGS ================= -->
+<section id="bookings" class="page">
+  <div class="container">
+    <h2>Car bookings</h2>
+    <p class="lead not-admin">Your bookings and their status.</p>
+    <p class="lead admin-only">All bookings from customers.</p>
+    <div class="auth-in">
+      <div class="table-wrap"><table class="data" id="booking-table"></table></div>
+      <p id="bookings-status" class="status" role="status"></p>
+    </div>
+    <div class="auth-out form-box login-note">
+      <p>Please login to see your bookings.</p>
+      <a class="btn" href="#login">Login</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REPORT (admin only) ================= -->
+<section id="report" class="page">
+  <div class="container">
+    <h2>Report</h2>
+    <div class="not-admin form-box login-note"><p>This page is for the admin only.</p></div>
+    <div class="admin-only">
+      <p class="lead">A summary of cars, bookings, accounts and comments.</p>
+      <div class="tiles" id="report-tiles"></div>
+      <div class="two">
+        <div><h3>Bookings by status</h3><div class="table-wrap"><table class="data" id="report-status"></table></div></div>
+        <div><h3>Bookings per car</h3><div class="table-wrap"><table class="data" id="report-cars"></table></div></div>
+      </div>
+      <p style="text-align:center;margin-top:24px"><button class="btn" type="button" id="print-report">Print report</button></p>
+      <p id="report-msg" class="status" role="status"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" class="page">
+  <div class="container">
+    <h2>Login</h2>
+    <p class="lead">Sign in to your Thomas Transfer account.</p>
+    <div class="layout3 narrow">
+      <aside class="side left" aria-label="Why Thomas Transfer">
+        <h3>Why Thomas Transfer</h3>
+        <ul class="side-points"><li>On-time pickups</li><li>Fixed prices, no hidden fees</li><li>Licensed and insured drivers</li><li>Open 24 hours, every day</li></ul>
+      </aside>
+      <form id="login-form" class="form-box">
+      <label for="l-email">Email</label>
+      <input id="l-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      <label for="l-pass">Password</label>
+      <input id="l-pass" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+      <button class="btn" type="submit">Login</button>
+      <p id="login-status" class="status" role="status"></p>
+      <p class="hint">Don't have an account yet?</p>
+      <a class="btn outline" href="#create-account">Create account</a>
+    </form>
+      <aside class="side right" aria-label="Travel with confidence">
+        <h3>Travel with confidence</h3>
+        <p class="side-quote">Every good journey starts with a good ride.</p>
+        <ul class="side-list">
+          <li><span>Airport transfers</span>We track your flight, so your driver is waiting.</li>
+          <li><span>City rides</span>You see the price before you confirm.</li>
+          <li><span>Group travel</span>Larger vehicles for tours, weddings and events.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CREATE ACCOUNT ================= -->
+<section id="create-account" class="page">
+  <div class="container">
+    <h2>Create account</h2>
+    <p class="lead">It takes one minute. Then you can log in any time.</p>
+    <form id="register-form" class="form-box wide">
+      <div class="row">
+        <div><label for="c-first">First name</label><input id="c-first" type="text" maxlength="50" autocomplete="given-name" required></div>
+        <div><label for="c-last">Last name</label><input id="c-last" type="text" maxlength="50" autocomplete="family-name" required></div>
+      </div>
+      <label for="c-email">Email</label>
+      <input id="c-email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" required>
+      <label for="c-phone">Phone number</label>
+      <input id="c-phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+250 ...">
+      <div class="row">
+        <div><label for="c-pass">Password</label><input id="c-pass" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
+        <div><label for="c-pass2">Confirm password</label><input id="c-pass2" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
+      </div>
+      <p class="hint">Use at least 8 characters.</p>
+      <button class="btn" type="submit">Create account</button>
+      <p id="register-status" class="status" role="status"></p>
+      <p class="hint">Already have an account? <a href="#login">Login</a></p>
+    </form>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section id="contact" class="page">
+  <div class="page-banner page-banner--hero page-banner--contact">
+    <img src="assets/images/kigali-contact-dark.jpg" alt="A busy road in Kigali, Rwanda, at dusk, with cars, motorbikes and pedestrians" loading="lazy">
+    <div class="page-banner-content page-banner-content--left">
+      <p class="eyebrow banner-slide-up">Contact</p>
+      <h2 class="banner-slide-up">We reply in <em>minutes</em></h2>
+      <p class="banner-slide-up">WhatsApp is the fastest way to reach us — but call or email works too. Available around the clock for airport pickups.</p>
+    </div>
+  </div>
+  <div class="container contact-wrap">
+    <div class="contact-left">
+    <div class="touch">
+      <p class="eyebrow">Get in touch</p>
+      <h2>Talk to a real person</h2>
+      <p>No call centres, no waiting queues. You’ll speak directly with our team in Kigali, in English, French or Kinyarwanda.</p>
+    </div>
+    <div class="contact-card">
+      <ul class="cc-list">
+        <li>
+          <span class="cc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg></span>
+          <span><b>WhatsApp (fastest)</b><a href="https://wa.me/250783882549" target="_blank" rel="noopener">+250 783 882 549</a></span>
+        </li>
+        <li>
+          <span class="cc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.3a11 11 0 0 0 5.2 5.2l1.3-2 4 1.5v3a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4.5 5.5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+          <span><b>Phone</b><a href="tel:0783882549">+250 783 882 549</a></span>
+        </li>
+        <li>
+          <span class="cc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 7.5l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+          <span><b>Email</b><a href="mailto:info@thomastransfer.com">info@thomastransfer.com</a></span>
+        </li>
+        <li>
+          <span class="cc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.2-6.5-10a6.5 6.5 0 0 1 13 0c0 4.8-6.5 10-6.5 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="11" r="2.4" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+          <span><b>Based in</b><span class="cc-detail">Kigali, Rwanda — serving the whole country</span></span>
+        </li>
+        <li>
+          <span class="cc-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><b>Hours</b><span class="cc-detail">Airport transfers 24/7 · Office replies 06:00 – 22:00</span></span>
+        </li>
+      </ul>
+    </div>
+    <div class="quick-actions">
+      <a class="cta-ready-btn" href="https://wa.me/250783882549" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Start a WhatsApp chat</a>
+      <a class="qa-outline" href="tel:0783882549">Call us now</a>
+      <a class="qa-outline" href="#pay">Pay by card</a>
+    </div>
+    </div>
+    <aside class="faq" aria-labelledby="faq-title">
+      <p class="eyebrow">Quick answers</p>
+      <h2 id="faq-title">Frequently asked</h2>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q" aria-expanded="false" aria-controls="faq-a">How do I pay?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a" role="region" aria-labelledby="faq-q">
+          <p>Cash (RWF or USD), mobile money (MTN MoMo), or bank transfer. International guests can also <a href="#pay">pay securely by Visa or Mastercard online.</a> Transfers and rentals are paid on pickup; tours are confirmed with a small deposit.</p>
+        </div>
+      </div>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q2" aria-expanded="false" aria-controls="faq-a2">What if my flight is delayed?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a2" role="region" aria-labelledby="faq-q2">
+          <p>We track every flight we pick up. Your driver adjusts automatically and waits for you at arrivals — no extra charge for delays.</p>
+        </div>
+      </div>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q3" aria-expanded="false" aria-controls="faq-a3">Are tour prices per person or per group?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a3" role="region" aria-labelledby="faq-q3">
+          <p>Tour package prices are per person and already include the 10% discount. Groups of four or more travellers get an additional group rate — ask us on WhatsApp.</p>
+        </div>
+      </div>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q4" aria-expanded="false" aria-controls="faq-a4">Can you arrange gorilla trekking permits?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a4" role="region" aria-labelledby="faq-q4">
+          <p>Yes. Gorilla and chimpanzee permits are issued by the Rwanda Development Board and sold separately from our tour prices. Tell us your dates early — permits are limited and sell out in high season.</p>
+        </div>
+      </div>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q5" aria-expanded="false" aria-controls="faq-a5">Do rental cars come with a driver?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a5" role="region" aria-labelledby="faq-q5">
+          <p>Your choice. All rental prices are for self-drive; a professional driver can be added to any rental for a small daily fee.</p>
+        </div>
+      </div>
+      <div class="faq-card closed">
+        <button class="faq-toggle" type="button" id="faq-q6" aria-expanded="false" aria-controls="faq-a6">Is the 30% weekly rental discount automatic?<span class="faq-ico" aria-hidden="true"><svg class="ico-show" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg><svg class="ico-hide" viewBox="0 0 24 24"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.2 17.2 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></button>
+        <div class="faq-answer" id="faq-a6" role="region" aria-labelledby="faq-q6">
+          <p>Yes — any rental of 7 days or longer is charged at 30% off the daily rate for the entire period. No code needed.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ================= PAY ONLINE ================= -->
+<section id="pay" class="page">
+  <div class="page-banner page-banner--hero page-banner--pay">
+    <img src="assets/images/pay-banner.jpg" alt="The stone-arched clubhouse at Muri Park, Kigali, beside a green lawn" loading="lazy">
+    <div class="page-banner-content page-banner-content--left">
+      <p class="eyebrow banner-slide-up">Secure online payment</p>
+      <h2 class="banner-slide-up">Pay by <em>card</em></h2>
+      <p class="banner-slide-up">Visa &amp; Mastercard accepted for guests who don't use local mobile money. Choose a service below, or enter the amount we agreed — checkout is handled securely by Flutterwave.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="trust-bar" role="note" aria-label="Payment security">
+      <span class="trust-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10" width="15" height="9.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14.7" r="1.2" fill="currentColor"/></svg></span>
+      <p class="trust-text"><strong>Your card stays private.</strong> Details are entered on Flutterwave's encrypted checkout — Thomas Transfer never sees or stores your card number.</p>
+      <span class="trust-badges"><span class="badge-mini">VISA</span><span class="badge-mini">Mastercard</span></span>
+    </div>
+    <section class="fare-block" aria-labelledby="fare-title">
+      <p class="eyebrow fare-eyebrow">Pay a set fare</p>
+      <h2 class="fare-title" id="fare-title">Common services</h2>
+      <p class="fare-sub">Tap a service to pay its standard fare. Tour prices already include the 10% discount.</p>
+      <div class="fare-grid">
+        <article class="fare-card">
+          <p class="fare-tag">Airport transfer</p>
+          <h3 class="fare-name">Kigali Airport ⇄ City</h3>
+          <p class="fare-price">25,000 RWF</p>
+          <p class="fare-note">Fixed fare</p>
+          <button type="button" class="fare-btn" data-svc="airport">Pay 25,000 RWF</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">City transport</p>
+          <h3 class="fare-name">Kigali All-Day Service</h3>
+          <p class="fare-price">150,000 RWF</p>
+          <p class="fare-note">Until 21:00</p>
+          <button type="button" class="fare-btn" data-svc="allday">Pay 150,000 RWF</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Safari · 10% off</p>
+          <h3 class="fare-name">Akagera National Park</h3>
+          <p class="fare-price">$315</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="akagera">Pay $315</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Tour · 10% off</p>
+          <h3 class="fare-name">Volcanoes National Park</h3>
+          <p class="fare-price">$270</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="volcanoes">Pay $270</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Tour · 10% off</p>
+          <h3 class="fare-name">Nyungwe National Park</h3>
+          <p class="fare-price">$270</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="nyungwe">Pay $270</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Lake Kivu · 10% off</p>
+          <h3 class="fare-name">Gisenyi — Lake Kivu</h3>
+          <p class="fare-price">$225</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="gisenyi">Pay $225</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Heritage · 10% off</p>
+          <h3 class="fare-name">King's Palace Museum</h3>
+          <p class="fare-price">$90</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="palace">Pay $90</button>
+        </article>
+      </div>
+      <p class="fare-status" id="fare-status" role="status"></p>
+    </section>
+    <div class="custom-row">
+    <aside class="custom-pay" aria-labelledby="custom-title">
+      <p class="eyebrow cp-eyebrow">Something else?</p>
+      <h2 class="cp-title" id="custom-title">Pay a custom amount</h2>
+      <p class="cp-sub">For car rentals, intercity trips, multi-day packages or any fare we agreed over WhatsApp — just enter the amount and pay securely by card.</p>
+      <ul class="cp-list">
+        <li>Visa &amp; Mastercard, from anywhere in the world</li>
+        <li>Instant email receipt from Flutterwave</li>
+        <li>We confirm your booking on WhatsApp right after</li>
+      </ul>
+    </aside>
+    <form id="custom-pay-form" class="cp-card">
+      <label for="cf-name">Full name</label>
+      <input id="cf-name" type="text" maxlength="100" autocomplete="name" placeholder="Your name" required>
+      <label for="cf-email">Email (for your receipt)</label>
+      <input id="cf-email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" required>
+      <label for="cf-phone">Phone (optional)</label>
+      <input id="cf-phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+250 ...">
+      <div class="row">
+        <div><label for="cf-amount">Amount</label><input id="cf-amount" type="number" min="1" step="1" placeholder="0" required></div>
+        <div><label for="cf-currency">Currency</label><select id="cf-currency"><option value="USD" selected>USD</option><option value="RWF">RWF</option></select></div>
+      </div>
+      <button class="fare-btn cp-pay" type="submit">Pay securely</button>
+      <p class="fare-status cp-status" id="custom-status" role="status"></p>
+    </form>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMMENT ================= -->
+<section id="comment" class="page">
+  <div class="container">
+    <h2>Comment</h2>
+    <p class="lead">Tell us about your trip. Your comment is private and is read only by our team.</p>
+    <div class="layout3 wide">
+      <aside class="side left" aria-label="What to tell us">
+        <h3>What to tell us</h3>
+        <p>A few details help us improve your next trip.</p>
+        <ul class="side-points"><li>How was your driver?</li><li>How was the vehicle?</li><li>Was pick-up on time?</li><li>Was the price fair?</li></ul>
+      </aside>
+      <form id="comment-form" class="form-box wide">
+      <label for="m-name">Your name</label>
+      <input id="m-name" type="text" maxlength="100" required>
+      <label for="m-rate">Rating</label>
+      <select id="m-rate">
+        <option value="5 - Excellent">5 - Excellent</option>
+        <option value="4 - Good">4 - Good</option>
+        <option value="3 - Fair">3 - Fair</option>
+        <option value="2 - Poor">2 - Poor</option>
+        <option value="1 - Very poor">1 - Very poor</option>
+      </select>
+      <label for="m-text">Your comment</label>
+      <textarea id="m-text" maxlength="2000" required></textarea>
+      <button class="btn" type="submit">Submit</button>
+      <p id="comment-status" class="status" role="status"></p>
+    </form>
+      <aside class="side right" aria-label="Our promise">
+        <h3>Our promise</h3>
+        <p class="side-quote">Safe, on-time trips at a fair price.</p>
+        <p>We read every comment and use it to make Thomas Transfer better. Your comment is private and is never shown to other visitors.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOGOUT ================= -->
+<section id="logout" class="page">
+  <div class="container">
+    <div class="notice">
+      <div class="tick">&#10003;</div>
+      <h2>You are logged out</h2>
+      <p class="lead" style="margin:0 auto 22px">Thanks for travelling with Thomas Transfer. Your account is safe.</p>
+      <a class="btn" href="#login">Login again</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container foot">
+    <div>
+      <h4>Thomas Transfer</h4>
+      <p>Reliable transfers for airports, cities and events. Book online, travel with confidence.</p>
+      <h4 style="margin-top:18px">Follow us</h4>
+      <div class="social dark" aria-label="Social media">
+      <a href="https://www.facebook.com/" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.5V7c0-.8.3-1.2 1.3-1.2H17V3h-2.6C11.6 3 10.5 4.7 10.5 6.9v1.6H8V11.4h2.5V21H14v-9.6h2.7L17 8.5z" fill="currentColor"/></svg></a>
+      <a href="https://www.instagram.com/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3.8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="7" r="1.3" fill="currentColor"/></svg></a>
+      <a href="https://wa.me/250000000000" target="_blank" rel="noopener" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg></a>
+    </div>
+    </div>
+    <div>
+      <h4>Services</h4>
+      <ul>
+        <li><a href="#pay">Airport Transfer</a></li>
+        <li><a href="#transport">Kigali All-Day</a></li>
+        <li><a href="#transport">Intercity Travel</a></li>
+        <li><a href="#cars">Car Rental</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contact us</h4>
+      <ul class="foot-contact">
+        <li><svg class="fi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 7.5l8 6 8-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Email: info@thomastransfer.com</li>
+        <li><svg class="fi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h3l1.5 4-2 1.3a11 11 0 0 0 5.2 5.2l1.3-2 4 1.5v3a2 2 0 0 1-2 2A15.5 15.5 0 0 1 4.5 5.5a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Phone: <a href="tel:0783689231">0783689231</a></li>
+        <li><svg class="fi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Open 24 hours, every day</li>
+      </ul>
+    </div>
+  </div>
+  <div class="container foot-nums" aria-hidden="true">
+    <span>1</span>
+    <span>2</span>
+    <span>3</span>
+    <span>4</span>
+  </div>
+  <div class="container copy"><span>&copy; 2026 Thomas Transfer. All rights reserved.</span><span>Kigali, Rwanda — the land of a thousand hills.</span></div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/250783882549" target="_blank" rel="noopener" aria-label="Chat on WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg></a>
+
+<!-- ================= SUPPORT MESSAGE DIALOG ================= -->
+<dialog id="msg-dialog" class="msg-dialog" aria-labelledby="msg-title">
+  <button type="button" class="msg-close" id="msg-close" aria-label="Close">&times;</button>
+  <h3 id="msg-title">Write to support</h3>
+  <form id="support-form">
+    <label for="s-name">Full name</label>
+    <input id="s-name" type="text" autocomplete="name" required>
+    <label for="s-email">Email</label>
+    <input id="s-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label for="s-phone">Phone number</label>
+    <input id="s-phone" type="tel" autocomplete="tel" placeholder="+250 ..." required>
+    <label for="s-msg">Message</label>
+    <textarea id="s-msg" placeholder="Write your message here" required></textarea>
+    <button class="btn" type="submit">Send message</button>
+    <p id="support-status" class="status" role="status"></p>
+  </form>
+</dialog>
+
+<!-- page scripts (order matters: i18n defines T, dashboard defines window.ttPages) -->
+<script src="js/i18n.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/search.js"></script>
+<script src="js/faq.js"></script>
+<script src="js/home-cards.js"></script>
+<script src="js/comment.js"></script>
+<script src="js/pay-fares.js"></script>
+<script src="js/pay-custom.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/support.js"></script>
+</body>
+</html>

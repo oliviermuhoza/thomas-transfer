@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block content %}
+<section id="pay" class="page">
+  <div class="page-banner page-banner--hero page-banner--pay">
+    <img src="/assets/images/pay-banner.jpg" alt="The stone-arched clubhouse at Muri Park, Kigali, beside a green lawn" loading="lazy">
+    <div class="page-banner-content page-banner-content--left">
+      <p class="eyebrow banner-slide-up">Secure online payment</p>
+      <h2 class="banner-slide-up">Pay by <em>card</em></h2>
+      <p class="banner-slide-up">Visa &amp; Mastercard accepted for guests who don't use local mobile money. Choose a service below, or enter the amount we agreed — checkout is handled securely by Flutterwave.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="trust-bar" role="note" aria-label="Payment security">
+      <span class="trust-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10" width="15" height="9.5" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.8a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14.7" r="1.2" fill="currentColor"/></svg></span>
+      <p class="trust-text"><strong>Your card stays private.</strong> Details are entered on Flutterwave's encrypted checkout — Thomas Transfer never sees or stores your card number.</p>
+      <span class="trust-badges"><span class="badge-mini">VISA</span><span class="badge-mini">Mastercard</span></span>
+    </div>
+    <section class="fare-block" aria-labelledby="fare-title">
+      <p class="eyebrow fare-eyebrow">Pay a set fare</p>
+      <h2 class="fare-title" id="fare-title">Common services</h2>
+      <p class="fare-sub">Tap a service to pay its standard fare. Tour prices already include the 10% discount.</p>
+      <div class="fare-grid">
+        <article class="fare-card">
+          <p class="fare-tag">Airport transfer</p>
+          <h3 class="fare-name">Kigali Airport ⇄ City</h3>
+          <p class="fare-price">25,000 RWF</p>
+          <p class="fare-note">Fixed fare</p>
+          <button type="button" class="fare-btn" data-svc="airport">Pay 25,000 RWF</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">City transport</p>
+          <h3 class="fare-name">Kigali All-Day Service</h3>
+          <p class="fare-price">150,000 RWF</p>
+          <p class="fare-note">Until 21:00</p>
+          <button type="button" class="fare-btn" data-svc="allday">Pay 150,000 RWF</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Safari · 10% off</p>
+          <h3 class="fare-name">Akagera National Park</h3>
+          <p class="fare-price">$315</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="akagera">Pay $315</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Tour · 10% off</p>
+          <h3 class="fare-name">Volcanoes National Park</h3>
+          <p class="fare-price">$270</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="volcanoes">Pay $270</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Tour · 10% off</p>
+          <h3 class="fare-name">Nyungwe National Park</h3>
+          <p class="fare-price">$270</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="nyungwe">Pay $270</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Lake Kivu · 10% off</p>
+          <h3 class="fare-name">Gisenyi — Lake Kivu</h3>
+          <p class="fare-price">$225</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="gisenyi">Pay $225</button>
+        </article>
+        <article class="fare-card">
+          <p class="fare-tag">Heritage · 10% off</p>
+          <h3 class="fare-name">King's Palace Museum</h3>
+          <p class="fare-price">$90</p>
+          <p class="fare-note">Per person</p>
+          <button type="button" class="fare-btn" data-svc="palace">Pay $90</button>
+        </article>
+      </div>
+      <p class="fare-status" id="fare-status" role="status"></p>
+    </section>
+    <div class="custom-row">
+    <aside class="custom-pay" aria-labelledby="custom-title">
+      <p class="eyebrow cp-eyebrow">Something else?</p>
+      <h2 class="cp-title" id="custom-title">Pay a custom amount</h2>
+      <p class="cp-sub">For car rentals, intercity trips, multi-day packages or any fare we agreed over WhatsApp — just enter the amount and pay securely by card.</p>
+      <ul class="cp-list">
+        <li>Visa &amp; Mastercard, from anywhere in the world</li>
+        <li>Instant email receipt from Flutterwave</li>
+        <li>We confirm your booking on WhatsApp right after</li>
+      </ul>
+    </aside>
+    <form id="custom-pay-form" class="cp-card">
+      <label for="cf-name">Full name</label>
+      <input id="cf-name" type="text" maxlength="100" autocomplete="name" placeholder="Your name" required>
+      <label for="cf-email">Email (for your receipt)</label>
+      <input id="cf-email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" required>
+      <label for="cf-phone">Phone (optional)</label>
+      <input id="cf-phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+250 ...">
+      <div class="row">
+        <div><label for="cf-amount">Amount</label><input id="cf-amount" type="number" min="1" step="1" placeholder="0" required></div>
+        <div><label for="cf-currency">Currency</label><select id="cf-currency"><option value="USD" selected>USD</option><option value="RWF">RWF</option></select></div>
+      </div>
+      <button class="fare-btn cp-pay" type="submit">Pay securely</button>
+      <p class="fare-status cp-status" id="custom-status" role="status"></p>
+    </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/js/pay-fares.js"></script>
+<script src="/js/pay-custom.js"></script>
+{% endblock %}

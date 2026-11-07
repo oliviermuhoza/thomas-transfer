@@ -1,0 +1,46 @@
+<header>
+  <div class="container bar">
+    <div class="brand">
+      <div class="more">
+        <button id="more-btn" class="more-btn" type="button" aria-label="More options" aria-haspopup="true" aria-expanded="false" aria-controls="more-menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2" fill="currentColor"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="12" cy="19" r="2.2" fill="currentColor"/></svg></button>
+        <div id="more-menu" class="menu">
+          <ul class="menu-list">
+            <li><a href="/account#car-list">List of cars</a></li>
+            <li><a href="/account#available">Available cars</a></li>
+            <li><a href="/account#bookings">Car bookings</a></li>
+            <li class="admin-only"><a href="/account#report">Report</a></li>
+          </ul>
+          <button id="support-toggle" class="menu-item" type="button" aria-expanded="false" aria-controls="support-panel"><span>Support</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div id="support-panel" class="settings-panel" hidden>
+            <ul class="menu-list support-list">
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="#" id="open-message">Message</a></li>
+              <li><a href="mailto:info@thomastransfer.com">Email</a></li>
+            </ul>
+          </div>
+          <button id="settings-toggle" class="menu-item" type="button" aria-expanded="false" aria-controls="settings-panel"><span>Settings</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div id="settings-panel" class="settings-panel" hidden>
+          <button id="theme-toggle" class="tool-btn" type="button" aria-label="Dark mode"><svg class="ico-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="currentColor"/></svg><svg class="ico-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="tool-label">Dark mode</span></button>
+          <p class="menu-label">Language</p>
+          <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
+          </div>
+        </div>
+      </div>
+      <a class="logo" href="/">
+        <img class="logo-img" src="/assets/images/logo.png" alt="Thomas Transfer logo"> <span>Thomas Transfer</span>
+      </a>
+    </div>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="/"{% if page == 'home' %} aria-current="page"{% endif %}>Home</a></li>
+        <li><a href="/transport"{% if page == 'transport' %} aria-current="page"{% endif %}>Transport</a></li>
+        <li><a href="/tours"{% if page == 'tours' %} aria-current="page"{% endif %}>Tour packages</a></li>
+        <li><a href="/cars"{% if page == 'cars' %} aria-current="page"{% endif %}>Car rental</a></li>
+        <li><a href="/contact"{% if page == 'contact' %} aria-current="page"{% endif %}>Contact</a></li>
+        <li><a href="/pay"{% if page == 'pay' %} aria-current="page"{% endif %}>Pay online</a></li>
+      </ul>
+      <a class="nav-wa" href="https://wa.me/250783882549" target="_blank" rel="noopener" aria-label="WhatsApp 0783882549"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg><span>0783882549</span></a>
+      <a class="nav-book" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
+    </nav>
+  </div>
+</header>

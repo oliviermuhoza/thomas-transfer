@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- ================= LIST OF CARS ================= -->
+<section id="car-list" class="page">
+  <div class="container">
+    <h2>List of cars</h2>
+    <p class="lead">All our vehicles and whether they are free now.</p>
+    <div class="table-wrap"><table class="data" id="car-table"></table></div>
+    <p id="car-list-status" class="status" role="status"></p>
+  </div>
+</section>
+
+<!-- ================= AVAILABLE CARS + BOOKING ================= -->
+<section id="available" class="page">
+  <div class="container">
+    <h2>Available cars</h2>
+    <p class="lead">Pick a car that is free now and send your booking.</p>
+    <div class="auth-in">
+      <form id="booking-form" class="form-box wide">
+        <h3>Book a car</h3>
+        <label for="bk-car">Car</label>
+        <select id="bk-car" required></select>
+        <div class="row">
+          <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" required></div>
+          <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" required></div>
+        </div>
+        <div class="row">
+          <div><label for="bk-when">Date and time</label><input id="bk-when" type="datetime-local" required></div>
+          <div><label for="bk-pax">Passengers</label><input id="bk-pax" type="number" min="1" max="60" value="1" required></div>
+        </div>
+        <label for="bk-notes">Notes (optional)</label>
+        <textarea id="bk-notes" maxlength="500" style="min-height:80px"></textarea>
+        <button class="btn" type="submit">Book now</button>
+        <p id="booking-status" class="status" role="status"></p>
+      </form>
+    </div>
+    <div class="auth-out form-box login-note">
+      <p>Please login to book a car.</p>
+      <a class="btn" href="#login">Login</a>
+    </div>
+    <div class="cars" id="available-cars"></div>
+    <p id="available-empty" class="status" role="status"></p>
+  </div>
+</section>
+
+<!-- ================= CAR BOOKINGS ================= -->
+<section id="bookings" class="page">
+  <div class="container">
+    <h2>Car bookings</h2>
+    <p class="lead not-admin">Your bookings and their status.</p>
+    <p class="lead admin-only">All bookings from customers.</p>
+    <div class="auth-in">
+      <div class="table-wrap"><table class="data" id="booking-table"></table></div>
+      <p id="bookings-status" class="status" role="status"></p>
+    </div>
+    <div class="auth-out form-box login-note">
+      <p>Please login to see your bookings.</p>
+      <a class="btn" href="#login">Login</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REPORT (admin only) ================= -->
+<section id="report" class="page">
+  <div class="container">
+    <h2>Report</h2>
+    <div class="not-admin form-box login-note"><p>This page is for the admin only.</p></div>
+    <div class="admin-only">
+      <p class="lead">A summary of cars, bookings, accounts and comments.</p>
+      <div class="tiles" id="report-tiles"></div>
+      <div class="two">
+        <div><h3>Bookings by status</h3><div class="table-wrap"><table class="data" id="report-status"></table></div></div>
+        <div><h3>Bookings per car</h3><div class="table-wrap"><table class="data" id="report-cars"></table></div></div>
+      </div>
+      <p style="text-align:center;margin-top:24px"><button class="btn" type="button" id="print-report">Print report</button></p>
+      <p id="report-msg" class="status" role="status"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" class="page">
+  <div class="container">
+    <h2>Login</h2>
+    <p class="lead">Sign in to your Thomas Transfer account.</p>
+    <div class="layout3 narrow">
+      <aside class="side left" aria-label="Why Thomas Transfer">
+        <h3>Why Thomas Transfer</h3>
+        <ul class="side-points"><li>On-time pickups</li><li>Fixed prices, no hidden fees</li><li>Licensed and insured drivers</li><li>Open 24 hours, every day</li></ul>
+      </aside>
+      <form id="login-form" class="form-box">
+        <label for="l-email">Email</label>
+        <input id="l-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <label for="l-pass">Password</label>
+        <input id="l-pass" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+        <button class="btn" type="submit">Login</button>
+        <p id="login-status" class="status" role="status"></p>
+        <p class="hint">Don't have an account yet?</p>
+        <a class="btn outline" href="#create-account">Create account</a>
+      </form>
+      <aside class="side right" aria-label="Travel with confidence">
+        <h3>Travel with confidence</h3>
+        <p class="side-quote">Every good journey starts with a good ride.</p>
+        <ul class="side-list">
+          <li><span>Airport transfers</span>We track your flight, so your driver is waiting.</li>
+          <li><span>City rides</span>You see the price before you confirm.</li>
+          <li><span>Group travel</span>Larger vehicles for tours, weddings and events.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CREATE ACCOUNT ================= -->
+<section id="create-account" class="page">
+  <div class="container">
+    <h2>Create account</h2>
+    <p class="lead">It takes one minute. Then you can log in any time.</p>
+    <form id="register-form" class="form-box wide">
+      <div class="row">
+        <div><label for="c-first">First name</label><input id="c-first" type="text" maxlength="50" autocomplete="given-name" required></div>
+        <div><label for="c-last">Last name</label><input id="c-last" type="text" maxlength="50" autocomplete="family-name" required></div>
+      </div>
+      <label for="c-email">Email</label>
+      <input id="c-email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" required>
+      <label for="c-phone">Phone number</label>
+      <input id="c-phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+250 ...">
+      <div class="row">
+        <div><label for="c-pass">Password</label><input id="c-pass" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
+        <div><label for="c-pass2">Confirm password</label><input id="c-pass2" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
+      </div>
+      <p class="hint">Use at least 8 characters.</p>
+      <button class="btn" type="submit">Create account</button>
+      <p id="register-status" class="status" role="status"></p>
+      <p class="hint">Already have an account? <a href="#login">Login</a></p>
+    </form>
+  </div>
+</section>
+
+<!-- ================= LOGOUT ================= -->
+<section id="logout" class="page">
+  <div class="container">
+    <div class="notice">
+      <div class="tick">&#10003;</div>
+      <h2>You are logged out</h2>
+      <p class="lead" style="margin:0 auto 22px">Thanks for travelling with Thomas Transfer. Your account is safe.</p>
+      <a class="btn" href="#login">Login again</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/js/dashboard.js"></script>
+<script src="/js/auth-forms.js"></script>
+{% endblock %}

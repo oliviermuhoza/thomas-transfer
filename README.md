@@ -1,1 +1,194 @@
-# thomas-transfer
+# Thomas Transfer
+
+Marketing and booking website for Thomas Transfer, a transport and car-rental
+business in Kigali, Rwanda.
+
+The front end is plain HTML, CSS and JavaScript with no build step. It lives in
+`web/` and is served by a small Flask backend that also provides the JSON API
+under `/api/*` and stores accounts, cars, bookings, comments and messages in
+SQLite.
+
+## Structure
+
+```
+.
+├── backend/                    # All server-side code lives here
+│   ├── __init__.py
+│   ├── app.py                  # Flask app: API routes + static file serving
+│   ├── db.py                   # SQLite connection, schema setup, seed data
+│   ├── schema.sql              # Tables for users, cars, bookings, comments, messages
+│   ├── requirements.txt        # Runtime dependency (Flask)
+│   ├── requirements-dev.txt    # Adds pytest
+│   ├── data/                   # Created at runtime; holds the database
+│   └── tests/
+│       ├── conftest.py         # Keeps tests away from the development database
+│       └── test_api.py         # API, auth, booking and report tests
+├── web/                        # Static site served by Flask
+│   ├── index.html              # Page markup (styles and scripts are external)
+│   ├── css/
+│   │   └── styles.css          # Theme tokens, components, responsive rules
+│   ├── js/
+│   │   ├── theme-init.js       # Applies the saved theme before paint (head)
+│   │   ├── i18n.js             # EN/RW dictionary, language + theme toggle
+│   │   ├── menu.js             # Three-dots menu and panels
+│   │   ├── dashboard.js        # Cars, available cars, bookings, report
+│   │   ├── search.js           # Navbar search (cars + pages)
+│   │   ├── faq.js              # FAQ open/close buttons
+│   │   ├── home-cards.js       # Home photo cards reuse fleet images
+│   │   ├── comment.js          # Comment form -> POST /api/comment
+│   │   ├── pay-fares.js        # Fixed-fare payment buttons
+│   │   ├── pay-custom.js       # Custom-amount payment form
+│   │   ├── auth.js             # Login, register, logout, session state
+│   │   └── support.js          # Support message dialog -> POST /api/contact
+│   └── assets/
+│       ├── images/             # Page, fleet and brand images
+│       │   ├── cars/           # Fleet photos (01-08)
+│       │   └── logo.png
+│       └── video/
+│           └── kigali.mp4      # Home hero video
+└── archive/
+    ├── thomas-transfer-v1.html            # Original single-file version
+    └── thomas-transfer-v1.mangled.bak.html # Older damaged backup
+```
+
+The `archive/` files are reference copies only. They are not linked from the
+site, are not served by Flask, and their asset paths still point at the old flat
+layout.
+
+## Running locally
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+python -m backend.app
+```
+
+Then open <http://127.0.0.1:5000/>.
+
+On the first start the backend creates `backend/data/thomas.db`, adds the eight
+cars from the fleet page and creates one admin account. Set the admin
+credentials before that first start if you want to choose them:
+
+```powershell
+$env:TT_ADMIN_EMAIL = 'you@example.com'
+$env:TT_ADMIN_PASSWORD = 'a-long-password'
+python -m backend.app
+```
+
+If `TT_ADMIN_PASSWORD` is not set, a random password is generated and printed
+to the terminal once. You can also start with Flask's CLI:
+
+```powershell
+flask --app backend.app run
+```
+
+## Database
+
+SQLite, using Python's built-in `sqlite3` module (no ORM). The default file is
+`backend/data/thomas.db`; the `backend/data/` directory is ignored by git. The
+schema in `backend/schema.sql` is applied automatically on startup and is safe
+to run repeatedly.
+
+| Table | Holds |
+| --- | --- |
+| `users` | Accounts, password hashes, admin flag |
+| `cars` | Fleet entries, status (`available`, `booked`, `maintenance`) |
+| `bookings` | Customer bookings and their status |
+| `comments` | Private feedback with a 1–5 rating |
+| `messages` | Support and contact messages |
+
+The car seed in `backend/db.py` mirrors the eight cards in the static fleet
+markup. If you add or rename a vehicle on the page, update the seed (or edit the
+`cars` table) so the "List of cars" and "Available cars" pages match.
+
+Booking rules enforced by the API:
+
+- A booking starts as `pending` and puts the car in `booked`.
+- Only an admin can move it to `confirmed` or `completed`; a customer can only
+  cancel their own pending or confirmed booking.
+- Cancelling or completing a booking returns the car to `available`.
+- A car in `maintenance` or already `booked` cannot be booked.
+- Deleting `backend/data/thomas.db` resets everything; the next start reseeds
+  the cars and creates a new admin account.
+
+## Configuration
+
+Environment variables, all optional:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SECRET_KEY` | generated in `backend/data/secret_key` | Signs session cookies |
+| `TT_DATABASE` | `backend/data/thomas.db` | SQLite file path |
+| `TT_ADMIN_EMAIL` | `admin@thomastransfer.com` | Seeded admin email |
+| `TT_ADMIN_PASSWORD` | generated, printed once | Seeded admin password |
+| `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
+| `TT_PORT` | `5000` | Port used by `python -m backend.app` |
+| `TT_DEBUG` | off | Set to `1` for Flask debug mode |
+| `TT_COOKIE_SECURE` | off | Set to `1` when served over HTTPS |
+
+Sessions are signed cookies (`HttpOnly`, `SameSite=Lax`), passwords are stored
+with Werkzeug's PBKDF2 hash, and every query uses parameters. The API accepts
+JSON only and is intended to be served from the same origin as the pages.
+
+## Testing
+
+```powershell
+pip install -r backend/requirements-dev.txt
+python -m pytest
+```
+
+The tests use a temporary database and cover registration/login, permissions,
+the booking lifecycle, car status rules, comments, contact messages and the
+admin report.
+
+## Runtime notes
+
+- **Page routing** uses URL hashes and CSS `:target`; `#home` is the default.
+- **Script order matters.** `i18n.js` defines the global `T()` translation
+  helper, and `dashboard.js` defines `window.ttPages`. Both are used by later
+  scripts, so keep the order in `index.html`.
+- **Translations** are keyed by the exact English text in the markup. If you
+  edit visible copy, update the matching key in `js/i18n.js`.
+- **Fonts:** `web/index.html` loads Google Sans (400/500/700) from Google
+  Fonts. `--font-sans` and `--font-heading` in `styles.css` use Google Sans with
+  the generic `sans-serif` fallback.
+- **Theme and language** are stored in `localStorage` under `tt-theme` and
+  `tt-lang`.
+- **Contact details** (`0783882549`, `wa.me/250783882549`) are repeated inline
+  in the markup and a few scripts.
+- **Payments** are not processed by the backend. The pay buttons in
+  `js/pay-fares.js` and `js/pay-custom.js` open Flutterwave links when they are
+  filled in, otherwise WhatsApp.
+
+## API endpoints
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/me` | Current session user (`{user: null}` when signed out) |
+| POST | `/api/login` | Sign in |
+| POST | `/api/logout` | Sign out |
+| POST | `/api/register` | Create account |
+| GET | `/api/cars` | Fleet list; `?available=1` filters free cars |
+| POST | `/api/cars/:id/status` | Set car status (admin) |
+| GET | `/api/bookings` | Bookings (own, or all for admin) |
+| POST | `/api/bookings` | Create a booking |
+| POST | `/api/bookings/:id/status` | Change booking status |
+| GET | `/api/report` | Admin summary |
+| POST | `/api/comment` | Submit a private comment |
+| POST | `/api/contact` | Contact / support message |
+
+## Deploying
+
+Point any WSGI server at `backend.app:app`. For example, on Windows with
+Waitress:
+
+```powershell
+pip install waitress
+waitress-serve --listen=0.0.0.0:8000 backend.app:app
+```
+
+On Linux, `gunicorn -w 2 -b 0.0.0.0:8000 backend.app:app` works the same way.
+Put the site behind HTTPS, set `TT_COOKIE_SECURE=1`, and keep `backend/data/` on
+a persistent disk (or set `TT_DATABASE` to a writable path outside the
+deployment folder). Back up the SQLite file regularly.
