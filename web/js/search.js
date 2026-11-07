@@ -2,9 +2,9 @@
 (function () {
   var form = document.getElementById('site-search'), input = document.getElementById('search-input'), list = document.getElementById('search-results');
   if (!form || !input || !list) { return; }
-  var PAGES = [['Home', '#home'], ['Cars', '#cars'], ['Transport', '#transport'], ['Tour packages', '#tours'],
-               ['Car rental', '#available'], ['Pay online', '#pay'], ['List of cars', '#car-list'], ['Available cars', '#available'],
-                ['Car bookings', '#bookings'], ['Contact', '#contact'], ['Comment', '#comment'], ['Login', '#login'], ['Logout', '#logout']];
+  var PAGES = [['Home', '/'], ['Cars', '/cars'], ['Transport', '/transport'], ['Tour packages', '/tours'],
+               ['Car rental', '/account#available'], ['Pay online', '/pay'], ['List of cars', '/account#car-list'], ['Available cars', '/account#available'],
+                ['Car bookings', '/account#bookings'], ['Contact', '/contact'], ['Comment', '/comment'], ['Login', '/account#login'], ['Logout', '/account#logout']];
   var LABEL = {available: 'Available', booked: 'Booked', maintenance: 'Maintenance'};
   var cars = [], items = [], active = -1;
 
@@ -20,13 +20,17 @@
   }
   function show(open) { list.hidden = !open; input.setAttribute('aria-expanded', open ? 'true' : 'false'); }
   function go(target) {
-    if (location.hash === target) { if (window.ttPages) { window.ttPages.refresh(); } } else { location.hash = target; }
+    var current = location.pathname + location.hash;
+    if (target.charAt(0) === '#') { target = '/account' + target; }
+    if (current === target) { if (window.ttPages) { window.ttPages.refresh(); } }
+    else { location.assign(target); }
   }
   function choose(item) {
     input.value = ''; show(false); input.blur();
     if (item.car) {
       window.ttSelectedCar = item.car.id;
-      go(item.car.status === 'available' ? '#available' : '#car-list');
+      try { sessionStorage.setItem('tt-selected-car', String(item.car.id)); } catch (e) {}
+      go(item.car.status === 'available' ? '/account#available' : '/account#car-list');
     } else { go(item.href); }
   }
   function setActive(n) {
@@ -49,9 +53,9 @@
     var body = document.body, admin = body.classList.contains('is-admin'), logged = body.classList.contains('logged-in');
 
     var carHits = cars.filter(function (c) { return low(c.name + ' ' + c.type + ' ' + c.description + ' ' + T(c.type) + ' ' + T(c.description)).indexOf(q) > -1; }).slice(0, 6);
-    var pages = PAGES.concat(admin ? [['Report', '#report']] : []).filter(function (p) {
-      if (p[1] === '#login' && logged) { return false; }
-      if (p[1] === '#logout' && !logged) { return false; }
+    var pages = PAGES.concat(admin ? [['Report', '/account#report']] : []).filter(function (p) {
+      if (p[1] === '/account#login' && logged) { return false; }
+      if (p[1] === '/account#logout' && !logged) { return false; }
       return low(p[0] + ' ' + T(p[0])).indexOf(q) > -1;
     });
 

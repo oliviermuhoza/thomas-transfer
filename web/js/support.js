@@ -2,7 +2,9 @@
 (function () {
   var dlg = document.getElementById('msg-dialog'), form = document.getElementById('support-form');
   var status = document.getElementById('support-status');
-  document.getElementById('open-message').addEventListener('click', function (e) {
+  var openBtn = document.getElementById('open-message');
+  if (!dlg || !form || !status || !openBtn) { return; }
+  openBtn.addEventListener('click', function (e) {
     e.preventDefault(); status.className = 'status'; status.textContent = '';
     document.body.classList.add('msg-open');
     if (dlg.showModal) { dlg.showModal(); } else { dlg.setAttribute('open', ''); }

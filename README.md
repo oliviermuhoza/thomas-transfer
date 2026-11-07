@@ -4,9 +4,9 @@ Marketing and booking website for Thomas Transfer, a transport and car-rental
 business in Kigali, Rwanda.
 
 The front end is plain HTML, CSS and JavaScript with no build step. It lives in
-`web/` and is served by a small Flask backend that also provides the JSON API
-under `/api/*` and stores accounts, cars, bookings, comments and messages in
-SQLite.
+`web/` (CSS/JS/assets only) and is served by a small Flask backend that also
+provides the JSON API under `/api/*` and stores accounts, cars, bookings,
+comments and messages in SQLite.
 
 ## Structure
 
@@ -15,30 +15,39 @@ SQLite.
 ├── backend/                    # All server-side code lives here
 │   ├── __init__.py
 │   ├── app.py                  # Flask app: API routes + static file serving
+│   ├── pages.py                # Page blueprint: marketing pages + /account + redirects
 │   ├── db.py                   # SQLite connection, schema setup, seed data
 │   ├── schema.sql              # Tables for users, cars, bookings, comments, messages
 │   ├── requirements.txt        # Runtime dependency (Flask)
 │   ├── requirements-dev.txt    # Adds pytest
 │   ├── data/                   # Created at runtime; holds the database
+│   ├── templates/              # Jinja templates
+│   │   ├── layout.html         # Shared head, header, footer, support dialog, scripts
+│   │   ├── partials/
+│   │   │   ├── header.html     # Logo, nav, search, menu, support, settings
+│   │   │   ├── footer.html
+│   │   │   └── support-dialog.html
+│   │   ├── pages/              # home, transport, tours, cars, contact, pay, comment, account
+│   │   └── errors/404.html
 │   └── tests/
 │       ├── conftest.py         # Keeps tests away from the development database
-│       └── test_api.py         # API, auth, booking and report tests
-├── web/                        # Static site served by Flask
-│   ├── index.html              # Page markup (styles and scripts are external)
+│       ├── test_api.py         # API, auth, booking and report tests
+│       └── test_pages.py       # Page routes, redirects, nav state, 404
+├── web/                        # Static assets served by Flask
 │   ├── css/
 │   │   └── styles.css          # Theme tokens, components, responsive rules
 │   ├── js/
 │   │   ├── theme-init.js       # Applies the saved theme before paint (head)
+│   │   ├── legacy-hash.js      # Old #hash bookmarks -> real routes (client-side)
 │   │   ├── i18n.js             # EN/RW dictionary, language + theme toggle
-│   │   ├── menu.js             # Three-dots menu and panels
-│   │   ├── dashboard.js        # Cars, available cars, bookings, report
-│   │   ├── search.js           # Navbar search (cars + pages)
+│   │   ├── session.js          # /api/me, body classes, logout, selected car
+│   │   ├── dashboard.js        # Cars, available cars, bookings, report (account only)
+│   │   ├── search.js           # Navbar search (cars + pages, real URLs)
 │   │   ├── faq.js              # FAQ open/close buttons
-│   │   ├── home-cards.js       # Home photo cards reuse fleet images
 │   │   ├── comment.js          # Comment form -> POST /api/comment
 │   │   ├── pay-fares.js        # Fixed-fare payment buttons
 │   │   ├── pay-custom.js       # Custom-amount payment form
-│   │   ├── auth.js             # Login, register, logout, session state
+│   │   ├── auth-forms.js       # Login + register forms (account only)
 │   │   └── support.js          # Support message dialog -> POST /api/contact
 │   └── assets/
 │       ├── images/             # Page, fleet and brand images
@@ -47,13 +56,38 @@ SQLite.
 │       └── video/
 │           └── kigali.mp4      # Home hero video
 └── archive/
-    ├── thomas-transfer-v1.html            # Original single-file version
-    └── thomas-transfer-v1.mangled.bak.html # Older damaged backup
+    ├── thomas-transfer-v1.html           # Original single-file version
+    ├── thomas-transfer-v1.mangled.bak.html # Older damaged backup
+    └── thomas-transfer-spa.html          # Previous hash-routed single page
 ```
 
 The `archive/` files are reference copies only. They are not linked from the
 site, are not served by Flask, and their asset paths still point at the old flat
 layout.
+
+## Pages
+
+Marketing pages are Jinja templates with real URLs:
+
+| URL | Template |
+| --- | --- |
+| `/` | `pages/home.html` |
+| `/transport` | `pages/transport.html` |
+| `/tours` | `pages/tours.html` |
+| `/cars` | `pages/cars.html` |
+| `/contact` | `pages/contact.html` |
+| `/pay` | `pages/pay.html` |
+| `/comment` | `pages/comment.html` |
+| `/account` | `pages/account.html` (hash sections: `#car-list`, `#available`, `#bookings`, `#report`, `#login`, `#create-account`, `#logout`) |
+
+`/` and `/index.html` redirect to the template home page. Old bookmarks
+(`/login`, `/register`, `/car-list`, `/available`, `/bookings`, `/report`,
+`/logout`) are 302 redirects to the matching `/account#...` section, and
+`legacy-hash.js` maps old `/#hash` links to the new routes on the client
+(servers never see fragments).
+
+The nav marks the current page with `aria-current="page"` (set server-side),
+not CSS `:target`.
 
 ## Running locally
 
@@ -99,8 +133,9 @@ to run repeatedly.
 | `messages` | Support and contact messages |
 
 The car seed in `backend/db.py` mirrors the eight cards in the static fleet
-markup. If you add or rename a vehicle on the page, update the seed (or edit the
-`cars` table) so the "List of cars" and "Available cars" pages match.
+markup in `backend/templates/pages/cars.html`. If you add or rename a vehicle
+on the page, update the seed (or edit the `cars` table) so the "List of cars"
+and "Available cars" pages match.
 
 Booking rules enforced by the API:
 
@@ -135,24 +170,26 @@ JSON only and is intended to be served from the same origin as the pages.
 
 ```powershell
 pip install -r backend/requirements-dev.txt
-python -m pytest
+python -m pytest -q
 ```
 
 The tests use a temporary database and cover registration/login, permissions,
-the booking lifecycle, car status rules, comments, contact messages and the
-admin report.
+the booking lifecycle, car status rules, comments, contact messages, the
+admin report, page routes, redirects, nav state and 404 handling.
 
 ## Runtime notes
 
-- **Page routing** uses URL hashes and CSS `:target`; `#home` is the default.
-- **Script order matters.** `i18n.js` defines the global `T()` translation
-  helper, and `dashboard.js` defines `window.ttPages`. Both are used by later
-  scripts, so keep the order in `index.html`.
+- **Page routing** is real URLs rendered by Jinja; only the `/account` sections
+  still use URL hashes (`.page` rules are scoped to `body[data-page="account"]`).
+  `legacy-hash.js` redirects old `/#hash` bookmarks.
+- **Script order matters.** `legacy-hash.js` must run first in the head,
+  `i18n.js` defines the global `T()` translation helper, and `dashboard.js`
+  defines `window.ttPages`. Keep the order in `backend/templates/layout.html`.
 - **Translations** are keyed by the exact English text in the markup. If you
-  edit visible copy, update the matching key in `js/i18n.js`.
-- **Fonts:** `web/index.html` loads Google Sans (400/500/700) from Google
-  Fonts. `--font-sans` and `--font-heading` in `styles.css` use Google Sans with
-  the generic `sans-serif` fallback.
+  edit visible copy, update the matching key in `web/js/i18n.js`.
+- **Fonts:** `backend/templates/layout.html` loads Google Sans (400/500/700)
+  from Google Fonts. `--font-sans` and `--font-heading` in `styles.css` use
+  Google Sans with the generic `sans-serif` fallback.
 - **Theme and language** are stored in `localStorage` under `tt-theme` and
   `tt-lang`.
 - **Contact details** (`0783882549`, `wa.me/250783882549`) are repeated inline

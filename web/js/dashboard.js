@@ -69,6 +69,10 @@
     try { r = await api('/api/cars?available=1'); } catch (e) { r = {ok: false}; }
     if (!r.ok) { say(empty, 'bad', T(NOSERVER)); return; }
     var wanted = window.ttSelectedCar || sel.value;
+    try {
+      wanted = wanted || sessionStorage.getItem('tt-selected-car');
+      sessionStorage.removeItem('tt-selected-car');
+    } catch (e) {}
     clear(grid); clear(sel);
     var first = el('option', '', T('Car')); first.value = ''; sel.appendChild(first);
     r.data.forEach(function (c) {
@@ -178,14 +182,10 @@
   /* ---------- which page is open ---------- */
   function refresh() {
     var h = location.hash;
-    if (h === '#car-list') { loadCars(); } else if (h === '#available') { loadAvailable(); }
+    if (h === '#car-list') { loadCars(); } else if (h === '#available' || h === '') { loadAvailable(); }
     else if (h === '#bookings') { loadBookings(); } else if (h === '#report') { loadReport(); }
   }
   window.ttPages = {refresh: refresh};
   window.addEventListener('hashchange', refresh);
-  document.addEventListener('click', function (e) {
-    var a = e.target.closest ? e.target.closest('[data-book]') : null;
-    if (a) { window.ttSelectedCar = a.getAttribute('data-book'); }
-  });
   refresh();
 })();
