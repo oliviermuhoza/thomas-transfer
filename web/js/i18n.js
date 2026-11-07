@@ -447,6 +447,7 @@
  "Selected car": "Imodoka yahiswemo",
  "Selected": "Yahiswemo",
  "Change car": "Hindura imodoka",
+ "Close booking": "Funga ubusabe",
  "Booking panel": "Aho gutumiza",
  "Your trips and their status appear here after you sign in.": "Ingendo zawe n’uko zimeze bizagaragara hano nyuma yo kwinjira.",
  "Pick-up place": "Aho tugufatira",

@@ -44,6 +44,16 @@
     if (location.hash === '#logout') { logout(); }
   });
 
+  function updateAuthMode() {
+    var h = location.hash;
+    body.classList.toggle(
+      'auth-mode',
+      body.dataset.page === 'account' && (h === '#login' || h === '#create-account' || h === '#logout')
+    );
+  }
+  window.addEventListener('hashchange', updateAuthMode);
+  updateAuthMode();
+
   /* Remember a car chosen on a marketing page so /account#available can
      preselect it after the full page navigation. */
   document.addEventListener('click', function (e) {

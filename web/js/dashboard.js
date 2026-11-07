@@ -35,10 +35,43 @@
     var bodyEl = el('tbody'); table.appendChild(bodyEl); return bodyEl;
   }
   function cell(row, text, cls) { var td = el('td', cls || '', text); row.appendChild(td); return td; }
+  function skel(cls, w) {
+    var s = el('div', 'skel ' + (cls || ''));
+    if (w) { s.style.width = w; }
+    s.setAttribute('aria-hidden', 'true');
+    return s;
+  }
+  function skelCards(n) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var card = el('div', 'skel-card');
+      card.appendChild(skel('skel-img'));
+      var b = el('div', 'skel-body');
+      b.appendChild(skel('skel-line', '55%')); b.appendChild(skel('skel-line', '85%'));
+      b.appendChild(skel('skel-line', '40%'));
+      card.appendChild(b);
+      out.push(card);
+    }
+    return out;
+  }
+  function skelRows(tableId, n) {
+    var table = $(tableId);
+    if (!table) { return; }
+    clear(table);
+    var tb = el('tbody');
+    for (var i = 0; i < n; i++) {
+      var tr = el('tr');
+      for (var j = 0; j < 4; j++) { tr.appendChild(el('td')).appendChild(skel('skel-line', j === 0 ? '56px' : '70%')); }
+      tb.appendChild(tr);
+    }
+    table.appendChild(tb);
+  }
 
   /* ---------- List of cars ---------- */
   async function loadCars() {
     var st = $('car-list-status');
+    say(st, '', T('Loading...'));
+    skelRows('car-table', 5);
     var r;
     try { r = await api('/api/cars'); } catch (e) { r = {ok: false}; }
     if (!r.ok) { say(st, 'bad', T(NOSERVER)); return; }
@@ -144,6 +177,9 @@
     markSelected(selectedId);
     $('booking-intro').hidden = true;
     $('booking-form-wrap').hidden = false;
+    var layout = document.querySelector('.booking-layout');
+    if (layout) { layout.classList.add('has-sheet'); }
+    if ($('sheet-backdrop')) { $('sheet-backdrop').hidden = mobilePanel(); }
     placePanel(document.querySelector('#available-cars .car-card[data-car-id="' + selectedId + '"]'));
 
     if (opts.focus) {
@@ -160,6 +196,7 @@
 
   function closePanel(opts) {
     opts = opts || {};
+    var previous = selectedId;
     selectedId = null;
     $('bk-car').value = '';
     renderSummary(null);
@@ -167,10 +204,17 @@
     var wrap = $('booking-form-wrap'), intro = $('booking-intro');
     if (wrap) { wrap.hidden = true; }
     if (intro) { intro.hidden = false; }
+    var layout = document.querySelector('.booking-layout');
+    if (layout) { layout.classList.remove('has-sheet'); }
+    if ($('sheet-backdrop')) { $('sheet-backdrop').hidden = true; }
     resetPanelPosition();
     if (opts.focusGrid) {
       var grid = $('available-cars');
       if (grid) { grid.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+    }
+    if (opts.restoreFocus && previous !== null) {
+      var back = document.querySelector('#available-cars [data-book-id="' + previous + '"]');
+      if (back) { back.focus(); }
     }
   }
 
@@ -215,13 +259,6 @@
     book.setAttribute('data-book-id', String(c.id));
     book.setAttribute('aria-pressed', 'false');
     book.addEventListener('click', function () {
-      if (!body.classList.contains('logged-in')) {
-        /* Keep the choice across the login round-trip. */
-        window.ttSelectedCar = String(c.id);
-        try { sessionStorage.setItem('tt-selected-car', String(c.id)); } catch (e) {}
-        location.hash = '#login';
-        return;
-      }
       openPanel(c, {focus: true});
     });
     foot.appendChild(book);
@@ -233,6 +270,9 @@
   async function loadAvailable() {
     var grid = $('available-cars'), empty = $('available-empty');
     var seq = ++loadSeq;
+    clear(grid);
+    skelCards(6).forEach(function (c) { grid.appendChild(c); });
+    say(empty, '', T('Loading...'));
     var r;
     try { r = await api('/api/cars?available=1'); } catch (e) { r = {ok: false}; }
     if (seq !== loadSeq) { return; }
@@ -253,10 +293,10 @@
       grid.appendChild(renderCarCard(c));
     });
 
-    if (wanted && body.classList.contains('logged-in') && carsById[String(wanted)]) {
+    if (wanted && carsById[String(wanted)]) {
       openPanel(carsById[String(wanted)], {focus: true});
       try { sessionStorage.removeItem('tt-selected-car'); } catch (e) {}
-    } else if (wanted && body.classList.contains('logged-in')) {
+    } else if (wanted) {
       try { sessionStorage.removeItem('tt-selected-car'); } catch (e) {}
     }
 
@@ -265,7 +305,7 @@
 
   (function setupBookingForm() {
     var form = $('booking-form'), when = $('bk-when');
-    var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); when.min = d.toISOString().slice(0, 16);
+    if (!form || !when) { return; }
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var st = $('booking-status'), btn = form.querySelector('button[type="submit"]');
@@ -283,9 +323,23 @@
             location.hash = '#bookings';
             st.textContent = '';
           }, 1400);
+        } else if (r.status === 401) {
+          window.ttSelectedCar = $('bk-car').value || selectedId;
+          try { sessionStorage.setItem('tt-selected-car', $('bk-car').value || selectedId); } catch (e) {}
+          say(st, 'bad', T('Please login to send your booking.'));
+          setTimeout(function () { location.hash = '#login'; }, 1200);
         } else { say(st, 'bad', T(r.data && r.data.error) || T('Please fill in all the fields.')); }
       } catch (err) { say(st, 'bad', T(NOSERVER)); }
       btn.disabled = false;
+    });
+  })();
+
+  (function setupSheetDismiss() {
+    function dismiss() { if (selectedId !== null) { closePanel({restoreFocus: true}); } }
+    $('sheet-close').addEventListener('click', dismiss);
+    $('sheet-backdrop').addEventListener('click', dismiss);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { dismiss(); }
     });
   })();
 
@@ -297,6 +351,8 @@
   /* ---------- Car bookings ---------- */
   async function loadBookings() {
     var st = $('bookings-status'), r;
+    say(st, '', T('Loading...'));
+    skelRows('booking-table', 4);
     try { r = await api('/api/bookings'); } catch (e) { return; }
     if (r.status === 401) { return; }            /* the "please login" note is shown instead */
     if (!r.ok) { say(st, 'bad', T((r.data && r.data.error) || NOSERVER)); return; }
