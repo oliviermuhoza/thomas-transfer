@@ -78,6 +78,8 @@ nav a.nav-wa{display:flex;align-items:center;gap:6px;background:#25d366;color:#0
 nav a.nav-wa:hover{background:#1ebe5b;color:#0b2a17}
 nav a.nav-wa svg{width:17px;height:17px;flex:none;display:block}
 nav a.nav-wa span{display:none}
+nav a.nav-login{background:transparent;color:var(--white);border:2px solid var(--line);padding:8px 16px;border-radius:7px;font-weight:700;font-size:.9rem;white-space:nowrap;transition:border-color .2s ease,color .2s ease}
+nav a.nav-login:hover{border-color:var(--yellow);color:var(--yellow)}
 nav a.nav-book{background:var(--yellow);color:#0B0B0C;padding:10px 16px;border-radius:7px;font-weight:800;font-size:.9rem;white-space:nowrap;
   box-shadow:0 4px 12px rgba(198,244,50,.32);transition:background .2s,transform .2s;min-height:44px;display:inline-flex;align-items:center}
 nav a.nav-book:hover{background:var(--yellow-dark);color:#FFFFFF;transform:translateY(-1px)}
