@@ -93,7 +93,7 @@ def test_register_login_logout(client):
     assert register(client, email="short@example.com", password="123").status_code == 400
     assert register(client, email="not-an-email").status_code == 400
 
-    client.post("/api/logout")
+    assert client.post("/api/logout", json={}).status_code == 200
     assert client.get("/api/me").get_json() == {"user": None}
 
     assert login(client, "jane@example.com", "wrong-password").status_code == 401

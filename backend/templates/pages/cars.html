@@ -21,166 +21,38 @@
       <p>Every vehicle is serviced, insured and delivered clean with a full tank agreement. Rent self-drive or add one of our professional drivers.</p>
     </div>
     <div class="cars">
+      {% for card in cars %}
       <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/01-toyota-corolla-hybrid.jpg" alt="Toyota Corolla Hybrid" loading="lazy">
+        <img class="car-photo" src="{{ card.image }}" alt="{{ card.name }}" loading="lazy">
         <div class="car-info">
-          <span class="car-badge">Economy sedan</span>
-          <h3>Toyota Corolla Hybrid</h3>
-          <p>Economical and comfortable for city rides and airport trips.</p>
+          <span class="car-badge">{{ card.type }}</span>
+          <h3>{{ card.name }}</h3>
+          <p>{{ card.description }}</p>
+          {% if card.specs %}
           <ul class="car-specs">
-            <li>5 seats · A/C · Hybrid</li>
-            <li>Excellent fuel economy</li>
+            {% for spec in card.specs %}
+            <li>{{ spec }}</li>
+            {% endfor %}
           </ul>
+          {% endif %}
           <div class="car-foot">
+            {% if card.price %}
             <div class="car-rate">
-              <span class="rate-price">45,000 RWF</span>
+              <span class="rate-price">{{ card.price }}</span>
               <span class="rate-per">Per day</span>
-              <span class="rate-week">31,500 RWF/day from 7 days</span>
+              <span class="rate-week">{{ card.week }}</span>
             </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%201." target="_blank" rel="noopener" data-book="1">Reserve</a>
+            {% else %}
+            <div class="car-rate">
+              <span class="rate-price">Ask for a quote</span>
+              <span class="rate-per">Per day</span>
+            </div>
+            {% endif %}
+            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%20{{ card.id }}." target="_blank" rel="noopener" data-book="{{ card.id }}">Reserve</a>
           </div>
         </div>
       </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/02-toyota-land-cruiser.jpg" alt="Toyota Land Cruiser" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Large SUV</span>
-          <h3>Toyota Land Cruiser</h3>
-          <p>Strong and spacious for long distance and rough roads.</p>
-          <ul class="car-specs">
-            <li>7 seats · 4×4 · A/C</li>
-            <li>Built for rough roads</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">70,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">49,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%202." target="_blank" rel="noopener" data-book="2">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/03-toyota-rav4.jpg" alt="Toyota RAV4" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Compact SUV</span>
-          <h3>Toyota RAV4</h3>
-          <p>Modern, smooth and good for small families.</p>
-          <ul class="car-specs">
-            <li>4–5 seats · AWD · A/C</li>
-            <li>Great fuel economy</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">50,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">35,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%203." target="_blank" rel="noopener" data-book="3">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/04-mercedes-benz-g-class.jpg" alt="Mercedes-Benz G-Class" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Luxury SUV</span>
-          <h3>Mercedes-Benz G-Class</h3>
-          <p>A premium ride for special occasions and VIP guests.</p>
-          <ul class="car-specs">
-            <li>5 seats · AWD · A/C</li>
-            <li>VIP comfort and presence</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">150,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">105,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%204." target="_blank" rel="noopener" data-book="4">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/05-volkswagen-transporter.jpg" alt="Volkswagen Transporter" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Van</span>
-          <h3>Volkswagen Transporter</h3>
-          <p>Roomy and comfortable for groups with luggage.</p>
-          <ul class="car-specs">
-            <li>8–9 seats · A/C · large boot</li>
-            <li>Roomy for groups and luggage</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">120,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">84,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%205." target="_blank" rel="noopener" data-book="5">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/06-mercedes-amg-gle-coupe.jpg" alt="Mercedes-AMG GLE Coupe" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Luxury SUV</span>
-          <h3>Mercedes-AMG GLE Coupe</h3>
-          <p>A fast, stylish ride for executive travel.</p>
-          <ul class="car-specs">
-            <li>5 seats · AWD · A/C</li>
-            <li>Executive style and speed</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">150,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">105,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%206." target="_blank" rel="noopener" data-book="6">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/07-toyota-land-cruiser-prado-black.jpg" alt="Toyota Land Cruiser Prado, black" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Mid-size SUV</span>
-          <h3>Toyota Land Cruiser Prado, black</h3>
-          <p>A reliable all-round vehicle for family and business trips.</p>
-          <ul class="car-specs">
-            <li>7 seats · AWD · A/C</li>
-            <li>Family and business trips</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">70,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">49,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%207." target="_blank" rel="noopener" data-book="7">Reserve</a>
-          </div>
-        </div>
-      </div>
-      <div class="car-card">
-        <img class="car-photo" src="/assets/images/cars/08-toyota-land-cruiser-prado-rear.jpg" alt="Toyota Land Cruiser Prado, black (rear view)" loading="lazy">
-        <div class="car-info">
-          <span class="car-badge">Mid-size SUV</span>
-          <h3>Toyota Land Cruiser Prado, black (rear view)</h3>
-          <p>Large luggage space and comfortable seating.</p>
-          <ul class="car-specs">
-            <li>7 seats · large luggage space</li>
-            <li>Comfortable seating</li>
-          </ul>
-          <div class="car-foot">
-            <div class="car-rate">
-              <span class="rate-price">70,000 RWF</span>
-              <span class="rate-per">Per day</span>
-              <span class="rate-week">49,000 RWF/day from 7 days</span>
-            </div>
-            <a class="reserve-btn" href="https://wa.me/250783882549?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20reserve%20car%208." target="_blank" rel="noopener" data-book="8">Reserve</a>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </div>
     <div class="rent-steps">
       <p class="eyebrow">Simple terms</p>

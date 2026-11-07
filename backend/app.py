@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 
 from flask import (
     Flask,
+    current_app,
     g,
     jsonify,
     redirect,
@@ -42,6 +43,7 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+PHONE_RE = re.compile(r"^\+?[0-9][0-9\s().-]{6,28}[0-9]$")
 CAR_STATUSES = {"available", "maintenance"}
 BOOKING_STATUSES = {"pending", "confirmed", "completed", "cancelled"}
 BOOKING_TRANSITIONS = {
@@ -50,6 +52,8 @@ BOOKING_TRANSITIONS = {
     "completed": set(),
     "cancelled": set(),
 }
+# Seeded fleet order/capacities (no schema column); used for booking validation.
+CAR_CAPACITIES = {1: 4, 2: 7, 3: 5, 4: 5, 5: 8, 6: 5, 7: 7, 8: 7}
 
 
 def create_app(database=None, secret_key=None, admin_password=None):
@@ -220,6 +224,15 @@ def text_value(data, key, max_length):
     return "" if value is None else str(value).strip()[:max_length]
 
 
+def valid_phone(phone):
+    phone = (phone or "").strip()
+    return not phone or bool(PHONE_RE.match(phone))
+
+
+def car_capacity(car):
+    return CAR_CAPACITIES.get(car["id"], 60)
+
+
 def current_user():
     user_id = session.get("user_id")
     if not user_id:
@@ -270,7 +283,7 @@ def parse_trip_at(raw):
     except ValueError:
         return None, "Please choose a valid date and time."
     if moment.tzinfo is not None:
-        moment = moment.replace(tzinfo=None)
+        return None, "Please choose a local date and time."
     if moment < datetime.now() - timedelta(minutes=5):
         return None, "Please choose a date and time in the future."
     return moment.isoformat(timespec="minutes"), None
@@ -336,6 +349,8 @@ def register_routes(app):
             return error("Please fill in all the fields.", 400)
         if not EMAIL_RE.match(email):
             return error("Please enter a valid email address.", 400)
+        if not valid_phone(phone):
+            return error("Please enter a valid phone number.", 400)
         if len(password) < 8:
             return error("Use at least 8 characters for the password.", 400)
 
@@ -452,6 +467,8 @@ def register_routes(app):
 
         if not pickup or not dropoff:
             return error("Please fill in all the fields.", 400)
+        if pickup.casefold() == dropoff.casefold():
+            return error("Pick-up and drop-off places must be different.", 400)
         if not 1 <= passengers <= 60:
             return error("Passengers must be between 1 and 60.", 400)
 
@@ -465,6 +482,9 @@ def register_routes(app):
             return error("This car does not exist.", 404)
         if car["status"] != "available":
             return error("This car is not available. Please choose another car.", 409)
+        capacity = car_capacity(car)
+        if passengers > capacity:
+            return error(f"This car can take up to {capacity} passengers.", 400)
 
         taken = db.execute(
             "UPDATE cars SET status = 'booked' WHERE id = ? AND status = 'available'",
@@ -588,6 +608,8 @@ def register_routes(app):
 
     @app.post("/api/comment")
     def comment():
+        if _rate_limited("public_write", limit=20, window_seconds=600):
+            return error("Too many attempts. Please try again later.", 429)
         data = body()
         name = text_value(data, "name", 100)
         text = text_value(data, "text", 2000)
@@ -598,7 +620,10 @@ def register_routes(app):
         if rating is None:
             return error("Please choose a rating.", 400)
 
-        user = current_user()
+        try:
+            user = current_user()
+        except Exception:
+            user = None
         db = get_db()
         db.execute(
             "INSERT INTO comments (user_id, name, rating, text) VALUES (?, ?, ?, ?)",
@@ -609,6 +634,8 @@ def register_routes(app):
 
     @app.post("/api/contact")
     def contact():
+        if _rate_limited("public_write", limit=20, window_seconds=600):
+            return error("Too many attempts. Please try again later.", 429)
         data = body()
         name = text_value(data, "name", 100)
         email = text_value(data, "email", 150).lower()
@@ -620,6 +647,8 @@ def register_routes(app):
             return error("Please fill in your name, email and message.", 400)
         if not EMAIL_RE.match(email):
             return error("Please enter a valid email address.", 400)
+        if not valid_phone(phone):
+            return error("Please enter a valid phone number.", 400)
 
         db = get_db()
         db.execute(

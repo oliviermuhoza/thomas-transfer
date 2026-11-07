@@ -8,6 +8,11 @@ all of their forms and tables to exist on one page.
 
 from flask import Blueprint, redirect, render_template
 
+try:
+    from .db import get_db
+except ImportError:  # pragma: no cover
+    from backend.db import get_db
+
 pages = Blueprint("pages", __name__)
 
 PAGE_META = {
@@ -54,14 +59,29 @@ PAGE_META = {
 }
 
 
-def render_page(name):
+def render_page(name, **extra):
     title, description = PAGE_META[name]
     return render_template(
         f"pages/{name}.html",
         page=name,
         page_title=title,
         page_description=description,
+        **extra,
     )
+
+
+# Display-only extras for the fleet page (prices/specs are not in the DB):
+# the car list itself always comes from the `cars` table.
+CAR_DISPLAY = {
+    1: {"specs": ["5 seats · A/C · Hybrid", "Excellent fuel economy"], "price": "45,000 RWF", "week": "31,500 RWF/day from 7 days"},
+    2: {"specs": ["7 seats · 4×4 · A/C", "Built for rough roads"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
+    3: {"specs": ["4–5 seats · AWD · A/C", "Great fuel economy"], "price": "50,000 RWF", "week": "35,000 RWF/day from 7 days"},
+    4: {"specs": ["5 seats · AWD · A/C", "VIP comfort and presence"], "price": "150,000 RWF", "week": "105,000 RWF/day from 7 days"},
+    5: {"specs": ["8–9 seats · A/C · large boot", "Roomy for groups and luggage"], "price": "120,000 RWF", "week": "84,000 RWF/day from 7 days"},
+    6: {"specs": ["5 seats · AWD · A/C", "Executive style and speed"], "price": "150,000 RWF", "week": "105,000 RWF/day from 7 days"},
+    7: {"specs": ["7 seats · AWD · A/C", "Family and business trips"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
+    8: {"specs": ["7 seats · large luggage space", "Comfortable seating"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
+}
 
 
 # ---------------------------------------------------------------------------
@@ -86,7 +106,15 @@ def tours():
 
 @pages.get("/cars")
 def cars():
-    return render_page("cars")
+    rows = get_db().execute(
+        "SELECT id, name, type, description, image, status FROM cars ORDER BY id"
+    ).fetchall()
+    cards = []
+    for row in rows:
+        card = dict(row)
+        card.update(CAR_DISPLAY.get(card["id"], {"specs": [], "price": "", "week": ""}))
+        cards.append(card)
+    return render_page("cars", cars=cards)
 
 
 @pages.get("/contact")
