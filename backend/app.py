@@ -8,9 +8,12 @@ Run with `python -m backend.app` (development) or point a WSGI server at
 import os
 import re
 import secrets
+import time
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import (
     Flask,
@@ -22,6 +25,7 @@ from flask import (
     send_from_directory,
     session,
 )
+from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
@@ -54,7 +58,13 @@ def create_app(database=None, secret_key=None, admin_password=None):
         data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
     else:
         data_dir = PACKAGE_DIR / "data"
-        data_dir.mkdir(exist_ok=True)
+        try:
+            data_dir.mkdir(exist_ok=True)
+        except OSError:  # read-only filesystem (e.g., Vercel)
+            import tempfile
+
+            data_dir = Path(tempfile.gettempdir()) / "thomas-transfer-data"
+            data_dir.mkdir(parents=True, exist_ok=True)
         database = str(data_dir / "thomas.db")
     if database != ":memory:":
         Path(database).parent.mkdir(parents=True, exist_ok=True)
@@ -68,6 +78,7 @@ def create_app(database=None, secret_key=None, admin_password=None):
         SESSION_COOKIE_SECURE=os.environ.get("TT_COOKIE_SECURE") == "1",
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         MAX_CONTENT_LENGTH=64 * 1024,
+        RATE_LIMITS=defaultdict(deque),
     )
     app.teardown_appcontext(close_db)
 
@@ -79,8 +90,29 @@ def create_app(database=None, secret_key=None, admin_password=None):
 
     @app.context_processor
     def inject_current_user():
-        user = current_user()
+        try:
+            user = current_user()
+        except Exception:
+            return {"current_user": None}
         return {"current_user": user_json(user) if user else None}
+
+    @app.before_request
+    def protect_api_requests():
+        if not request.path.startswith("/api/"):
+            return None
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            origin_error = _check_same_origin()
+            if origin_error:
+                return origin_error
+            if not request.is_json:
+                return error("Send a JSON request.", 415)
+        return None
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def too_large(err):
+        if request.path.startswith("/api/"):
+            return error("Request is too large.", 413)
+        return err
 
     @app.errorhandler(404)
     def not_found(err):
@@ -96,10 +128,24 @@ def create_app(database=None, secret_key=None, admin_password=None):
             404,
         )
 
+    @app.errorhandler(HTTPException)
+    def http_errors(err):
+        if request.path.startswith("/api/"):
+            return error(err.description or "Request failed.", err.code or 400)
+        return err
+
+    @app.errorhandler(Exception)
+    def unexpected_errors(err):
+        if request.path.startswith("/api/"):
+            app.logger.exception("Unhandled API error")
+            return error("Something went wrong. Please try again.", 500)
+        raise err
+
     @app.after_request
     def security_headers(response):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         return response
 
     return app
@@ -114,8 +160,11 @@ def _load_secret_key(data_dir):
     if path.exists():
         return path.read_text(encoding="utf-8").strip()
     key = secrets.token_hex(32)
-    data_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(key, encoding="utf-8")
+    try:
+        data_dir.mkdir(parents=True, exist_ok=True)
+        path.write_text(key, encoding="utf-8")
+    except OSError:
+        pass  # read-only filesystem: ephemeral key is fine
     return key
 
 
@@ -130,6 +179,40 @@ def error(message, status):
 
 def body():
     return request.get_json(silent=True) or {}
+
+
+def _client_ip():
+    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
+    return forwarded or request.remote_addr or "unknown"
+
+
+def _rate_limited(bucket, limit, window_seconds):
+    store = current_app.config.setdefault("RATE_LIMITS", defaultdict(deque))
+    key = (bucket, _client_ip())
+    now = time.monotonic()
+    hits = store[key]
+    cutoff = now - window_seconds
+    while hits and hits[0] <= cutoff:
+        hits.popleft()
+    if len(hits) >= limit:
+        return True
+    hits.append(now)
+    return False
+
+
+def _check_same_origin():
+    # Defense-in-depth for cookie-authenticated API writes. Browsers send Origin on
+    # cross-site requests; same-origin test/CLI clients may omit it.
+    origin = request.headers.get("Origin")
+    if origin:
+        expected = {request.host_url.rstrip("/"), f"{request.scheme}://{request.host}"}
+        return None if origin.rstrip("/") in expected else error("Invalid request origin.", 403)
+    referer = request.headers.get("Referer")
+    if referer:
+        ref = urlparse(referer)
+        if ref.netloc and ref.netloc != request.host:
+            return error("Invalid request origin.", 403)
+    return None
 
 
 def text_value(data, key, max_length):
@@ -231,11 +314,17 @@ def register_routes(app):
 
     @app.get("/api/me")
     def me():
-        user = current_user()
+        try:
+            user = current_user()
+        except Exception:
+            app.logger.exception("Failed to load current user")
+            return jsonify({"user": None})
         return jsonify({"user": user_json(user) if user else None})
 
     @app.post("/api/register")
     def register():
+        if _rate_limited("register", limit=10, window_seconds=3600):
+            return error("Too many attempts. Please try again later.", 429)
         data = body()
         first_name = text_value(data, "first_name", 50)
         last_name = text_value(data, "last_name", 50)
@@ -253,7 +342,7 @@ def register_routes(app):
         db = get_db()
         exists = db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
         if exists:
-            return error("An account with this email already exists. Please login.", 409)
+            return error("Could not create the account with that email.", 409)
 
         cursor = db.execute(
             "INSERT INTO users (first_name, last_name, email, phone, password_hash)"
@@ -270,6 +359,8 @@ def register_routes(app):
 
     @app.post("/api/login")
     def login():
+        if _rate_limited("login", limit=15, window_seconds=60):
+            return error("Too many attempts. Please try again later.", 429)
         data = body()
         email = text_value(data, "email", 150).lower()
         password = str(data.get("password") or "")

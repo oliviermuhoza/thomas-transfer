@@ -1,12 +1,17 @@
 {% extends "layout.html" %}
 {% block content %}
-<section class="page">
+<section class="page not-found-page">
   <div class="container">
-    <div class="notice">
-      <div class="tick">&#10003;</div>
+    <div class="not-found">
+      <p class="not-found-eyebrow">Thomas Transfer</p>
+      <p class="not-found-code" aria-hidden="true">404</p>
       <h2>Page not found</h2>
-      <p class="lead" style="margin:0 auto 22px">The page you asked for does not exist or has moved.</p>
-      <a class="btn" href="/">Go to the home page</a>
+      <p class="lead">The page you asked for does not exist or has moved. Let’s get you back on the road.</p>
+      <div class="not-found-actions">
+        <a class="btn primary" href="/">Go to the home page</a>
+        <a class="btn secondary" href="/contact">Contact us</a>
+      </div>
+      <p class="not-found-help">Looking for a car? <a href="/cars">Browse the fleet</a> or <a href="https://wa.me/250783882549" target="_blank" rel="noopener">chat on WhatsApp</a>.</p>
     </div>
   </div>
 </section>

@@ -503,7 +503,7 @@
       }
     });
     ['placeholder', 'aria-label', 'title'].forEach(function (a) {
-      document.querySelectorAll('[' + a + ']:not(#theme-toggle)').forEach(function (el) {
+      document.querySelectorAll('[' + a + ']').forEach(function (el) {
         var store = 'data-en-' + a;
         if (!el.hasAttribute(store)) { el.setAttribute(store, el.getAttribute(a)); }
         var en = el.getAttribute(store);
@@ -514,22 +514,8 @@
     document.querySelectorAll('.lang button').forEach(function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-lang') === l ? 'true' : 'false');
     });
-    refreshTheme();
     if (save) { try { localStorage.setItem('tt-lang', l); } catch (e) {} }
   }
-
-  var themeBtn = document.getElementById('theme-toggle');
-  function isDark() { return root.getAttribute('data-theme') === 'dark'; }
-  function refreshTheme() {
-    var key = isDark() ? 'Light mode' : 'Dark mode';
-    themeBtn.querySelector('.tool-label').textContent = T(key);
-    themeBtn.setAttribute('aria-label', T(key));
-  }
-  themeBtn.addEventListener('click', function () {
-    if (isDark()) { root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', 'dark'); }
-    try { localStorage.setItem('tt-theme', isDark() ? 'dark' : 'light'); } catch (e) {}
-    refreshTheme();
-  });
 
   document.querySelectorAll('.lang button').forEach(function (b) {
     b.addEventListener('click', function () { setLang(b.getAttribute('data-lang'), true); });
@@ -537,5 +523,5 @@
 
   var saved = 'en';
   try { saved = localStorage.getItem('tt-lang') || 'en'; } catch (e) {}
-  if (saved === 'rw') { setLang('rw', false); } else { refreshTheme(); }
+  if (saved === 'rw') { setLang('rw', false); }
 })();
