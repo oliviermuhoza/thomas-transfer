@@ -1,6 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
-    { "source": "/__tt_probe", "destination": "/", "permanent": false }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }

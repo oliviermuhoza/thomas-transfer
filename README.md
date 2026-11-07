@@ -249,10 +249,12 @@ writable path outside the deployment folder) and back up the SQLite file regular
 
 ### Vercel
 
-Vercel detects Flask from the root `requirements.txt` and uses the root `app.py`
-entrypoint (`app` = the Flask app). `vercel.json` intentionally has no rewrites:
-the framework preset routes every request to the Flask app, so `api/index.py`
-(legacy file-based function) is no longer used.
+Vercel detects Flask from the root `requirements.txt` and routes every request
+to the Flask app. Depending on the entrypoint it resolves (`app.py` at the root,
+or `backend/app.py`), `backend/app.py` imports its siblings either as a package
+(`from .db`) or as top-level modules (`from db`). `vercel.json` intentionally
+has no rewrites, so `api/index.py` (legacy file-based function) is no longer
+used.
 
 The deployment filesystem is read-only except for `/tmp`. The backend picks the
 first writable database location at startup (`TT_DATABASE`, then
