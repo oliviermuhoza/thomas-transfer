@@ -1,7 +1,11 @@
-/* Session state shared by every page: /api/me, body classes, logout and
-   remembering which car a "book" link pointed at. */
+/* Session state shared by every page: /api/me, CSRF token, body classes,
+   logout and remembering which car a "book" link pointed at. */
 (function () {
   var body = document.body;
+
+  function setCsrf(token) {
+    if (token) { window.ttCsrf = token; }
+  }
 
   function setUser(user, rerender) {
     body.classList.toggle('logged-in', !!user);
@@ -11,17 +15,28 @@
     if (rerender !== false && window.ttPages) { window.ttPages.refresh(); }
   }
 
-  window.ttSetUser = function (user) { setUser(user, true); };
+  window.ttSetUser = function (user, csrfToken) { setCsrf(csrfToken); setUser(user, true); };
+  window.ttSetCsrf = setCsrf;
+  window.ttCsrfHeaders = function (headers) {
+    headers = headers || {'Content-Type': 'application/json'};
+    if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
+    return headers;
+  };
 
   function logout() {
-    fetch('/api/logout', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'})
-      .then(function () { setUser(null, true); })
-      .catch(function () {});
+    fetch('/api/logout', {
+      method: 'POST',
+      headers: window.ttCsrfHeaders({'Content-Type': 'application/json'}),
+      body: '{}'
+    })
+      .then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (json) { setCsrf(json.csrf_token); setUser(null, true); })
+      .catch(function () { setUser(null, true); });
   }
 
   fetch('/api/me')
     .then(function (r) { return r.json(); })
-    .then(function (json) { setUser(json.user, false); })
+    .then(function (json) { setCsrf(json.csrf_token); setUser(json.user, false); })
     .catch(function () {});
 
   if (location.hash === '#logout') { logout(); }

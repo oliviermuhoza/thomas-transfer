@@ -4,9 +4,11 @@ document.getElementById('comment-form').addEventListener('submit', async functio
   var form = e.target, msg = document.getElementById('comment-status'), btn = form.querySelector('button');
   msg.className = 'status'; msg.textContent = T('Sending...'); btn.disabled = true;
   try {
+    var headers = {'Content-Type': 'application/json'};
+    if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
     var res = await fetch('/api/comment', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: headers,
       body: JSON.stringify({
         name: document.getElementById('m-name').value,
         rating: document.getElementById('m-rate').value,
