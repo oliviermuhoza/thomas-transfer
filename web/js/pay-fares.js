@@ -6,7 +6,7 @@
               nyungwe: 'Nyungwe National Park ($270 per person)', gisenyi: 'Gisenyi — Lake Kivu ($225 per person)',
               palace: "King's Palace Museum ($90 per person)", custom: 'a custom amount'};
   var status = document.getElementById('fare-status');
-  function waUrl(svc) { return 'https://wa.me/250783882549?text=' + encodeURIComponent("Hello Thomas Transfer! I'd like to book and pay for " + (FARE[svc] || 'a service') + '.'); }
+  function waUrl(svc) { return 'https://wa.me/250784659514?text=' + encodeURIComponent("Hello Thomas Transfer! I'd like to book and pay for " + (FARE[svc] || 'a service') + '.'); }
   document.querySelectorAll('.fare-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var svc = btn.getAttribute('data-svc');

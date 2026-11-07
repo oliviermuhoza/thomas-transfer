@@ -126,7 +126,7 @@ def _seed_admin(db, password=None):
             "Thomas",
             "Transfer",
             email,
-            "0783882549",
+            "0784659514",
             generate_password_hash(password),
         ),
     )

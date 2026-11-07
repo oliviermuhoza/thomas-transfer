@@ -17,7 +17,7 @@
   if (loginForm) {
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      var form = e.target, st = document.getElementById('login-status'), btn = form.querySelector('button');
+      var form = e.target, st = document.getElementById('login-status'), btn = form.querySelector('button[type="submit"]');
       show(st, '', T('Checking...')); btn.disabled = true;
       try {
         var r = await post('/api/login', {
@@ -43,7 +43,7 @@
   if (registerForm) {
     registerForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      var form = e.target, st = document.getElementById('register-status'), btn = form.querySelector('button');
+      var form = e.target, st = document.getElementById('register-status'), btn = form.querySelector('button[type="submit"]');
       var pass = document.getElementById('c-pass').value;
       if (pass !== document.getElementById('c-pass2').value) {
         show(st, 'bad', T('The two passwords are not the same.'));
@@ -72,4 +72,15 @@
       btn.disabled = false;
     });
   }
+
+  document.querySelectorAll('.auth-toggle[data-toggle]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var input = document.getElementById(btn.getAttribute('data-toggle'));
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+      btn.setAttribute('aria-label', show ? T('Hide password') : T('Show password'));
+    });
+  });
 })();

@@ -81,32 +81,55 @@
 <!-- ================= LOGIN ================= -->
 <section id="login" class="page">
   <div class="container">
-    <h2>Login</h2>
-    <p class="lead">Sign in to your Thomas Transfer account.</p>
-    <div class="layout3 narrow">
-      <aside class="side left" aria-label="Why Thomas Transfer">
-        <h3>Why Thomas Transfer</h3>
-        <ul class="side-points"><li>On-time pickups</li><li>Fixed prices, no hidden fees</li><li>Licensed and insured drivers</li><li>Open 24 hours, every day</li></ul>
-      </aside>
-      <form id="login-form" class="form-box">
-        <label for="l-email">Email</label>
-        <input id="l-email" type="email" autocomplete="email" placeholder="you@example.com" required>
-        <label for="l-pass">Password</label>
-        <input id="l-pass" type="password" autocomplete="current-password" placeholder="Enter your password" required>
-        <button class="btn" type="submit">Login</button>
-        <p id="login-status" class="status" role="status"></p>
-        <p class="hint">Don't have an account yet?</p>
-        <a class="btn outline" href="#create-account">Create account</a>
-      </form>
-      <aside class="side right" aria-label="Travel with confidence">
-        <h3>Travel with confidence</h3>
-        <p class="side-quote">Every good journey starts with a good ride.</p>
-        <ul class="side-list">
-          <li><span>Airport transfers</span>We track your flight, so your driver is waiting.</li>
-          <li><span>City rides</span>You see the price before you confirm.</li>
-          <li><span>Group travel</span>Larger vehicles for tours, weddings and events.</li>
+    <div class="auth-shell">
+      <aside class="auth-brand" aria-label="Why Thomas Transfer">
+        <span class="auth-badge">Thomas Transfer</span>
+        <h2>Your ride,<br><em>ready when you are.</em></h2>
+        <p class="auth-brand-sub">Sign in to book a car, follow your trips and manage every booking in one place.</p>
+        <ul class="auth-benefits">
+          <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>On-time pickups, every day</li>
+          <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Fixed prices, no hidden fees</li>
+          <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Licensed and insured drivers</li>
+          <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Open 24 hours, every day</li>
         </ul>
+        <p class="auth-quote">“Every good journey starts with a good ride.”</p>
       </aside>
+      <div class="auth-panel">
+        <form id="login-form" class="auth-card">
+          <p class="eyebrow">Welcome back</p>
+          <h3>Login</h3>
+          <p class="auth-sub">Sign in to your Thomas Transfer account.</p>
+
+          <div class="auth-field">
+            <label for="l-email">Email</label>
+            <div class="auth-input">
+              <svg class="auth-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 7.5l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <input id="l-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <div class="auth-label-row">
+              <label for="l-pass">Password</label>
+              <a class="auth-link" href="https://wa.me/250784659514?text=Hello%20Thomas%20Transfer!%20I%20need%20help%20with%20my%20account." target="_blank" rel="noopener">Forgot password?</a>
+            </div>
+            <div class="auth-input">
+              <svg class="auth-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input id="l-pass" type="password" autocomplete="current-password" placeholder="Enter your password" required>
+              <button type="button" class="auth-toggle" data-toggle="l-pass" aria-label="Show password" aria-pressed="false">
+                <svg class="eye-show" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                <svg class="eye-hide" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M9.9 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.2M6.5 6.8A16.8 16.8 0 0 0 2 12s3.5 7 10 7a10.5 10.5 0 0 0 4.4-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn auth-submit" type="submit">Login</button>
+          <p id="login-status" class="status" role="status" aria-live="polite"></p>
+
+          <div class="auth-divider"><span>New to Thomas Transfer?</span></div>
+          <a class="btn outline auth-alt" href="#create-account">Create account</a>
+        </form>
+      </div>
     </div>
   </div>
 </section>
