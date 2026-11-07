@@ -34,12 +34,17 @@ from werkzeug.security import check_password_hash, generate_password_hash
 try:
     from .db import close_db, get_db, init_db
     from .pages import pages
-except ImportError:  # running directly as `python backend/app.py`
+except ImportError:  # running directly, or loaded as a top-level module by Vercel
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-    from backend.db import close_db, get_db, init_db
-    from backend.pages import pages
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    try:
+        from backend.db import close_db, get_db, init_db
+        from backend.pages import pages
+    except ImportError:  # deployment root is backend/ itself
+        from db import close_db, get_db, init_db
+        from pages import pages
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
