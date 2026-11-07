@@ -302,7 +302,7 @@ h2{font-size:2rem;margin-bottom:8px}
 .af-copy p:not(.eyebrow){color:rgba(255,255,255,.74);margin:0;font-size:.98rem}
 .af-list{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:10px}
 .af-list li{display:flex;gap:10px;color:rgba(255,255,255,.8);font-size:.94rem}
-.af-list li::before{content:"âœ“";color:#C6F432;font-weight:700;flex:none;line-height:1.5}
+.af-list li::before{content:"\2713";color:#C6F432;font-weight:700;flex:none;line-height:1.5}
 .af-foot{display:flex;align-items:center;gap:clamp(16px,3vw,26px);margin-top:28px;flex-wrap:wrap}
 .af-price{font-family:var(--font-heading);color:#C6F432;font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1}
 .af-price span{display:block;font-family:var(--font-sans);font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-top:7px}
@@ -771,7 +771,7 @@ img.thumb{width:86px;height:62px;object-fit:cover;border-radius:6px;display:bloc
 .cp-sub{color:var(--muted);max-width:46ch}
 .cp-list{list-style:none;margin:28px 0 30px;padding:0;display:flex;flex-direction:column;gap:18px}
 .cp-list li{position:relative;padding-left:32px}
-.cp-list li::before{content:"âœ“";position:absolute;left:0;top:-1px;color:#C6F432;font-size:1.1rem;font-weight:700}
+.cp-list li::before{content:"\2713";position:absolute;left:0;top:-1px;color:#C6F432;font-size:1.1rem;font-weight:700}
 
 .fare-eyebrow{color:#C6F432;letter-spacing:.22em;gap:14px;font-size:.68rem;margin-bottom:14px}
 .fare-eyebrow::before{background:#C6F432;width:36px;height:1px}
