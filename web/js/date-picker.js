@@ -1,93 +1,192 @@
-/* Custom date & time picker for the booking form.
-   Writes the selected value into the hidden #bk-when field as a local
-   ISO string (YYYY-MM-DDTHH:MM), which dashboard.js posts to /api/bookings. */
+/* Booking date & time picker. The chosen value is written to the hidden
+   #bk-when field as a local ISO string (YYYY-MM-DDTHH:MM); dashboard.js posts
+   it to /api/bookings. Changes are only kept when Apply is pressed. */
 (function () {
   var btn = document.getElementById('bk-when-btn'), pop = document.getElementById('bk-when-pop');
   var hidden = document.getElementById('bk-when'), text = document.getElementById('bk-when-text');
   var title = document.getElementById('dp-title'), days = document.getElementById('dp-days');
   var hourSel = document.getElementById('dp-hour'), minSel = document.getElementById('dp-min');
-  if (!btn || !pop || !hidden) { return; }
+  var prev = document.getElementById('dp-prev'), next = document.getElementById('dp-next');
+  var todayBtn = document.getElementById('dp-today'), clearBtn = document.getElementById('dp-clear');
+  var applyBtn = document.getElementById('dp-apply'), msg = document.getElementById('dp-msg');
+  if (!btn || !pop || !hidden || !days) { return; }
 
-  var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'];
-  var view = new Date();
-  view.setDate(1);
-  var selected = null; // Date or null
+  var MINUTES = [0, 15, 30, 45];
+  var committed = null;   // Date last applied, or null
+  var view = null;        // first day of the month being shown
+  var picked = null;      // day chosen in the calendar (midnight), or null
+  var draftHour = 12, draftMin = 0;
+
+  function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function sameDay(a, b) { return !!a && !!b && a.getTime() === b.getTime(); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function locale() { return document.documentElement.lang === 'rw' ? 'rw' : 'en-GB'; }
+  function fmtDay(d) {
+    return new Intl.DateTimeFormat(locale(), {weekday: 'short', day: 'numeric', month: 'short'}).format(d);
+  }
+  function fmtTitle(d) {
+    return new Intl.DateTimeFormat(locale(), {month: 'long', year: 'numeric'}).format(d);
+  }
+  function fmtIso(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function fmtLabel(d) { return fmtDay(d) + ' · ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function setMsg(t) {
+    if (!msg) { return; }
+    msg.className = t ? 'status bad' : 'status';
+    msg.textContent = t || '';
+  }
 
   (function fillHours() {
     for (var h = 0; h < 24; h++) {
       var o = document.createElement('option');
-      o.value = o.textContent = String(h).padStart(2, '0');
+      o.value = o.textContent = pad(h);
       hourSel.appendChild(o);
     }
-    hourSel.value = '12';
   })();
 
-  function today() { var n = new Date(); n.setHours(0, 0, 0, 0); return n; }
-  function fmt(d) {
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0') + 'T' + String(d.getHours()).padStart(2, '0') + ':' +
-      String(d.getMinutes()).padStart(2, '0');
+  /* Keep the time on or after "now" when the chosen day is today. */
+  function clampTime() {
+    var now = new Date();
+    if (!picked || !sameDay(picked, startOfDay(now))) { return; }
+    if (draftHour < now.getHours()) { draftHour = now.getHours(); }
+    if (draftHour === now.getHours() && draftMin < now.getMinutes()) {
+      var later = MINUTES.filter(function (m) { return m >= now.getMinutes(); })[0];
+      if (later === undefined) { draftHour = Math.min(23, draftHour + 1); later = 0; }
+      draftMin = later;
+    }
   }
-  function commit() {
-    hidden.value = selected ? fmt(selected) : '';
-    text.textContent = selected
-      ? selected.toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'}) +
-        ' · ' + String(selected.getHours()).padStart(2, '0') + ':' + String(selected.getMinutes()).padStart(2, '0')
-      : 'Select date & time';
+
+  function syncTimeControls() {
+    clampTime();
+    var now = new Date();
+    var isToday = !!picked && sameDay(picked, startOfDay(now));
+    hourSel.value = pad(draftHour);
+    minSel.value = pad(draftMin);
+    Array.prototype.forEach.call(hourSel.options, function (o) {
+      o.disabled = isToday && Number(o.value) < now.getHours();
+    });
+    Array.prototype.forEach.call(minSel.options, function (o) {
+      o.disabled = isToday && draftHour === now.getHours() && Number(o.value) < now.getMinutes();
+    });
   }
+
   function render() {
-    title.textContent = MONTHS[view.getMonth()] + ' ' + view.getFullYear();
+    title.textContent = fmtTitle(view);
     days.textContent = '';
-    var t = today();
+    var t = startOfDay(new Date());
     var firstDow = (new Date(view.getFullYear(), view.getMonth(), 1).getDay() + 6) % 7; // Monday = 0
     var count = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
     for (var i = 0; i < firstDow; i++) { days.appendChild(document.createElement('span')); }
     for (var day = 1; day <= count; day++) {
-      var date = new Date(view.getFullYear(), view.getMonth(), day);
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'dp-day';
-      b.textContent = day;
-      b.disabled = date < t;
-      if (selected && date.getTime() === new Date(selected.getFullYear(), selected.getMonth(), selected.getDate()).getTime()) {
-        b.classList.add('on'); b.setAttribute('aria-pressed', 'true');
-      }
-      (function (d) {
+      (function (date) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'dp-day';
+        b.textContent = date.getDate();
+        b.setAttribute('aria-label', fmtDay(date));
+        b.disabled = date < t;
+        if (sameDay(date, t)) { b.classList.add('is-today'); }
+        if (sameDay(date, picked)) { b.classList.add('on'); b.setAttribute('aria-pressed', 'true'); }
         b.addEventListener('click', function () {
-          selected = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Number(hourSel.value), Number(minSel.value));
+          picked = date;
+          syncTimeControls();
+          setMsg('');
           render();
         });
-      })(date);
-      days.appendChild(b);
+        days.appendChild(b);
+      })(new Date(view.getFullYear(), view.getMonth(), day));
     }
-    document.getElementById('dp-prev').disabled = new Date(view.getFullYear(), view.getMonth(), 1) <= t;
+    prev.disabled = startOfMonth(view) <= startOfMonth(t);
+    applyBtn.disabled = !picked;
+    syncTimeControls();
   }
-  function open() { pop.hidden = false; btn.setAttribute('aria-expanded', 'true'); render(); }
-  function close() { pop.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+
+  function open() {
+    picked = committed ? startOfDay(committed) : null;
+    draftHour = committed ? committed.getHours() : 12;
+    draftMin = committed ? committed.getMinutes() : 0;
+    view = startOfMonth(picked || new Date());
+    setMsg('');
+    pop.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+    render();
+    var focusTarget = days.querySelector('.dp-day.on:not(:disabled)') || days.querySelector('.dp-day.is-today') ||
+      days.querySelector('.dp-day:not(:disabled)');
+    if (focusTarget) { focusTarget.focus(); }
+  }
+
+  function close() {
+    pop.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function showValue() {
+    text.textContent = committed ? fmtLabel(committed) : T('Select date & time');
+    btn.classList.toggle('has-value', !!committed);
+    hidden.value = committed ? fmtIso(committed) : '';
+  }
+
+  function apply() {
+    if (!picked) { return; }
+    var c = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate(), draftHour, draftMin, 0, 0);
+    var nowMinute = new Date();
+    nowMinute.setSeconds(0, 0);
+    if (c < nowMinute) {
+      setMsg(T('Please choose a date and time in the future.'));
+      syncTimeControls();
+      return;
+    }
+    committed = c;
+    showValue();
+    close();
+    btn.focus();
+  }
+
+  function reset() {
+    committed = null;
+    picked = null;
+    showValue();
+    setMsg('');
+    close();
+  }
+  window.ttDatePicker = {reset: reset};
 
   btn.addEventListener('click', function () { pop.hidden ? open() : close(); });
-  document.addEventListener('click', function (e) { if (!pop.contains(e.target) && e.target !== btn && !btn.contains(e.target)) { close(); } });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !pop.hidden) { close(); btn.focus(); } });
-  document.getElementById('dp-prev').addEventListener('click', function () { view.setMonth(view.getMonth() - 1); render(); });
-  document.getElementById('dp-next').addEventListener('click', function () { view.setMonth(view.getMonth() + 1); render(); });
-
-  hourSel.addEventListener('change', function () {
-    if (selected) { selected.setHours(Number(hourSel.value)); }
-    else { selected = new Date(today().getTime()); selected.setHours(Number(hourSel.value)); }
+  document.addEventListener('mousedown', function (e) {
+    if (!pop.hidden && !pop.contains(e.target) && !btn.contains(e.target)) { close(); }
   });
-  minSel.addEventListener('change', function () {
-    if (selected) { selected.setMinutes(Number(minSel.value)); }
-    else { selected = new Date(today().getTime()); selected.setMinutes(Number(minSel.value)); }
-  });
-  document.getElementById('dp-apply').addEventListener('click', function () {
-    if (!selected) { selected = new Date(); selected.setHours(Number(hourSel.value), Number(minSel.value), 0, 0); }
-    if (selected < new Date()) { selected = new Date(); selected.setSeconds(0, 0); }
-    commit(); close();
-  });
-  document.getElementById('dp-clear').addEventListener('click', function () {
-    selected = null; commit(); render();
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !pop.hidden) { close(); btn.focus(); }
   });
 
-  commit(); render();
+  prev.addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); render(); });
+  next.addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); render(); });
+  todayBtn.addEventListener('click', function () {
+    var now = new Date();
+    view = startOfMonth(now);
+    picked = startOfDay(now);
+    setMsg('');
+    render();
+  });
+  hourSel.addEventListener('change', function () { draftHour = Number(hourSel.value); syncTimeControls(); setMsg(''); });
+  minSel.addEventListener('change', function () { draftMin = Number(minSel.value); syncTimeControls(); setMsg(''); });
+  applyBtn.addEventListener('click', apply);
+  clearBtn.addEventListener('click', reset);
+
+  days.addEventListener('keydown', function (e) {
+    var steps = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7};
+    if (!(e.key in steps)) { return; }
+    var buttons = Array.prototype.slice.call(days.querySelectorAll('.dp-day'));
+    var idx = buttons.indexOf(document.activeElement);
+    if (idx < 0) { return; }
+    e.preventDefault();
+    var j = idx + steps[e.key];
+    while (j >= 0 && j < buttons.length && buttons[j].disabled) { j += steps[e.key]; }
+    if (j >= 0 && j < buttons.length) { buttons[j].focus(); }
+  });
+
+  showValue();
 })();

@@ -207,6 +207,7 @@
     var layout = document.querySelector('.booking-layout');
     if (layout) { layout.classList.remove('has-sheet'); }
     if ($('sheet-backdrop')) { $('sheet-backdrop').hidden = true; }
+    if (window.ttDatePicker) { window.ttDatePicker.reset(); }
     resetPanelPosition();
     if (opts.focusGrid) {
       var grid = $('available-cars');
@@ -309,6 +310,7 @@
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var st = $('booking-status'), btn = form.querySelector('button[type="submit"]');
+      if (!when.value) { say(st, 'bad', T('Please choose a date and time in the future.')); return; }
       say(st, '', T('Sending...')); btn.disabled = true;
       try {
         var r = await post('/api/bookings', {
