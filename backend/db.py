@@ -82,12 +82,12 @@ def close_db(exc=None):
         connection.close()
 
 
-def init_db(admin_password=None):
+def init_db(admin_password=None, production=False):
     """Create missing tables and seed the fleet plus the first admin account."""
     db = get_db()
     db.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     _seed_cars(db)
-    _seed_admin(db, admin_password)
+    _seed_admin(db, admin_password, production=production)
     db.commit()
 
 
@@ -100,15 +100,21 @@ def _seed_cars(db):
     )
 
 
-def _seed_admin(db, password=None):
+def _seed_admin(db, password=None, production=False):
     if db.execute("SELECT 1 FROM users WHERE is_admin = 1 LIMIT 1").fetchone():
         return
 
     email = os.environ.get("TT_ADMIN_EMAIL", "admin@thomastransfer.com").strip().lower()
-    password = password or os.environ.get("TT_ADMIN_PASSWORD")
-    generated = not password
-    if generated:
-        password = secrets.token_urlsafe(12)
+    provided = password or os.environ.get("TT_ADMIN_PASSWORD")
+    if production and not provided:
+        raise RuntimeError(
+            "No admin account exists and TT_ADMIN_PASSWORD is not set. "
+            "In production, set TT_ADMIN_PASSWORD (and optionally TT_ADMIN_EMAIL) "
+            "before the first start."
+        )
+
+    generated = not provided
+    password = provided or secrets.token_urlsafe(12)
 
     if db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
         print(
@@ -131,14 +137,14 @@ def _seed_admin(db, password=None):
         ),
     )
 
-    if generated:
+    if generated and not production:
         print(
             "\n"
-            "  Admin account created.\n"
+            "  Admin account created (development bootstrap).\n"
             f"    email:    {email}\n"
             f"    password: {password}\n"
-            "  Set TT_ADMIN_EMAIL / TT_ADMIN_PASSWORD before the first run to choose\n"
-            "  your own credentials. This password is shown only once.\n",
+            "  Set TT_ADMIN_PASSWORD before the first run in production. "
+            "This password is shown only once.\n",
             file=sys.stderr,
             flush=True,
         )

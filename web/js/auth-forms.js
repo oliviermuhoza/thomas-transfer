@@ -1,9 +1,11 @@
 /* Login and create-account forms. Loaded only on /account. */
 (function () {
   function post(url, data) {
+    var headers = {'Content-Type': 'application/json'};
+    if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
     return fetch(url, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: headers,
       body: JSON.stringify(data || {})
     }).then(async function (res) {
       var json = {};
@@ -25,7 +27,7 @@
           password: document.getElementById('l-pass').value
         });
         if (r.ok) {
-          window.ttSetUser(r.data.user);
+          window.ttSetUser(r.data.user, r.data.csrf_token);
           form.reset();
           show(st, 'ok', T('Welcome back, ') + r.data.user.name + '.');
           setTimeout(function () { location.hash = '#available'; st.textContent = ''; }, 900);
@@ -59,7 +61,7 @@
           password: pass
         });
         if (r.ok) {
-          window.ttSetUser(r.data.user);
+          window.ttSetUser(r.data.user, r.data.csrf_token);
           form.reset();
           show(st, 'ok', T('Account created. Welcome, ') + r.data.user.name + '.');
           setTimeout(function () { location.hash = '#available'; st.textContent = ''; }, 1100);

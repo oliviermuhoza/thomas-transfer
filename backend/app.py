@@ -27,6 +27,7 @@ from flask import (
     session,
 )
 from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
@@ -56,7 +57,12 @@ BOOKING_TRANSITIONS = {
 CAR_CAPACITIES = {1: 4, 2: 7, 3: 5, 4: 5, 5: 8, 6: 5, 7: 7, 8: 7}
 
 
-def create_app(database=None, secret_key=None, admin_password=None):
+def create_app(database=None, secret_key=None, admin_password=None, production=None):
+    production = (
+        os.environ.get("TT_ENV", "").strip().lower() == "production"
+        if production is None
+        else bool(production)
+    )
     database = database or os.environ.get("TT_DATABASE")
     if database:
         data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
@@ -73,21 +79,56 @@ def create_app(database=None, secret_key=None, admin_password=None):
     if database != ":memory:":
         Path(database).parent.mkdir(parents=True, exist_ok=True)
 
+    cookie_secure = _truthy_env("TT_COOKIE_SECURE")
+    if production and not cookie_secure:
+        raise RuntimeError(
+            "TT_COOKIE_SECURE=1 is required in production (HTTPS). "
+            "Set TT_ENV=production only when served behind HTTPS."
+        )
+
     app = Flask(__name__, static_folder=None)
+    rate_limit_backend = os.environ.get("TT_RATE_LIMIT_BACKEND", "memory").strip().lower()
     app.config.update(
+        PRODUCTION=production,
         DATABASE=database,
-        SECRET_KEY=secret_key or _load_secret_key(data_dir),
+        SECRET_KEY=secret_key or _load_secret_key(data_dir, production=production),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_SECURE=os.environ.get("TT_COOKIE_SECURE") == "1",
+        SESSION_COOKIE_SECURE=cookie_secure,
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         MAX_CONTENT_LENGTH=64 * 1024,
         RATE_LIMITS=defaultdict(deque),
+        RATE_LIMIT_BACKEND=rate_limit_backend,
+        RATE_LIMIT_REDIS=None,
     )
+    if _truthy_env("TT_TRUST_PROXY_HEADERS"):
+        hops = int(os.environ.get("TT_TRUSTED_PROXY_HOPS", "1") or "1")
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=hops, x_proto=hops, x_host=hops, x_port=hops
+        )
+        app.config["TRUST_PROXY_HEADERS"] = True
+    if rate_limit_backend == "redis":
+        redis_url = os.environ.get("TT_REDIS_URL")
+        if not redis_url:
+            raise RuntimeError("TT_REDIS_URL is required when TT_RATE_LIMIT_BACKEND=redis.")
+        try:
+            import redis  # optional dependency
+        except ImportError as exc:
+            raise RuntimeError(
+                "TT_RATE_LIMIT_BACKEND=redis requires the 'redis' package."
+            ) from exc
+        client = redis.Redis.from_url(redis_url)
+        client.ping()
+        app.config["RATE_LIMIT_REDIS"] = client
+    elif production:
+        app.logger.warning(
+            "Using in-memory rate limiting in production; set TT_RATE_LIMIT_BACKEND=redis "
+            "and TT_REDIS_URL for shared limits across workers, or enforce limits at the edge/WAF."
+        )
     app.teardown_appcontext(close_db)
 
     with app.app_context():
-        init_db(admin_password)
+        init_db(admin_password, production=production)
 
     register_routes(app)
     app.register_blueprint(pages)
@@ -110,6 +151,10 @@ def create_app(database=None, secret_key=None, admin_password=None):
                 return origin_error
             if not request.is_json:
                 return error("Send a JSON request.", 415)
+            expected = session.get("csrf_token")
+            provided = request.headers.get("X-CSRF-Token", "")
+            if not expected or not provided or not secrets.compare_digest(str(expected), str(provided)):
+                return _csrf_error()
         return None
 
     @app.errorhandler(RequestEntityTooLarge)
@@ -155,11 +200,17 @@ def create_app(database=None, secret_key=None, admin_password=None):
     return app
 
 
-def _load_secret_key(data_dir):
+def _truthy_env(name):
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _load_secret_key(data_dir, production=False):
     """Use SECRET_KEY when given, otherwise keep a generated key across restarts."""
     key = os.environ.get("SECRET_KEY")
     if key:
         return key
+    if production:
+        raise RuntimeError("SECRET_KEY must be set in production.")
     path = data_dir / "secret_key"
     if path.exists():
         return path.read_text(encoding="utf-8").strip()
@@ -185,12 +236,25 @@ def body():
     return request.get_json(silent=True) or {}
 
 
+def _ensure_csrf_token():
+    token = session.get("csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["csrf_token"] = token
+        session.modified = True
+    return token
+
+
+def _csrf_error():
+    return error("Invalid or missing CSRF token.", 403)
+
+
 def _client_ip():
-    forwarded = (request.headers.get("X-Forwarded-For") or "").split(",")[0].strip()
-    return forwarded or request.remote_addr or "unknown"
+    # request.remote_addr is normalized by ProxyFix when TT_TRUST_PROXY_HEADERS is set.
+    return request.remote_addr or "unknown"
 
 
-def _rate_limited(bucket, limit, window_seconds):
+def _rate_limited_memory(bucket, limit, window_seconds):
     store = current_app.config.setdefault("RATE_LIMITS", defaultdict(deque))
     key = (bucket, _client_ip())
     now = time.monotonic()
@@ -202,6 +266,29 @@ def _rate_limited(bucket, limit, window_seconds):
         return True
     hits.append(now)
     return False
+
+
+def _rate_limited_redis(bucket, limit, window_seconds):
+    client = current_app.config.get("RATE_LIMIT_REDIS")
+    if client is None:
+        return _rate_limited_memory(bucket, limit, window_seconds)
+    key = f"tt:rl:{bucket}:{_client_ip()}"
+    try:
+        # Fixed window counter; simple and dependency-free on Redis side.
+        current = client.incr(key)
+        if current == 1:
+            client.expire(key, window_seconds)
+        return current > limit
+    except Exception:
+        current_app.logger.warning("Redis rate limiter unavailable; allowing request")
+        return False
+
+
+def _rate_limited(bucket, limit, window_seconds):
+    backend = current_app.config.get("RATE_LIMIT_BACKEND", "memory")
+    if backend == "redis":
+        return _rate_limited_redis(bucket, limit, window_seconds)
+    return _rate_limited_memory(bucket, limit, window_seconds)
 
 
 def _check_same_origin():
@@ -325,14 +412,19 @@ def register_routes(app):
 
     # ---------- accounts ----------
 
+    @app.get("/api/csrf")
+    def csrf():
+        return jsonify({"csrf_token": _ensure_csrf_token()})
+
     @app.get("/api/me")
     def me():
+        csrf_token = _ensure_csrf_token()
         try:
             user = current_user()
         except Exception:
             app.logger.exception("Failed to load current user")
-            return jsonify({"user": None})
-        return jsonify({"user": user_json(user) if user else None})
+            return jsonify({"user": None, "csrf_token": csrf_token})
+        return jsonify({"user": user_json(user) if user else None, "csrf_token": csrf_token})
 
     @app.post("/api/register")
     def register():
@@ -370,7 +462,8 @@ def register_routes(app):
         session.clear()
         session.permanent = True
         session["user_id"] = user["id"]
-        return jsonify({"user": user_json(user)}), 201
+        session["csrf_token"] = secrets.token_urlsafe(32)
+        return jsonify({"user": user_json(user), "csrf_token": session["csrf_token"]}), 201
 
     @app.post("/api/login")
     def login():
@@ -389,12 +482,14 @@ def register_routes(app):
         session.clear()
         session.permanent = True
         session["user_id"] = user["id"]
-        return jsonify({"user": user_json(user)})
+        session["csrf_token"] = secrets.token_urlsafe(32)
+        return jsonify({"user": user_json(user), "csrf_token": session["csrf_token"]})
 
     @app.post("/api/logout")
     def logout():
         session.clear()
-        return jsonify({"ok": True})
+        session["csrf_token"] = secrets.token_urlsafe(32)
+        return jsonify({"ok": True, "csrf_token": session["csrf_token"]})
 
     # ---------- fleet ----------
 

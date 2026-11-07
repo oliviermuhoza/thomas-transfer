@@ -31,8 +31,18 @@ def future(minutes=60):
     return moment.replace(second=0, microsecond=0).isoformat(timespec="minutes")
 
 
+def csrf_headers(client):
+    token = client.get("/api/csrf").get_json()["csrf_token"]
+    return {"X-CSRF-Token": token}
+
+
+def api_post(client, url, json=None):
+    return client.post(url, json=json or {}, headers=csrf_headers(client))
+
+
 def register(client, email="jane@example.com", password="secret123"):
-    return client.post(
+    return api_post(
+        client,
         "/api/register",
         json={
             "first_name": "Jane",
@@ -45,7 +55,7 @@ def register(client, email="jane@example.com", password="secret123"):
 
 
 def login(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD):
-    return client.post("/api/login", json={"email": email, "password": password})
+    return api_post(client, "/api/login", json={"email": email, "password": password})
 
 
 def booking_payload(**overrides):
@@ -76,7 +86,9 @@ def test_site_is_served(client):
 def test_me_is_null_without_session(client):
     response = client.get("/api/me")
     assert response.status_code == 200
-    assert response.get_json() == {"user": None}
+    data = response.get_json()
+    assert data["user"] is None
+    assert data["csrf_token"]
 
 
 def test_register_login_logout(client):
@@ -93,8 +105,8 @@ def test_register_login_logout(client):
     assert register(client, email="short@example.com", password="123").status_code == 400
     assert register(client, email="not-an-email").status_code == 400
 
-    assert client.post("/api/logout", json={}).status_code == 200
-    assert client.get("/api/me").get_json() == {"user": None}
+    assert api_post(client, "/api/logout", json={}).status_code == 200
+    assert client.get("/api/me").get_json()["user"] is None
 
     assert login(client, "jane@example.com", "wrong-password").status_code == 401
     assert login(client, "jane@example.com", "secret123").status_code == 200
@@ -113,16 +125,16 @@ def test_fleet_is_seeded(client):
 def test_permissions(client):
     assert client.get("/api/bookings").status_code == 401
     assert client.get("/api/report").status_code == 401
-    assert client.post("/api/bookings", json=booking_payload()).status_code == 401
+    assert api_post(client, "/api/bookings", json=booking_payload()).status_code == 401
 
     register(client)
     assert client.get("/api/report").status_code == 403
-    assert client.post("/api/cars/1/status", json={"status": "maintenance"}).status_code == 403
+    assert api_post(client, "/api/cars/1/status", json={"status": "maintenance"}).status_code == 403
 
 
 def test_booking_flow(client):
     register(client)
-    response = client.post("/api/bookings", json=booking_payload())
+    response = api_post(client, "/api/bookings", json=booking_payload())
     assert response.status_code == 201
     booking_id = response.get_json()["id"]
 
@@ -139,8 +151,8 @@ def test_booking_flow(client):
 
     # Customers cannot confirm their own booking.
     assert (
-        client.post(
-            f"/api/bookings/{booking_id}/status", json={"status": "confirmed"}
+        api_post(
+            client, f"/api/bookings/{booking_id}/status", json={"status": "confirmed"}
         ).status_code
         == 400
     )
@@ -149,14 +161,14 @@ def test_booking_flow(client):
     assert login(admin).status_code == 200
     assert admin.get("/api/bookings").get_json()[0]["customer"] == "Jane Doe"
     assert (
-        admin.post(
-            f"/api/bookings/{booking_id}/status", json={"status": "confirmed"}
+        api_post(
+            admin, f"/api/bookings/{booking_id}/status", json={"status": "confirmed"}
         ).status_code
         == 200
     )
     assert (
-        admin.post(
-            f"/api/bookings/{booking_id}/status", json={"status": "completed"}
+        api_post(
+            admin, f"/api/bookings/{booking_id}/status", json={"status": "completed"}
         ).status_code
         == 200
     )
@@ -175,10 +187,10 @@ def test_booking_flow(client):
 
 def test_customer_can_cancel_and_car_is_released(client):
     register(client)
-    booking_id = client.post("/api/bookings", json=booking_payload()).get_json()["id"]
+    booking_id = api_post(client, "/api/bookings", json=booking_payload()).get_json()["id"]
     assert (
-        client.post(
-            f"/api/bookings/{booking_id}/status", json={"status": "cancelled"}
+        api_post(
+            client, f"/api/bookings/{booking_id}/status", json={"status": "cancelled"}
         ).status_code
         == 200
     )
@@ -189,24 +201,25 @@ def test_customer_can_cancel_and_car_is_released(client):
 def test_booking_validation(client):
     register(client)
 
-    assert client.post("/api/bookings", json={}).status_code == 400
+    assert api_post(client, "/api/bookings", json={}).status_code == 400
     assert (
-        client.post(
+        api_post(
+            client,
             "/api/bookings",
             json=booking_payload(trip_at="2020-01-01T10:00"),
         ).status_code
         == 400
     )
     assert (
-        client.post("/api/bookings", json=booking_payload(passengers=0)).status_code
+        api_post(client, "/api/bookings", json=booking_payload(passengers=0)).status_code
         == 400
     )
     assert (
-        client.post("/api/bookings", json=booking_payload(passengers=61)).status_code
+        api_post(client, "/api/bookings", json=booking_payload(passengers=61)).status_code
         == 400
     )
     assert (
-        client.post("/api/bookings", json=booking_payload(car_id=999)).status_code == 404
+        api_post(client, "/api/bookings", json=booking_payload(car_id=999)).status_code == 404
     )
 
 
@@ -215,45 +228,49 @@ def test_maintenance_blocks_booking_and_car_status_management(client):
     login(admin)
 
     assert (
-        admin.post("/api/cars/2/status", json={"status": "maintenance"}).status_code
+        api_post(admin, "/api/cars/2/status", json={"status": "maintenance"}).status_code
         == 200
     )
     assert admin.get("/api/cars?available=1").get_json()[0]["id"] != 2
 
     customer = client.application.test_client()
     register(customer)
-    assert customer.post("/api/bookings", json=booking_payload(car_id=2)).status_code == 409
+    assert api_post(customer, "/api/bookings", json=booking_payload(car_id=2)).status_code == 409
 
     # A booked car cannot be switched to maintenance/available by hand.
-    assert customer.post("/api/bookings", json=booking_payload(car_id=3)).status_code == 201
+    assert api_post(customer, "/api/bookings", json=booking_payload(car_id=3)).status_code == 201
     assert (
-        admin.post("/api/cars/3/status", json={"status": "maintenance"}).status_code
+        api_post(admin, "/api/cars/3/status", json={"status": "maintenance"}).status_code
         == 409
     )
 
     assert (
-        admin.post("/api/cars/2/status", json={"status": "available"}).status_code == 200
+        api_post(admin, "/api/cars/2/status", json={"status": "available"}).status_code == 200
     )
     assert len(admin.get("/api/cars?available=1").get_json()) == 7
 
 
 def test_comments_contact_and_report(client):
     assert (
-        client.post(
+        api_post(
+            client,
             "/api/comment",
             json={"name": "Aline", "rating": "5 - Excellent", "text": "Great trip."},
         ).status_code
         == 201
     )
     assert (
-        client.post(
-            "/api/comment", json={"name": "Aline", "rating": "nope", "text": "Hi"}
+        api_post(
+            client,
+            "/api/comment",
+            json={"name": "Aline", "rating": "nope", "text": "Hi"},
         ).status_code
         == 400
     )
 
     assert (
-        client.post(
+        api_post(
+            client,
             "/api/contact",
             json={
                 "name": "Aline",
@@ -266,8 +283,10 @@ def test_comments_contact_and_report(client):
         == 201
     )
     assert (
-        client.post(
-            "/api/contact", json={"name": "Aline", "email": "bad", "message": "Hi"}
+        api_post(
+            client,
+            "/api/contact",
+            json={"name": "Aline", "email": "bad", "message": "Hi"},
         ).status_code
         == 400
     )

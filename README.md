@@ -149,22 +149,29 @@ Booking rules enforced by the API:
 
 ## Configuration
 
-Environment variables, all optional:
+Environment variables:
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `SECRET_KEY` | generated in `backend/data/secret_key` | Signs session cookies |
+| `TT_ENV` | unset | Set to `production` to enable production checks (HTTPS cookie required, `SECRET_KEY` required, no generated admin password printed). |
+| `SECRET_KEY` | generated in `backend/data/secret_key` (non-production) | Signs session cookies. **Required in production.** |
 | `TT_DATABASE` | `backend/data/thomas.db` | SQLite file path |
 | `TT_ADMIN_EMAIL` | `admin@thomastransfer.com` | Seeded admin email |
-| `TT_ADMIN_PASSWORD` | generated, printed once | Seeded admin password |
+| `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
 | `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
 | `TT_PORT` | `5000` | Port used by `python -m backend.app` |
 | `TT_DEBUG` | off | Set to `1` for Flask debug mode |
-| `TT_COOKIE_SECURE` | off | Set to `1` when served over HTTPS |
+| `TT_COOKIE_SECURE` | off | Set to `1` when served over HTTPS. **Required in production.** |
+| `TT_TRUST_PROXY_HEADERS` | off | Set to `1` only behind a trusted reverse proxy; enables Werkzeug `ProxyFix`. |
+| `TT_TRUSTED_PROXY_HOPS` | `1` | Number of trusted proxy hops when `TT_TRUST_PROXY_HEADERS=1`. |
+| `TT_RATE_LIMIT_BACKEND` | `memory` | `memory` (per-process) or `redis` (shared). |
+| `TT_REDIS_URL` | unset | Required when `TT_RATE_LIMIT_BACKEND=redis` (needs optional `redis` package). |
 
 Sessions are signed cookies (`HttpOnly`, `SameSite=Lax`), passwords are stored
-with Werkzeug's PBKDF2 hash, and every query uses parameters. The API accepts
-JSON only and is intended to be served from the same origin as the pages.
+with Werkzeug's PBKDF2 hash, and every query uses parameters. Mutating `/api/*`
+requests require `Content-Type: application/json` and a valid `X-CSRF-Token`
+(from `GET /api/csrf` or the `csrf_token` field in `GET /api/me` / auth responses).
+The API is intended to be served from the same origin as the pages.
 
 ## Testing
 
@@ -202,10 +209,11 @@ admin report, page routes, redirects, nav state and 404 handling.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/me` | Current session user (`{user: null}` when signed out) |
-| POST | `/api/login` | Sign in |
-| POST | `/api/logout` | Sign out |
-| POST | `/api/register` | Create account |
+| GET | `/api/csrf` | CSRF token for mutating API requests (`{csrf_token}`) |
+| GET | `/api/me` | Current session user and CSRF token (`{user: null, csrf_token}` when signed out) |
+| POST | `/api/login` | Sign in (returns `user`, `csrf_token`) |
+| POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
+| POST | `/api/register` | Create account (returns `user`, `csrf_token`) |
 | GET | `/api/cars` | Fleet list; `?available=1` filters free cars |
 | POST | `/api/cars/:id/status` | Set car status (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
@@ -214,6 +222,9 @@ admin report, page routes, redirects, nav state and 404 handling.
 | GET | `/api/report` | Admin summary |
 | POST | `/api/comment` | Submit a private comment |
 | POST | `/api/contact` | Contact / support message |
+
+Mutating (`POST`) API requests require `Content-Type: application/json`, a valid
+`X-CSRF-Token`, and a same-origin request (Origin/Referer checked as defense in depth).
 
 ## Deploying
 
@@ -226,6 +237,12 @@ waitress-serve --listen=0.0.0.0:8000 backend.app:app
 ```
 
 On Linux, `gunicorn -w 2 -b 0.0.0.0:8000 backend.app:app` works the same way.
-Put the site behind HTTPS, set `TT_COOKIE_SECURE=1`, and keep `backend/data/` on
-a persistent disk (or set `TT_DATABASE` to a writable path outside the
-deployment folder). Back up the SQLite file regularly.
+
+For production, serve behind HTTPS and set:
+`TT_ENV=production`, `SECRET_KEY`, `TT_COOKIE_SECURE=1`, and `TT_ADMIN_PASSWORD`
+before the first boot if no admin exists. If running behind a trusted reverse
+proxy, set `TT_TRUST_PROXY_HEADERS=1` (and `TT_TRUSTED_PROXY_HOPS` as needed).
+In-memory rate limits are per-process; use `TT_RATE_LIMIT_BACKEND=redis` with
+`TT_REDIS_URL` (optional `redis` package) or enforce rate limiting at the
+edge/WAF. Keep `backend/data/` on a persistent disk (or set `TT_DATABASE` to a
+writable path outside the deployment folder) and back up the SQLite file regularly.

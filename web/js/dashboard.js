@@ -15,7 +15,9 @@
     return {ok: res.ok, status: res.status, data: data};
   }
   function post(url, obj) {
-    return api(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(obj || {})});
+    var headers = {'Content-Type': 'application/json'};
+    if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
+    return api(url, {method: 'POST', headers: headers, body: JSON.stringify(obj || {})});
   }
   function isAdmin() { return body.classList.contains('is-admin'); }
   function say(node, cls, text) { node.className = 'status ' + cls; node.textContent = text; }
