@@ -33,7 +33,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import close_db, get_db, init_db
-    from .pages import pages
+    from .pages import CAR_DISPLAY, pages
 except ImportError:  # running directly, or loaded as a top-level module by Vercel
     import sys
 
@@ -41,10 +41,10 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         from backend.db import close_db, get_db, init_db
-        from backend.pages import pages
+        from backend.pages import CAR_DISPLAY, pages
     except ImportError:  # deployment root is backend/ itself
         from db import close_db, get_db, init_db
-        from pages import pages
+        from pages import CAR_DISPLAY, pages
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
@@ -549,7 +549,15 @@ def register_routes(app):
         if request.args.get("available") in ("1", "true", "yes"):
             query += " WHERE status = 'available'"
         query += " ORDER BY id"
-        return jsonify([dict(row) for row in get_db().execute(query)])
+
+        # The prices and specs are display-only and live in pages.CAR_DISPLAY;
+        # the fleet itself always comes from the cars table.
+        cars = []
+        for row in get_db().execute(query):
+            car = dict(row)
+            car.update(CAR_DISPLAY.get(car["id"], {"specs": [], "price": "", "week": ""}))
+            cars.append(car)
+        return jsonify(cars)
 
     @app.post("/api/cars/<int:car_id>/status")
     @admin_required

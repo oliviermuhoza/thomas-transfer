@@ -120,6 +120,11 @@ def test_fleet_is_seeded(client):
     assert cars[0]["name"] == "Toyota Corolla Hybrid"
     assert cars[0]["status"] == "available"
     assert cars[0]["image"].startswith("/assets/images/cars/")
+    for car in cars:
+        assert {"specs", "price", "week"} <= set(car)
+    assert "5 seats" in cars[0]["specs"][0]
+    assert cars[0]["price"] == "45,000 RWF"
+    assert cars[0]["week"].startswith("31,500 RWF/day")
     assert len(client.get("/api/cars?available=1").get_json()) == 8
 
 

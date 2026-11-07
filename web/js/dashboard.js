@@ -64,35 +64,202 @@
     });
   }
 
-  /* ---------- Available cars + booking form ---------- */
+  /* ---------- Available cars + booking panel ---------- */
+  var selectedId = null;
+  var carsById = {};
+  var loadSeq = 0;
+
+  function mobilePanel() {
+    return window.matchMedia('(max-width: 980px)').matches;
+  }
+
+  function resetPanelPosition() {
+    var slot = $('booking-panel-slot'), panel = $('booking-panel');
+    if (!panel) { return; }
+    if (slot) { slot.hidden = false; }
+    if (slot && panel.parentNode !== slot) { slot.appendChild(panel); }
+    panel.classList.remove('inline');
+  }
+
+  function placePanel(card) {
+    var panel = $('booking-panel'), slot = $('booking-panel-slot');
+    if (!panel) { return; }
+    if (mobilePanel() && card) {
+      if (panel.parentNode !== card) { card.insertAdjacentElement('afterend', panel); }
+      panel.classList.add('inline');
+      if (slot) { slot.hidden = true; }
+    } else {
+      resetPanelPosition();
+    }
+  }
+
+  function markSelected(id) {
+    document.querySelectorAll('#available-cars .car-card').forEach(function (card) {
+      var on = id !== null && card.getAttribute('data-car-id') === String(id);
+      card.classList.toggle('is-selected', on);
+      var btn = card.querySelector('[data-book-id]');
+      if (btn) {
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.textContent = T(on ? 'Selected' : 'Book');
+      }
+    });
+  }
+
+  function renderSummary(car) {
+    var box = $('booking-summary');
+    if (!box) { return; }
+    clear(box);
+    if (!car) { return; }
+
+    var img = el('img', 'booking-summary-photo');
+    img.src = car.image; img.alt = car.name;
+    var info = el('div', 'booking-summary-info');
+    info.appendChild(el('span', 'booking-summary-label', T('Selected car')));
+    info.appendChild(el('h3', '', car.name));
+    info.appendChild(el('p', 'booking-summary-type', T(car.type)));
+
+    var rate = el('p', 'booking-summary-rate');
+    if (car.price) {
+      rate.appendChild(el('span', 'rate-price', car.price));
+      rate.appendChild(el('span', 'rate-per', T('Per day')));
+    } else {
+      rate.appendChild(el('span', 'rate-price', T('Ask for a quote')));
+    }
+    info.appendChild(rate);
+
+    var change = el('button', 'link-btn', T('Change car'));
+    change.type = 'button';
+    change.addEventListener('click', function () { closePanel({focusGrid: true}); });
+    info.appendChild(change);
+
+    box.appendChild(img);
+    box.appendChild(info);
+  }
+
+  function openPanel(car, opts) {
+    opts = opts || {};
+    selectedId = String(car.id);
+    $('bk-car').value = selectedId;
+    renderSummary(car);
+    markSelected(selectedId);
+    $('booking-intro').hidden = true;
+    $('booking-form-wrap').hidden = false;
+    placePanel(document.querySelector('#available-cars .car-card[data-car-id="' + selectedId + '"]'));
+
+    if (opts.focus) {
+      if (mobilePanel()) {
+        $('booking-panel').scrollIntoView({behavior: 'smooth', block: 'start'});
+        setTimeout(function () {
+          try { $('bk-from').focus({preventScroll: true}); } catch (e) { $('bk-from').focus(); }
+        }, 260);
+      } else {
+        try { $('bk-from').focus({preventScroll: true}); } catch (e) { $('bk-from').focus(); }
+      }
+    }
+  }
+
+  function closePanel(opts) {
+    opts = opts || {};
+    selectedId = null;
+    $('bk-car').value = '';
+    renderSummary(null);
+    markSelected(null);
+    var wrap = $('booking-form-wrap'), intro = $('booking-intro');
+    if (wrap) { wrap.hidden = true; }
+    if (intro) { intro.hidden = false; }
+    resetPanelPosition();
+    if (opts.focusGrid) {
+      var grid = $('available-cars');
+      if (grid) { grid.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+    }
+  }
+
+  function renderCarCard(c) {
+    var card = el('div', 'car-card');
+    card.setAttribute('data-car-id', String(c.id));
+
+    var img = el('img', 'car-photo');
+    img.src = c.image; img.alt = c.name; img.loading = 'lazy';
+    card.appendChild(img);
+
+    var info = el('div', 'car-info');
+    var top = el('div', 'car-card-top');
+    top.appendChild(el('span', 'car-badge', T(c.type)));
+    info.appendChild(top);
+
+    var statusBadge = el('span', 'car-status', T('Available'));
+    card.appendChild(statusBadge);
+
+    info.appendChild(el('h3', '', c.name));
+    info.appendChild(el('p', '', T(c.description)));
+
+    if (c.specs && c.specs.length) {
+      var specs = el('ul', 'car-specs');
+      c.specs.forEach(function (spec) { specs.appendChild(el('li', '', spec)); });
+      info.appendChild(specs);
+    }
+
+    var foot = el('div', 'car-foot');
+    var rate = el('div', 'car-rate');
+    if (c.price) {
+      rate.appendChild(el('span', 'rate-price', c.price));
+      rate.appendChild(el('span', 'rate-per', T('Per day')));
+      if (c.week) { rate.appendChild(el('span', 'rate-week', c.week)); }
+    } else {
+      rate.appendChild(el('span', 'rate-price', T('Ask for a quote')));
+    }
+    foot.appendChild(rate);
+
+    var book = el('button', 'reserve-btn', T('Book'));
+    book.type = 'button';
+    book.setAttribute('data-book-id', String(c.id));
+    book.setAttribute('aria-pressed', 'false');
+    book.addEventListener('click', function () {
+      if (!body.classList.contains('logged-in')) {
+        /* Keep the choice across the login round-trip. */
+        window.ttSelectedCar = String(c.id);
+        try { sessionStorage.setItem('tt-selected-car', String(c.id)); } catch (e) {}
+        location.hash = '#login';
+        return;
+      }
+      openPanel(c, {focus: true});
+    });
+    foot.appendChild(book);
+    info.appendChild(foot);
+    card.appendChild(info);
+    return card;
+  }
+
   async function loadAvailable() {
-    var grid = $('available-cars'), sel = $('bk-car'), empty = $('available-empty');
+    var grid = $('available-cars'), empty = $('available-empty');
+    var seq = ++loadSeq;
     var r;
     try { r = await api('/api/cars?available=1'); } catch (e) { r = {ok: false}; }
+    if (seq !== loadSeq) { return; }
     if (!r.ok) { say(empty, 'bad', T(NOSERVER)); return; }
-    var wanted = window.ttSelectedCar || sel.value;
-    try {
-      wanted = wanted || sessionStorage.getItem('tt-selected-car');
-      sessionStorage.removeItem('tt-selected-car');
-    } catch (e) {}
-    clear(grid); clear(sel);
-    var first = el('option', '', T('Car')); first.value = ''; sel.appendChild(first);
-    r.data.forEach(function (c) {
-      var o = el('option', '', c.name); o.value = String(c.id); sel.appendChild(o);
-      var card = el('div', 'car-card'), img = el('img', 'car-photo');
-      img.src = c.image; img.alt = c.name; img.loading = 'lazy'; card.appendChild(img);
-      var info = el('div', 'car-info');
-      info.appendChild(el('h3', '', c.name)); info.appendChild(el('p', '', T(c.description)));
-      var price = el('div', 'price'); price.appendChild(badge(c.status));
-      var book = el('button', 'btn', T('Book')); book.type = 'button';
-      book.addEventListener('click', function () {
-        if (!body.classList.contains('logged-in')) { location.hash = '#login'; return; }
-        sel.value = String(c.id); $('booking-form').scrollIntoView({behavior: 'smooth', block: 'center'});
-      });
-      price.appendChild(book); info.appendChild(price); card.appendChild(info); grid.appendChild(card);
-    });
-    if (wanted) { sel.value = String(wanted); }
+
+    var wanted = window.ttSelectedCar;
     window.ttSelectedCar = null;
+    if (!wanted) {
+      try { wanted = sessionStorage.getItem('tt-selected-car'); } catch (e) {}
+    }
+
+    resetPanelPosition();
+    clear(grid);
+    closePanel();
+    carsById = {};
+    r.data.forEach(function (c) {
+      carsById[String(c.id)] = c;
+      grid.appendChild(renderCarCard(c));
+    });
+
+    if (wanted && body.classList.contains('logged-in') && carsById[String(wanted)]) {
+      openPanel(carsById[String(wanted)], {focus: true});
+      try { sessionStorage.removeItem('tt-selected-car'); } catch (e) {}
+    } else if (wanted && body.classList.contains('logged-in')) {
+      try { sessionStorage.removeItem('tt-selected-car'); } catch (e) {}
+    }
+
     say(empty, '', r.data.length ? '' : T('No cars are available right now.'));
   }
 
@@ -109,13 +276,23 @@
           trip_at: when.value, passengers: $('bk-pax').value, notes: $('bk-notes').value
         });
         if (r.ok) {
-          form.reset(); say(st, 'ok', T('Your booking was sent. We will confirm it soon.'));
-          setTimeout(function () { location.hash = '#bookings'; st.textContent = ''; }, 1200);
+          say(st, 'ok', T('Your booking was sent. We will confirm it soon.'));
+          setTimeout(function () {
+            form.reset();
+            closePanel();
+            location.hash = '#bookings';
+            st.textContent = '';
+          }, 1400);
         } else { say(st, 'bad', T(r.data && r.data.error) || T('Please fill in all the fields.')); }
       } catch (err) { say(st, 'bad', T(NOSERVER)); }
       btn.disabled = false;
     });
   })();
+
+  window.addEventListener('resize', function () {
+    if (selectedId === null) { resetPanelPosition(); return; }
+    placePanel(document.querySelector('#available-cars .car-card[data-car-id="' + selectedId + '"]'));
+  });
 
   /* ---------- Car bookings ---------- */
   async function loadBookings() {

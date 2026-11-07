@@ -13,33 +13,72 @@
 <!-- ================= AVAILABLE CARS + BOOKING ================= -->
 <section id="available" class="page">
   <div class="container">
-    <h2>Available cars</h2>
-    <p class="lead">Pick a car that is free now and send your booking.</p>
-    <div class="auth-in">
-      <form id="booking-form" class="form-box wide">
-        <h3>Book a car</h3>
-        <label for="bk-car">Car</label>
-        <select id="bk-car" required></select>
-        <div class="row">
-          <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" required></div>
-          <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" required></div>
-        </div>
-        <div class="row">
-          <div><label for="bk-when">Date and time</label><input id="bk-when" type="datetime-local" required></div>
-          <div><label for="bk-pax">Passengers</label><input id="bk-pax" type="number" min="1" max="60" value="1" required></div>
-        </div>
-        <label for="bk-notes">Notes (optional)</label>
-        <textarea id="bk-notes" maxlength="500" style="min-height:80px"></textarea>
-        <button class="btn" type="submit">Book now</button>
-        <p id="booking-status" class="status" role="status"></p>
-      </form>
+    <div class="booking-head">
+      <p class="eyebrow">The Fleet</p>
+      <h2>Available cars</h2>
+      <p class="lead">Pick a car that is free now and send your booking.</p>
     </div>
-    <div class="auth-out form-box login-note">
-      <p>Please login to book a car.</p>
-      <a class="btn" href="#login">Login</a>
+
+    <div class="auth-out guest-notice">
+      <div class="guest-notice-copy">
+        <strong>Sign in to send your booking</strong>
+        <span>Browse the fleet now. You only need an account when you are ready to book.</span>
+      </div>
+      <div class="guest-notice-actions">
+        <a class="btn" href="#login">Login</a>
+        <a class="btn outline" href="#create-account">Create account</a>
+      </div>
     </div>
-    <div class="cars" id="available-cars"></div>
-    <p id="available-empty" class="status" role="status"></p>
+
+    <div class="booking-layout">
+      <div class="booking-fleet">
+        <div class="cars" id="available-cars"></div>
+        <p id="available-empty" class="status" role="status"></p>
+      </div>
+      <div class="booking-panel-slot" id="booking-panel-slot">
+        <aside class="booking-panel" id="booking-panel" aria-label="Booking panel">
+          <div class="booking-panel-inner">
+            <div class="booking-intro" id="booking-intro">
+              <p class="eyebrow">Book in three steps</p>
+              <ol class="booking-steps-list">
+                <li>
+                  <span class="booking-step-num" aria-hidden="true">1</span>
+                  <div><strong>Choose a car</strong><p>Pick one from the fleet that fits your trip.</p></div>
+                </li>
+                <li>
+                  <span class="booking-step-num" aria-hidden="true">2</span>
+                  <div><strong>Trip details</strong><p>Pick-up, drop-off, date and passengers.</p></div>
+                </li>
+                <li>
+                  <span class="booking-step-num" aria-hidden="true">3</span>
+                  <div><strong>Confirm</strong><p>Send the request and we reply by phone.</p></div>
+                </li>
+              </ol>
+              <p class="booking-intro-note">We confirm every request by phone. No payment is taken now.</p>
+            </div>
+            <div class="booking-form-wrap" id="booking-form-wrap" hidden>
+              <div class="booking-summary" id="booking-summary"></div>
+              <form id="booking-form" class="form-box">
+                <h3>Book a car</h3>
+                <input id="bk-car" type="hidden">
+                <div class="row">
+                  <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" required></div>
+                  <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" required></div>
+                </div>
+                <div class="row">
+                  <div><label for="bk-when">Date and time</label><input id="bk-when" type="datetime-local" required></div>
+                  <div><label for="bk-pax">Passengers</label><input id="bk-pax" type="number" min="1" max="60" value="1" required></div>
+                </div>
+                <label for="bk-notes">Notes (optional)</label>
+                <textarea id="bk-notes" maxlength="500" style="min-height:80px"></textarea>
+                <button class="btn" type="submit">Book now</button>
+                <p id="booking-status" class="status" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -53,9 +92,15 @@
       <div class="table-wrap"><table class="data" id="booking-table"></table></div>
       <p id="bookings-status" class="status" role="status"></p>
     </div>
-    <div class="auth-out form-box login-note">
-      <p>Please login to see your bookings.</p>
-      <a class="btn" href="#login">Login</a>
+    <div class="auth-out guest-notice">
+      <div class="guest-notice-copy">
+        <strong>Please login to see your bookings.</strong>
+        <span>Your trips and their status appear here after you sign in.</span>
+      </div>
+      <div class="guest-notice-actions">
+        <a class="btn" href="#login">Login</a>
+        <a class="btn outline" href="#create-account">Create account</a>
+      </div>
     </div>
   </div>
 </section>

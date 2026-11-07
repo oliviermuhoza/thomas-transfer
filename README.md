@@ -214,7 +214,7 @@ admin report, page routes, redirects, nav state and 404 handling.
 | POST | `/api/login` | Sign in (returns `user`, `csrf_token`) |
 | POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
 | POST | `/api/register` | Create account (returns `user`, `csrf_token`) |
-| GET | `/api/cars` | Fleet list; `?available=1` filters free cars |
+| GET | `/api/cars` | Fleet list; `?available=1` filters free cars. Rows include display-only `specs`, `price`, `week` |
 | POST | `/api/cars/:id/status` | Set car status (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
 | POST | `/api/bookings` | Create a booking |
