@@ -104,7 +104,7 @@ def _seed_admin(db, password=None, production=False, ephemeral=False):
     if db.execute("SELECT 1 FROM users WHERE is_admin = 1 LIMIT 1").fetchone():
         return
 
-    email = os.environ.get("TT_ADMIN_EMAIL", "admin@thomastransfer.com").strip().lower()
+    email = os.environ.get("TT_ADMIN_EMAIL", "tomsafaris@gmail.com").strip().lower()
     provided = password or os.environ.get("TT_ADMIN_PASSWORD")
     if production and not provided:
         if ephemeral:
@@ -141,7 +141,7 @@ def _seed_admin(db, password=None, production=False, ephemeral=False):
             "Thomas",
             "Transfer",
             email,
-            "0784659514",
+            "0788652120",
             generate_password_hash(password),
         ),
     )
