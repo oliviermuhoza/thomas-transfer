@@ -67,3 +67,16 @@ CREATE TABLE IF NOT EXISTS messages (
   handled    INTEGER NOT NULL DEFAULT 0,
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS fares (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  key       TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+  tag       TEXT    NOT NULL DEFAULT '',
+  name      TEXT    NOT NULL,
+  amount    REAL    NOT NULL CHECK (amount > 0),
+  currency  TEXT    NOT NULL DEFAULT 'RWF' CHECK (currency IN ('RWF', 'USD')),
+  note      TEXT    NOT NULL DEFAULT '',
+  flw_link  TEXT    NOT NULL DEFAULT '',
+  active    INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT   NOT NULL DEFAULT (datetime('now'))
+);

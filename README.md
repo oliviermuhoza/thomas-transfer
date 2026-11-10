@@ -17,7 +17,7 @@ comments and messages in SQLite.
 │   ├── app.py                  # Flask app: API routes + static file serving
 │   ├── pages.py                # Page blueprint: marketing pages + /account + redirects
 │   ├── db.py                   # SQLite connection, schema setup, seed data
-│   ├── schema.sql              # Tables for users, cars, bookings, comments, messages
+│   ├── schema.sql              # Tables for users, cars, bookings, comments, messages, fares
 │   ├── requirements.txt        # Runtime dependency (Flask)
 │   ├── requirements-dev.txt    # Adds pytest
 │   ├── data/                   # Created at runtime; holds the database
@@ -27,11 +27,12 @@ comments and messages in SQLite.
 │   │   │   ├── header.html     # Logo, nav, search, menu, support, settings
 │   │   │   ├── footer.html
 │   │   │   └── support-dialog.html
-│   │   ├── pages/              # home, transport, tours, cars, contact, pay, comment, account
+│   │   ├── pages/              # home, transport, tours, cars, contact, pay, comment, account, admin
 │   │   └── errors/404.html
 │   └── tests/
 │       ├── conftest.py         # Keeps tests away from the development database
 │       ├── test_api.py         # API, auth, booking and report tests
+│       ├── test_admin_api.py   # Admin portal API, migrations and /admin page guards
 │       └── test_pages.py       # Page routes, redirects, nav state, 404
 ├── web/                        # Static assets served by Flask
 │   ├── css/
@@ -42,10 +43,12 @@ comments and messages in SQLite.
 │   │   ├── i18n.js             # EN/RW dictionary, language + theme toggle
 │   │   ├── session.js          # /api/me, body classes, logout, selected car
 │   │   ├── dashboard.js        # Cars, available cars, bookings, report (account only)
+│   │   ├── date-picker.js      # Shared date/time picker used by the booking form
+│   │   ├── admin.js            # /admin portal: all operations views (admin only)
 │   │   ├── search.js           # Navbar search (cars + pages, real URLs)
 │   │   ├── faq.js              # FAQ open/close buttons
 │   │   ├── comment.js          # Comment form -> POST /api/comment
-│   │   ├── pay-fares.js        # Fixed-fare payment buttons
+│   │   ├── pay-fares.js        # Fixed-fare payment buttons (fares come from the DB)
 │   │   ├── pay-custom.js       # Custom-amount payment form
 │   │   ├── auth-forms.js       # Login + register forms (account only)
 │   │   └── support.js          # Support message dialog -> POST /api/contact
@@ -131,6 +134,7 @@ to run repeatedly.
 | `bookings` | Customer bookings, their status and recorded payments |
 | `comments` | Private feedback with a 1–5 rating |
 | `messages` | Support and contact messages with a `handled` flag |
+| `fares` | Standard /pay amounts, optional Flutterwave link, active flag |
 
 `CREATE TABLE IF NOT EXISTS` never alters an existing table, so additive column
 changes are applied by `_migrate()` in `backend/db.py` at startup:
@@ -193,12 +197,14 @@ admin report, page routes, redirects, nav state and 404 handling.
 
 ## Runtime notes
 
-- **Page routing** is real URLs rendered by Jinja; only the `/account` sections
-  still use URL hashes (`.page` rules are scoped to `body[data-page="account"]`).
-  `legacy-hash.js` redirects old `/#hash` bookmarks.
+- **Page routing** is real URLs rendered by Jinja; `/account` and `/admin`
+  sections use URL hashes (`.page` hiding rules are scoped to
+  `body[data-page="account"]`). `legacy-hash.js` redirects old `/#hash`
+  bookmarks but never rewrites `/admin` hashes.
 - **Script order matters.** `legacy-hash.js` must run first in the head,
   `i18n.js` defines the global `T()` translation helper, and `dashboard.js`
-  defines `window.ttPages`. Keep the order in `backend/templates/layout.html`.
+  (account) or `admin.js` (portal) defines `window.ttPages`. Keep the order in
+  `backend/templates/layout.html`.
 - **Translations** are keyed by the exact English text in the markup. If you
   edit visible copy, update the matching key in `web/js/i18n.js`.
 - **Fonts:** `backend/templates/layout.html` loads Google Sans (400/500/700)
@@ -208,9 +214,11 @@ admin report, page routes, redirects, nav state and 404 handling.
   `tt-lang`.
 - **Contact details** (`0783882549`, `wa.me/250783882549`) are repeated inline
   in the markup and a few scripts.
-- **Payments** are not processed by the backend. The pay buttons in
-  `js/pay-fares.js` and `js/pay-custom.js` open Flutterwave links when they are
-  filled in, otherwise WhatsApp.
+- **Payments** are not processed by the backend. The fare list on `/pay` comes
+  from the `fares` table (managed in `/admin#fares`). Each fare can carry a
+  Flutterwave payment link; the button opens it when set, otherwise it opens
+  WhatsApp with the current fare text. `js/pay-custom.js` behaves the same with
+  one globally configured link for custom amounts.
 
 ## API endpoints
 
@@ -226,6 +234,10 @@ admin report, page routes, redirects, nav state and 404 handling.
 | POST | `/api/admin/cars` | Create a car (admin) |
 | PATCH | `/api/admin/cars/:id` | Update car fields (admin) |
 | DELETE | `/api/admin/cars/:id` | Delete a car without bookings (admin) |
+| GET | `/api/admin/fares` | All fares, including hidden ones (admin) |
+| POST | `/api/admin/fares` | Create a fare (admin) |
+| PATCH | `/api/admin/fares/:id` | Update or hide a fare (admin) |
+| DELETE | `/api/admin/fares/:id` | Delete a fare (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
 | POST | `/api/bookings` | Create a booking; admins may pass `user_id` to book for a customer |
 | POST | `/api/bookings/:id/status` | Change booking status |

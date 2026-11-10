@@ -44,6 +44,120 @@
     b.addEventListener('click', fn);
     return b;
   }
+
+  /* Row action menu. A row can offer three or four actions; stacking that many
+     buttons in the last cell squeezed the table, so they live in one "Manage"
+     control instead. The panel is positioned fixed so the table's horizontal
+     scroll container cannot clip it. */
+  var openRow = null;
+  var CARET = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function closeRowMenu(refocus) {
+    if (!openRow) { return; }
+    var m = openRow;
+    openRow = null;
+    m.panel.remove();
+    m.btn.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('pointerdown', onDocPointer, true);
+    window.removeEventListener('keydown', onMenuKey, true);
+    window.removeEventListener('resize', onMenuScroll);
+    window.removeEventListener('scroll', onMenuScroll, true);
+    if (refocus) { m.btn.focus(); }
+  }
+
+  /* Keep the panel attached to its button while the page or the table scrolls
+     (smooth scrolling keeps emitting scroll events after the click, so closing
+     here would make the menu flash and vanish). Close only once the button has
+     left the viewport. */
+  function onMenuScroll() {
+    if (!openRow) { return; }
+    var r = openRow.btn.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) {
+      closeRowMenu();
+      return;
+    }
+    placeRowMenu(openRow.btn, openRow.panel);
+  }
+
+  function onDocPointer(e) {
+    if (!openRow) { return; }
+    if (openRow.panel.contains(e.target) || openRow.btn.contains(e.target)) { return; }
+    closeRowMenu();
+  }
+
+  function focusItem(item) {
+    if (!item) { return; }
+    try { item.focus({preventScroll: true}); } catch (e) { item.focus(); }
+  }
+
+  function onMenuKey(e) {
+    if (!openRow) { return; }
+    var items = Array.prototype.slice.call(openRow.panel.querySelectorAll('.rowmenu-item'));
+    var i = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeRowMenu(true);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+      if (next < 0) { next = items.length - 1; }
+      if (next >= items.length) { next = 0; }
+      if (items[next]) { focusItem(items[next]); }
+    } else if (e.key === 'Tab') {
+      closeRowMenu();
+    }
+  }
+
+  function placeRowMenu(btn, panel) {
+    var r = btn.getBoundingClientRect();
+    var w = panel.offsetWidth, h = panel.offsetHeight;
+    var left = Math.max(12, Math.min(r.right - w, window.innerWidth - w - 12));
+    var top = r.bottom + 6;
+    if (top + h > window.innerHeight - 12) { top = Math.max(12, r.top - h - 6); }
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+  }
+
+  function rowMenu(actions) {
+    var btn = el('button', 'rowmenu-btn');
+    btn.type = 'button';
+    btn.setAttribute('aria-haspopup', 'menu');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', T('Manage'));
+    btn.appendChild(el('span', '', T('Manage')));
+    btn.insertAdjacentHTML('beforeend', CARET);
+
+    var panel = el('div', 'rowmenu-panel');
+    panel.setAttribute('role', 'menu');
+    panel.hidden = true;
+    actions.forEach(function (a) {
+      var item = el('button', 'rowmenu-item' + (a.tone ? ' ' + a.tone : ''), T(a.label));
+      item.type = 'button';
+      item.setAttribute('role', 'menuitem');
+      item.addEventListener('click', function () {
+        closeRowMenu();
+        a.run();
+      });
+      panel.appendChild(item);
+    });
+
+    btn.addEventListener('click', function () {
+      if (openRow && openRow.btn === btn) { closeRowMenu(); return; }
+      closeRowMenu();
+      document.body.appendChild(panel);
+      panel.hidden = false;
+      btn.setAttribute('aria-expanded', 'true');
+      placeRowMenu(btn, panel);
+      openRow = {btn: btn, panel: panel};
+      document.addEventListener('pointerdown', onDocPointer, true);
+      window.addEventListener('keydown', onMenuKey, true);
+      window.addEventListener('resize', onMenuScroll);
+      window.addEventListener('scroll', onMenuScroll, true);
+      var first = panel.querySelector('.rowmenu-item');
+      focusItem(first);
+    });
+    return btn;
+  }
   function makeTable(table, cols) {
     clear(table);
     var tr = el('tr');
@@ -86,7 +200,7 @@
   }
   function query(id) { return ($(id) && $(id).value || '').toLowerCase().trim(); }
 
-  var state = {bookings: [], cars: [], accounts: [], messages: [], comments: []};
+  var state = {bookings: [], cars: [], accounts: [], messages: [], comments: [], fares: []};
 
   /* ---------- shared actions ---------- */
   async function changeBooking(id, status, node, done) {
@@ -468,19 +582,26 @@
       cell(tr, '').appendChild(badge(u.active ? 'active' : 'inactive'));
       cell(tr, u.created_at);
       var ta = cell(tr, '');
+      var actions = [];
       if (me && me.id === u.id) {
         ta.appendChild(el('span', 'sub', T('You')));
       } else {
-        ta.appendChild(small(u.admin ? 'Remove admin' : 'Make admin', u.admin ? 'warn' : 'ghost', function () {
-          changeRole(u.id, !u.admin, $('admin-accounts-status'), loadAccounts);
-        }));
-        ta.appendChild(small(u.active ? 'Deactivate' : 'Activate', u.active ? 'warn' : 'ok', function () {
-          changeActive(u.id, !u.active, $('admin-accounts-status'), loadAccounts);
-        }));
+        actions.push({
+          label: u.admin ? 'Remove admin' : 'Make admin',
+          tone: u.admin ? 'warn' : '',
+          run: function () { changeRole(u.id, !u.admin, $('admin-accounts-status'), loadAccounts); }
+        });
+        actions.push({
+          label: u.active ? 'Deactivate' : 'Activate',
+          tone: u.active ? 'warn' : 'ok',
+          run: function () { changeActive(u.id, !u.active, $('admin-accounts-status'), loadAccounts); }
+        });
       }
-      ta.appendChild(small('Reset password', 'ghost', function () {
-        resetPassword(u, $('admin-accounts-status'));
-      }));
+      actions.push({
+        label: 'Reset password',
+        run: function () { resetPassword(u, $('admin-accounts-status')); }
+      });
+      ta.appendChild(rowMenu(actions));
       tb.appendChild(tr);
     });
     say($('admin-accounts-status'), '', rows.length ? '' : T('No accounts yet.'));
@@ -562,16 +683,101 @@
     say($('admin-comments-status'), '', rows.length ? '' : T('No comments yet.'));
   }
 
+  /* ---------- fares ---------- */
+  async function loadFares() {
+    var st = $('admin-fares-status');
+    say(st, '', T('Loading...'));
+    skelRows('admin-fares', 4);
+    var r;
+    try { r = await api('/api/admin/fares'); } catch (e) { r = {ok: false}; }
+    if (!r.ok) { fail(st, r); return; }
+    state.fares = r.data;
+    renderFares();
+  }
+  function renderFares() {
+    var q = query('fares-filter');
+    var rows = state.fares.filter(function (f) {
+      return matches(f, ['key', 'tag', 'name', 'note', 'currency'], q);
+    });
+    var tb = makeTable($('admin-fares'),
+      ['Code', 'Name', 'Price', 'Note', 'Payment link', 'Status', 'Action']);
+    rows.forEach(function (f) {
+      var tr = el('tr');
+      cell(tr, f.key);
+      var nameCell = cell(tr, f.name);
+      if (f.tag) { nameCell.appendChild(el('div', 'sub', f.tag)); }
+      cell(tr, f.price);
+      cell(tr, f.note || '-');
+      cell(tr, f.flw_link ? T('Set') : T('WhatsApp'));
+      cell(tr, '').appendChild(badge(f.active ? 'active' : 'inactive'));
+      var ta = cell(tr, '');
+      ta.appendChild(small('Edit', 'ok', function () { openFareForm(f); }));
+      ta.appendChild(small(f.active ? 'Hide' : 'Show', 'ghost', function () {
+        patch('/api/admin/fares/' + f.id, {active: !f.active}).then(function (res) {
+          if (!res.ok) { say($('admin-fares-status'), 'bad', T((res.data && res.data.error) || NOSERVER)); }
+          loadFares();
+        });
+      }));
+      ta.appendChild(small('Delete', 'warn', function () {
+        removeRecord('/api/admin/fares/' + f.id, 'Delete this fare?',
+          $('admin-fares-status'), loadFares);
+      }));
+      tb.appendChild(tr);
+    });
+    say($('admin-fares-status'), '', rows.length ? '' : T('No fares yet.'));
+  }
+
+  /* ---------- fare form (create and edit) ---------- */
+  var editingFareId = null;
+  function openFareForm(f) {
+    editingFareId = f ? String(f.id) : null;
+    $('fr-key').value = f ? f.key : '';
+    $('fr-tag').value = f ? f.tag : '';
+    $('fr-name').value = f ? f.name : '';
+    $('fr-amount').value = f ? String(f.amount) : '';
+    $('fr-currency').value = f ? f.currency : 'RWF';
+    $('fr-note').value = f ? f.note : '';
+    $('fr-flw').value = f ? f.flw_link : '';
+    $('fr-active').checked = f ? !!f.active : true;
+    $('fare-form-title').textContent = T(f ? 'Edit fare' : 'New fare');
+    $('fare-form').hidden = false;
+    $('fr-name').focus();
+  }
+  function closeFareForm() {
+    var form = $('fare-form');
+    if (form) { form.hidden = true; }
+    editingFareId = null;
+  }
+  async function saveFare(event) {
+    event.preventDefault();
+    var st = $('admin-fares-status');
+    var data = {
+      key: $('fr-key').value, tag: $('fr-tag').value, name: $('fr-name').value,
+      amount: $('fr-amount').value, currency: $('fr-currency').value,
+      note: $('fr-note').value, flw_link: $('fr-flw').value,
+      active: $('fr-active').checked
+    };
+    var res = editingFareId === null
+      ? await post('/api/admin/fares', data)
+      : await patch('/api/admin/fares/' + editingFareId, data);
+    if (!res.ok) { say(st, 'bad', T((res.data && res.data.error) || NOSERVER)); return; }
+    say(st, '', '');
+    closeFareForm();
+    loadFares();
+  }
+
   /* ---------- which view is open ---------- */
   var LOADERS = {
     overview: loadOverview, bookings: loadBookings, fleet: loadFleet,
-    accounts: loadAccounts, messages: loadMessages, comments: loadComments
+    accounts: loadAccounts, messages: loadMessages, comments: loadComments,
+    fares: loadFares
   };
   function refresh() {
     var view = (location.hash || '#overview').replace('#', '');
     if (!LOADERS[view]) { view = 'overview'; }
     if (view !== 'fleet') { closeCarForm(); }
     if (view !== 'bookings') { closeBookingForm(); }
+    if (view !== 'fares') { closeFareForm(); }
     document.querySelectorAll('.admin-nav a').forEach(function (a) {
       if (a.getAttribute('data-view') === view) { a.setAttribute('aria-current', 'page'); }
       else { a.removeAttribute('aria-current'); }
@@ -600,6 +806,10 @@
   on('booking-new', 'click', function () { openBookingForm(null); });
   on('ab-cancel', 'click', closeBookingForm);
   on('ab-form', 'submit', saveBooking);
+  on('fares-filter', 'input', renderFares);
+  on('fare-new', 'click', function () { openFareForm(null); });
+  on('fare-cancel', 'click', closeFareForm);
+  on('fare-form', 'submit', saveFare);
 
   refresh();
 })();

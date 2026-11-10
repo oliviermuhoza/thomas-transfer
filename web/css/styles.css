@@ -764,14 +764,24 @@ body.is-admin .admin-only{display:block}
 body.is-admin .not-admin{display:none}
 
 /* ===== ADMIN PORTAL ===== */
-.admin-shell{padding-top:50px;padding-bottom:70px}
+/* Full-screen workspace, like the auth screens: the public header, footer,
+   floating WhatsApp button and support dialog stay out of the way. The portal
+   provides its own way back and out. */
+body[data-page="admin"] header,
+body[data-page="admin"] footer,
+body[data-page="admin"] .wa-float,
+body[data-page="admin"] .msg-dialog{display:none}
+body[data-page="admin"] main{padding-top:0}
+.admin-shell{padding-top:28px;padding-bottom:70px}
+.admin-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
+.admin-topbar .auth-back{margin-bottom:0}
 .admin-head{text-align:center;margin-bottom:26px}
 .admin-head .lead{margin-left:auto;margin-right:auto}
 .admin-nav{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);margin-bottom:30px}
 .admin-nav a{display:block;padding:12px 16px;border-radius:8px 8px 0 0;color:var(--muted);font-weight:700;font-size:.9rem;text-decoration:none;min-height:44px;border-bottom:3px solid transparent}
 .admin-nav a:hover{background:var(--surface);color:var(--heading)}
 .admin-nav a[aria-current="page"]{color:var(--heading);border-bottom-color:var(--yellow)}
-body[data-page="admin"] .admin-view{display:none;scroll-margin-top:92px}
+body[data-page="admin"] .admin-view{display:none;scroll-margin-top:24px}
 body[data-page="admin"] .admin-view:target{display:block}
 body[data-page="admin"]:not(:has(.admin-view:target)) #overview{display:block}
 .admin-view h3{margin:26px 0 12px}
@@ -814,6 +824,20 @@ img.thumb{width:86px;height:62px;object-fit:cover;border-radius:6px;display:bloc
 .mini.ghost{background:transparent;color:var(--heading);border-color:var(--heading)}
 .mini:hover{filter:brightness(1.1)}
 a.mini{display:inline-flex;align-items:center;text-decoration:none}
+
+/* Row action dropdown, used where a row offers several actions */
+.rowmenu-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 14px;font:inherit;font-size:.85rem;font-weight:700;
+  color:var(--heading);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;cursor:pointer;
+  transition:background .2s,border-color .2s}
+.rowmenu-btn:hover,.rowmenu-btn[aria-expanded="true"]{background:var(--surface);border-color:var(--yellow)}
+.rowmenu-btn svg{width:14px;height:14px;flex:none}
+.rowmenu-panel{position:fixed;z-index:60;min-width:200px;padding:6px;display:flex;flex-direction:column;gap:2px;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.rowmenu-item{display:block;width:100%;text-align:left;font:inherit;font-size:.88rem;font-weight:600;min-height:40px;
+  padding:10px 12px;border:0;border-radius:7px;background:none;color:var(--ink);cursor:pointer}
+.rowmenu-item:hover,.rowmenu-item:focus-visible{background:var(--surface-2);color:var(--heading);outline:none}
+.rowmenu-item.warn{color:var(--red-text)}
+.rowmenu-item.ok{color:var(--green-text)}
 .login-note{max-width:520px;margin:0 auto 24px;text-align:center}
 .login-note p{margin-bottom:6px;color:var(--ink)}
 #available .form-box,#bookings .form-box,#report .form-box{margin-left:auto;margin-right:auto}

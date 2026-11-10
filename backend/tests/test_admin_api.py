@@ -68,6 +68,7 @@ READ_ENDPOINTS = [
     "/api/admin/users",
     "/api/admin/messages",
     "/api/admin/comments",
+    "/api/admin/fares",
     "/api/admin/export/bookings.csv",
     "/api/admin/export/messages.csv",
 ]
@@ -200,6 +201,9 @@ def test_admin_comment_delete(client):
         ("post", "/api/admin/users/1/password"),
         ("patch", "/api/bookings/1"),
         ("post", "/api/admin/bookings/1/payment"),
+        ("post", "/api/admin/fares"),
+        ("patch", "/api/admin/fares/1"),
+        ("delete", "/api/admin/fares/1"),
     ],
 )
 def test_admin_write_endpoints_require_login(client, method, url):
@@ -225,6 +229,9 @@ def test_admin_write_endpoints_require_login(client, method, url):
         ("post", "/api/admin/users/1/password"),
         ("patch", "/api/bookings/1"),
         ("post", "/api/admin/bookings/1/payment"),
+        ("post", "/api/admin/fares"),
+        ("patch", "/api/admin/fares/1"),
+        ("delete", "/api/admin/fares/1"),
     ],
 )
 def test_admin_write_endpoints_reject_customers(client, method, url):
@@ -847,6 +854,82 @@ def test_startup_migrates_users_table(tmp_path):
     assert rows and all(row["active"] is True for row in rows)
 
 
+def test_pay_page_renders_seeded_fares(client):
+    page = client.get("/pay")
+    assert page.status_code == 200
+    assert b"25,000 RWF" in page.data
+    assert b"$315" in page.data
+    assert b'data-svc="airport"' in page.data
+    assert b'data-flw=""' in page.data
+
+
+def test_admin_fares_crud_and_visibility(client):
+    assert login_admin(client).status_code == 200
+
+    rows = client.get("/api/admin/fares").get_json()
+    assert len(rows) == 7
+    assert rows[0]["key"] == "airport"
+    assert rows[0]["price"] == "25,000 RWF"
+    assert rows[0]["active"] is True
+
+    created = api_post(
+        client,
+        "/api/admin/fares",
+        {
+            "key": "gishwati",
+            "tag": "Tour",
+            "name": "Gishwati Forest",
+            "amount": 180,
+            "currency": "USD",
+            "note": "Per person",
+            "flw_link": "https://flutterwave.com/pay/gishwati",
+        },
+    )
+    assert created.status_code == 201
+    fare = created.get_json()["fare"]
+    assert fare["price"] == "$180"
+    assert fare["flw_link"] == "https://flutterwave.com/pay/gishwati"
+
+    assert b'data-svc="gishwati"' in client.get("/pay").data
+
+    updated = api_patch(client, f"/api/admin/fares/{fare['id']}", {"amount": 160})
+    assert updated.status_code == 200
+    assert updated.get_json()["fare"]["price"] == "$160"
+
+    hidden = api_patch(client, f"/api/admin/fares/{fare['id']}", {"active": False})
+    assert hidden.get_json()["fare"]["active"] is False
+    assert b'data-svc="gishwati"' not in client.get("/pay").data
+
+    assert api_delete(client, f"/api/admin/fares/{fare['id']}").status_code == 200
+    assert len(client.get("/api/admin/fares").get_json()) == 7
+
+
+def test_admin_fare_validation(client):
+    assert login_admin(client).status_code == 200
+
+    bad = api_post(client, "/api/admin/fares",
+                   {"key": "Bad Key!", "name": "X", "amount": 5})
+    assert bad.status_code == 400
+    no_name = api_post(client, "/api/admin/fares", {"key": "ok", "name": "", "amount": 5})
+    assert no_name.status_code == 400
+    zero = api_post(client, "/api/admin/fares", {"key": "ok", "name": "X", "amount": 0})
+    assert zero.status_code == 400
+    bad_currency = api_post(
+        client, "/api/admin/fares", {"key": "ok", "name": "X", "amount": 5, "currency": "EUR"}
+    )
+    assert bad_currency.status_code == 400
+    bad_link = api_post(
+        client, "/api/admin/fares",
+        {"key": "ok", "name": "X", "amount": 5, "flw_link": "http://insecure.example"},
+    )
+    assert bad_link.status_code == 400
+    duplicate = api_post(client, "/api/admin/fares", {"key": "airport", "name": "X", "amount": 5})
+    assert duplicate.status_code == 409
+    assert api_patch(client, "/api/admin/fares/1", {}).status_code == 400
+    assert api_patch(client, "/api/admin/fares/9999", {"amount": 5}).status_code == 404
+    assert api_delete(client, "/api/admin/fares/9999").status_code == 404
+
+
 def test_admin_page_guards(client):
     assert client.get("/admin").status_code == 302
     assert client.get("/admin").headers["Location"] == "/account#login"
@@ -865,5 +948,6 @@ def test_admin_page_guards(client):
     assert b'class="nav-admin-item"' in page.data
     assert b'href="/admin" aria-current="page"' in page.data
     assert b'data-view="comments"' in page.data
+    assert b'data-view="fares"' in page.data
     assert b'id="messages-status"' in page.data
     assert client.get("/js/admin.js").status_code == 200

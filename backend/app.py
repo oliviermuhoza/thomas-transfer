@@ -34,7 +34,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import close_db, get_db, init_db
-    from .pages import pages
+    from .pages import format_price, pages
 except ImportError:  # running directly, or loaded as a top-level module by Vercel
     import sys
 
@@ -42,10 +42,10 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         from backend.db import close_db, get_db, init_db
-        from backend.pages import pages
+        from backend.pages import format_price, pages
     except ImportError:  # deployment root is backend/ itself
         from db import close_db, get_db, init_db
-        from pages import pages
+        from pages import format_price, pages
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
@@ -54,6 +54,8 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE_RE = re.compile(r"^\+?[0-9][0-9\s().-]{6,28}[0-9]$")
 CAR_STATUSES = {"available", "maintenance"}
 BOOKING_STATUSES = {"pending", "confirmed", "completed", "cancelled"}
+FARE_CURRENCIES = {"RWF", "USD"}
+FARE_KEY_RE = re.compile(r"^[a-z][a-z0-9_-]{1,29}$")
 BOOKING_TRANSITIONS = {
     "pending": {"confirmed", "cancelled"},
     "confirmed": {"completed", "cancelled"},
@@ -384,6 +386,51 @@ def car_json(row):
     car = dict(row)
     car["specs"] = [line for line in (car["specs"] or "").split("\n") if line]
     return car
+
+
+def fare_json(row):
+    fare = dict(row)
+    fare["active"] = bool(fare["active"])
+    fare["price"] = format_price(fare["amount"], fare["currency"])
+    return fare
+
+
+def _fare_payload(data, partial=False):
+    """Validate a fare create/update body; returns (values, error_message)."""
+    values = {}
+    if "key" in data or not partial:
+        key = text_value(data, "key", 30).lower()
+        if not FARE_KEY_RE.match(key):
+            return None, "The fare code must be 2-30 lowercase letters, digits, - or _."
+        values["key"] = key
+    for field, maximum in (("tag", 60), ("name", 100), ("note", 60), ("flw_link", 300)):
+        if field in data or not partial:
+            values[field] = text_value(data, field, maximum)
+    if "name" in values and not values["name"]:
+        return None, "Please give the fare a name."
+    if not partial and "name" not in values:
+        return None, "Please give the fare a name."
+    if "amount" in data or not partial:
+        try:
+            amount = round(float(data.get("amount")), 2)
+        except (TypeError, ValueError):
+            return None, "Amount must be a number."
+        if not 0 < amount <= 100000000:
+            return None, "Amount must be greater than zero."
+        values["amount"] = amount
+    if "currency" in data:
+        currency = text_value(data, "currency", 10).upper()
+        if currency not in FARE_CURRENCIES:
+            return None, "Currency must be RWF or USD."
+        values["currency"] = currency
+    elif not partial:
+        values["currency"] = "RWF"
+    if "active" in data:
+        values["active"] = int(bool(data["active"]))
+    link = values.get("flw_link")
+    if link is not None and link and not link.startswith("https://"):
+        return None, "The payment link must start with https://."
+    return values, None
 
 
 def _car_specs_value(raw):
@@ -1197,6 +1244,75 @@ def register_routes(app):
             )
         db.execute("DELETE FROM cars WHERE id = ?", (car_id,))
         db.commit()
+        return jsonify({"ok": True})
+
+    # ---------- admin fares ----------
+
+    @app.get("/api/admin/fares")
+    @admin_required
+    def admin_fares():
+        rows = get_db().execute(
+            "SELECT id, key, tag, name, amount, currency, note, flw_link, active"
+            " FROM fares ORDER BY id"
+        ).fetchall()
+        return jsonify([fare_json(row) for row in rows])
+
+    @app.post("/api/admin/fares")
+    @admin_required
+    def admin_fare_create():
+        values, problem = _fare_payload(body(), partial=False)
+        if problem:
+            return error(problem, 400)
+        db = get_db()
+        if db.execute("SELECT 1 FROM fares WHERE key = ?", (values["key"],)).fetchone():
+            return error("Another fare already uses that code.", 409)
+        cursor = db.execute(
+            "INSERT INTO fares (key, tag, name, amount, currency, note, flw_link)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (values["key"], values["tag"], values["name"], values["amount"],
+             values["currency"], values["note"], values["flw_link"]),
+        )
+        db.commit()
+        row = db.execute("SELECT * FROM fares WHERE id = ?", (cursor.lastrowid,)).fetchone()
+        return jsonify({"ok": True, "fare": fare_json(row)}), 201
+
+    @app.patch("/api/admin/fares/<int:fare_id>")
+    @admin_required
+    def admin_fare_update(fare_id):
+        values, problem = _fare_payload(body(), partial=True)
+        if problem:
+            return error(problem, 400)
+        if not values:
+            return error("Nothing to update.", 400)
+        db = get_db()
+        fare = db.execute("SELECT * FROM fares WHERE id = ?", (fare_id,)).fetchone()
+        if fare is None:
+            return error("This fare does not exist.", 404)
+        if "key" in values and values["key"] != fare["key"]:
+            clash = db.execute(
+                "SELECT 1 FROM fares WHERE key = ? AND id != ?", (values["key"], fare_id)
+            ).fetchone()
+            if clash:
+                return error("Another fare already uses that code.", 409)
+
+        # Field names come only from the validated keys in _fare_payload.
+        assignments = ", ".join(f"{field} = ?" for field in values)
+        db.execute(
+            f"UPDATE fares SET {assignments} WHERE id = ?",
+            (*values.values(), fare_id),
+        )
+        db.commit()
+        updated = db.execute("SELECT * FROM fares WHERE id = ?", (fare_id,)).fetchone()
+        return jsonify({"ok": True, "fare": fare_json(updated)})
+
+    @app.delete("/api/admin/fares/<int:fare_id>")
+    @admin_required
+    def admin_fare_delete(fare_id):
+        db = get_db()
+        deleted = db.execute("DELETE FROM fares WHERE id = ?", (fare_id,))
+        db.commit()
+        if deleted.rowcount == 0:
+            return error("This fare does not exist.", 404)
         return jsonify({"ok": True})
 
     # ---------- admin exports ----------

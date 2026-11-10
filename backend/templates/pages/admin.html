@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container admin-shell">
+  <div class="admin-topbar">
+    <a class="auth-back" href="/">&#8592; Back to site</a>
+    <a class="auth-back" href="/account#logout">Logout</a>
+  </div>
   <div class="admin-head">
     <p class="eyebrow">Operations</p>
     <h2>Admin</h2>
@@ -14,6 +18,7 @@
     <a href="#accounts" data-view="accounts">Accounts</a>
     <a href="#messages" data-view="messages">Messages</a>
     <a href="#comments" data-view="comments">Comments</a>
+    <a href="#fares" data-view="fares">Fares</a>
   </nav>
 
   <!-- ================= OVERVIEW ================= -->
@@ -143,6 +148,39 @@
     </div>
     <div class="table-wrap"><table class="data" id="admin-comments"></table></div>
     <p id="admin-comments-status" class="status" role="status"></p>
+  </section>
+
+  <!-- ================= FARES ================= -->
+  <section id="fares" class="admin-view">
+    <h3>Payment fares</h3>
+    <p class="lead admin-sub">The standard amounts shown on the Pay online page.</p>
+    <div class="admin-filter">
+      <input id="fares-filter" type="search" placeholder="Filter fares..." aria-label="Filter fares">
+      <button id="fare-new" class="mini ok" type="button">New fare</button>
+    </div>
+    <form id="fare-form" class="form-box" hidden>
+      <h3 id="fare-form-title">New fare</h3>
+      <div class="row">
+        <div><label for="fr-key">Code</label><input id="fr-key" type="text" maxlength="30" required></div>
+        <div><label for="fr-tag">Category</label><input id="fr-tag" type="text" maxlength="60"></div>
+      </div>
+      <label for="fr-name">Name</label>
+      <input id="fr-name" type="text" maxlength="100" required>
+      <div class="row">
+        <div><label for="fr-amount">Amount</label><input id="fr-amount" type="number" min="1" step="0.01" required></div>
+        <div><label for="fr-currency">Currency</label><select id="fr-currency"><option value="RWF">RWF</option><option value="USD">USD</option></select></div>
+      </div>
+      <label for="fr-note">Note</label>
+      <input id="fr-note" type="text" maxlength="60">
+      <label for="fr-flw">Flutterwave payment link (optional)</label>
+      <input id="fr-flw" type="text" maxlength="300" placeholder="https://flutterwave.com/pay/...">
+      <label for="fr-active">Show on the Pay page</label>
+      <input id="fr-active" type="checkbox" checked>
+      <button type="submit" class="btn">Save</button>
+      <button type="button" id="fare-cancel" class="mini ghost">Cancel</button>
+    </form>
+    <div class="table-wrap"><table class="data" id="admin-fares"></table></div>
+    <p id="admin-fares-status" class="status" role="status"></p>
   </section>
 </div>
 {% endblock %}

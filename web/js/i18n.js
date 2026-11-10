@@ -471,6 +471,25 @@
  "Amount must be a number.": "Amafaranga agomba kuba umubare.",
  "Download CSV": "Kumanura CSV",
  "Bookings per month": "Ibyatumijwe buri kwezi",
+ "Fares": "Ibiciro",
+ "Payment fares": "Ibiciro bisanzwe",
+ "The standard amounts shown on the Pay online page.": "Amafaranga asanzwe yerekana ku rupapuro rwo kwishyura.",
+ "New fare": "Igiciro gishya",
+ "Edit fare": "Hindura igiciro",
+ "Code": "Kode",
+ "Category": "Icyiciro",
+ "Price": "Igiciro",
+ "Amount": "Amafaranga",
+ "Note": "Icyitonderwa",
+ "Payment link": "Aho wishyurira",
+ "Flutterwave payment link (optional)": "Linki ya Flutterwave (si itegeko)",
+ "Show on the Pay page": "Ereka ku rupapuro rwo kwishyura",
+ "Set": "Yashyizweho",
+ "Hide": "Hisha",
+ "Show": "Erekana",
+ "Delete this fare?": "Ushaka gusiba iki giciro?",
+ "No fares yet.": "Nta biciro biraboneka.",
+ "Filter fares...": "Shungura ibiciro...",
  "Set maintenance": "Shyira mu isanwa",
  "Set available": "Subiza ku murimo",
  "Confirm": "Emeza",
@@ -587,7 +606,8 @@
   "Joined": "Igihe yiyandikishije",
   "You": "Wowe",
   "Make admin": "Mugire umuyobozi",
-  "Remove admin": "Mukureho ubuyobozi"
+  "Remove admin": "Mukureho ubuyobozi",
+  "Manage": "Genzura"
 };
   var REV = {}; for (var k in RW) { REV[RW[k]] = k; }
   var lang = 'en';

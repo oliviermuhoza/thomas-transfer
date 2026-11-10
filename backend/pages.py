@@ -74,6 +74,13 @@ def render_page(name, **extra):
     )
 
 
+def format_price(amount, currency):
+    """Display text for a fare or car price, e.g. '25,000 RWF' or '$315'."""
+    if currency == "USD":
+        return "${:,.0f}".format(amount)
+    return "{:,.0f} RWF".format(amount)
+
+
 # ---------------------------------------------------------------------------
 # Marketing pages
 # ---------------------------------------------------------------------------
@@ -115,7 +122,16 @@ def contact():
 
 @pages.get("/pay")
 def pay():
-    return render_page("pay")
+    rows = get_db().execute(
+        "SELECT key, tag, name, amount, currency, note, flw_link FROM fares"
+        " WHERE active = 1 ORDER BY id"
+    ).fetchall()
+    fares = []
+    for row in rows:
+        fare = dict(row)
+        fare["price"] = format_price(fare["amount"], fare["currency"])
+        fares.append(fare)
+    return render_page("pay", fares=fares)
 
 
 @pages.get("/comment")

@@ -98,6 +98,18 @@ SEED_CARS = [
 ]
 
 
+# Standard fares shown on the /pay page (key, tag, name, amount, currency, note).
+SEED_FARES = [
+    ("airport", "Airport transfer", "Kigali Airport \u21c4 City", 25000, "RWF", "Fixed fare"),
+    ("allday", "City transport", "Kigali All-Day Service", 150000, "RWF", "Until 21:00"),
+    ("akagera", "Safari \u00b7 10% off", "Akagera National Park", 315, "USD", "Per person"),
+    ("volcanoes", "Tour \u00b7 10% off", "Volcanoes National Park", 270, "USD", "Per person"),
+    ("nyungwe", "Tour \u00b7 10% off", "Nyungwe National Park", 270, "USD", "Per person"),
+    ("gisenyi", "Lake Kivu \u00b7 10% off", "Gisenyi \u2014 Lake Kivu", 225, "USD", "Per person"),
+    ("palace", "Heritage \u00b7 10% off", "King's Palace Museum", 90, "USD", "Per person"),
+]
+
+
 def get_db():
     """Return the connection for the current request, opening it on first use."""
     if "db" not in g:
@@ -121,8 +133,18 @@ def init_db(admin_password=None, production=False, ephemeral=False):
     db.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     _migrate(db)
     _seed_cars(db)
+    _seed_fares(db)
     _seed_admin(db, admin_password, production=production, ephemeral=ephemeral)
     db.commit()
+
+
+def _seed_fares(db):
+    if db.execute("SELECT 1 FROM fares LIMIT 1").fetchone():
+        return
+    db.executemany(
+        "INSERT INTO fares (key, tag, name, amount, currency, note) VALUES (?, ?, ?, ?, ?, ?)",
+        SEED_FARES,
+    )
 
 
 def _migrate(db):
