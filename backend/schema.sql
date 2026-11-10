@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone         TEXT    NOT NULL DEFAULT '',
   password_hash TEXT    NOT NULL,
   is_admin      INTEGER NOT NULL DEFAULT 0,
+  active        INTEGER NOT NULL DEFAULT 1,
   created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -18,6 +19,10 @@ CREATE TABLE IF NOT EXISTS cars (
   type        TEXT    NOT NULL,
   description TEXT    NOT NULL DEFAULT '',
   image       TEXT    NOT NULL DEFAULT '',
+  capacity    INTEGER NOT NULL DEFAULT 4,
+  price       TEXT    NOT NULL DEFAULT '',
+  week        TEXT    NOT NULL DEFAULT '',
+  specs       TEXT    NOT NULL DEFAULT '',
   status      TEXT    NOT NULL DEFAULT 'available'
                       CHECK (status IN ('available', 'booked', 'maintenance')),
   created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
@@ -34,6 +39,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   notes      TEXT    NOT NULL DEFAULT '',
   status     TEXT    NOT NULL DEFAULT 'pending'
                      CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+  paid_amount REAL   NOT NULL DEFAULT 0,
+  paid_method TEXT   NOT NULL DEFAULT '',
+  paid_at     TEXT   NOT NULL DEFAULT '',
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -56,5 +64,6 @@ CREATE TABLE IF NOT EXISTS messages (
   phone      TEXT    NOT NULL DEFAULT '',
   service    TEXT    NOT NULL DEFAULT '',
   message    TEXT    NOT NULL,
+  handled    INTEGER NOT NULL DEFAULT 0,
   created_at TEXT    NOT NULL DEFAULT (datetime('now'))
 );

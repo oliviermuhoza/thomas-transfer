@@ -1,6 +1,9 @@
 /* Legacy hash bookmarks: /#transport -> /transport, /#available -> /account#available.
    Browsers never send the fragment to the server, so this must run client-side. */
 (function () {
+  // The admin portal has its own hash sections with overlapping names
+  // (#bookings, #report, ...). Never rewrite bookmarks on /admin.
+  if (location.pathname === '/admin') { return; }
   var MAP = {
     '#home': '/',
     '#transport': '/transport',

@@ -18,6 +18,7 @@ from urllib.parse import urlparse
 
 from flask import (
     Flask,
+    Response,
     current_app,
     g,
     jsonify,
@@ -33,7 +34,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import close_db, get_db, init_db
-    from .pages import CAR_DISPLAY, pages
+    from .pages import pages
 except ImportError:  # running directly, or loaded as a top-level module by Vercel
     import sys
 
@@ -41,10 +42,10 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         from backend.db import close_db, get_db, init_db
-        from backend.pages import CAR_DISPLAY, pages
+        from backend.pages import pages
     except ImportError:  # deployment root is backend/ itself
         from db import close_db, get_db, init_db
-        from pages import CAR_DISPLAY, pages
+        from pages import pages
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
@@ -59,8 +60,16 @@ BOOKING_TRANSITIONS = {
     "completed": set(),
     "cancelled": set(),
 }
-# Seeded fleet order/capacities (no schema column); used for booking validation.
-CAR_CAPACITIES = {1: 4, 2: 7, 3: 5, 4: 5, 5: 8, 6: 5, 7: 7, 8: 7}
+# Editable car fields and their text limits (capacity is validated separately).
+CAR_TEXT_FIELDS = {
+    "name": 100,
+    "type": 60,
+    "description": 300,
+    "image": 300,
+    "price": 40,
+    "week": 80,
+    "specs": 500,
+}
 
 
 def create_app(database=None, secret_key=None, admin_password=None, production=None):
@@ -367,14 +376,59 @@ def valid_phone(phone):
 
 
 def car_capacity(car):
-    return CAR_CAPACITIES.get(car["id"], 60)
+    return car["capacity"]
+
+
+def car_json(row):
+    """Serialize a cars row; specs is stored newline-separated, returned as list."""
+    car = dict(row)
+    car["specs"] = [line for line in (car["specs"] or "").split("\n") if line]
+    return car
+
+
+def _car_specs_value(raw):
+    """Normalize free-text specs into one non-empty line per spec."""
+    lines = [line.strip() for line in str(raw or "").replace("\r", "\n").split("\n")]
+    return "\n".join(line for line in lines if line)[:500]
+
+
+def _csv_response(filename, header, rows):
+    """Build a downloadable CSV response (BOM so Excel reads UTF-8 correctly)."""
+
+    def esc(value):
+        value = "" if value is None else str(value)
+        if any(char in value for char in ('"', ",", "\n", "\r")):
+            value = '"' + value.replace('"', '""') + '"'
+        return value
+
+    lines = [",".join(esc(cell) for cell in header)]
+    lines += [",".join(esc(cell) for cell in row) for row in rows]
+    return Response(
+        ("\ufeff" + "\r\n".join(lines) + "\r\n").encode("utf-8"),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def parse_capacity(raw):
+    try:
+        capacity = int(raw)
+    except (TypeError, ValueError):
+        return None, "Passengers capacity must be a number."
+    if not 1 <= capacity <= 60:
+        return None, "Capacity must be between 1 and 60 passengers."
+    return capacity, None
 
 
 def current_user():
     user_id = session.get("user_id")
     if not user_id:
         return None
-    return get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    user = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if user is not None and not user["active"]:
+        # Deactivated accounts are treated as signed out everywhere.
+        return None
+    return user
 
 
 def user_json(user):
@@ -413,7 +467,7 @@ def admin_required(view):
     return wrapped
 
 
-def parse_trip_at(raw):
+def parse_trip_at(raw, require_future=True):
     raw = str(raw or "").strip()
     try:
         moment = datetime.fromisoformat(raw)
@@ -421,7 +475,7 @@ def parse_trip_at(raw):
         return None, "Please choose a valid date and time."
     if moment.tzinfo is not None:
         return None, "Please choose a local date and time."
-    if moment < datetime.now() - timedelta(minutes=5):
+    if require_future and moment < datetime.now() - timedelta(minutes=5):
         return None, "Please choose a date and time in the future."
     return moment.isoformat(timespec="minutes"), None
 
@@ -528,6 +582,8 @@ def register_routes(app):
         user = get_db().execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
         if user is None or not check_password_hash(user["password_hash"], password):
             return error("Wrong email or password.", 401)
+        if not user["active"]:
+            return error("This account has been deactivated. Please contact support.", 401)
 
         session.clear()
         session.permanent = True
@@ -545,17 +601,20 @@ def register_routes(app):
 
     @app.get("/api/cars")
     def list_cars():
-        query = "SELECT id, name, type, description, image, status FROM cars"
+        query = (
+            "SELECT id, name, type, description, image, status,"
+            " capacity, price, week, specs FROM cars"
+        )
         if request.args.get("available") in ("1", "true", "yes"):
             query += " WHERE status = 'available'"
         query += " ORDER BY id"
 
-        # The prices and specs are display-only and live in pages.CAR_DISPLAY;
-        # the fleet itself always comes from the cars table.
+        # Everything about a car now lives in the cars table; specs is stored
+        # as newline-separated text and returned as a list of display lines.
         cars = []
         for row in get_db().execute(query):
             car = dict(row)
-            car.update(CAR_DISPLAY.get(car["id"], {"specs": [], "price": "", "week": ""}))
+            car["specs"] = [line for line in car["specs"].split("\n") if line]
             cars.append(car)
         return jsonify(cars)
 
@@ -584,8 +643,9 @@ def register_routes(app):
     def list_bookings():
         db = get_db()
         query = """
-            SELECT b.id, b.user_id, b.pickup, b.dropoff, b.trip_at, b.passengers,
-                   b.notes, b.status, b.created_at,
+            SELECT b.id, b.user_id, b.car_id, b.pickup, b.dropoff, b.trip_at,
+                   b.passengers, b.notes, b.status,
+                   b.paid_amount, b.paid_method, b.paid_at, b.created_at,
                    c.name AS car_name,
                    u.first_name || ' ' || u.last_name AS customer,
                    u.phone, u.email
@@ -639,6 +699,19 @@ def register_routes(app):
         if passengers > capacity:
             return error(f"This car can take up to {capacity} passengers.", 400)
 
+        # An admin may book on behalf of a customer (phone or walk-in trips).
+        user_id = g.user["id"]
+        if g.user["is_admin"] and data.get("user_id") is not None:
+            try:
+                user_id = int(data.get("user_id"))
+            except (TypeError, ValueError):
+                return error("Choose a valid customer account.", 400)
+            customer = db.execute(
+                "SELECT id FROM users WHERE id = ? AND active = 1", (user_id,)
+            ).fetchone()
+            if customer is None:
+                return error("This account does not exist.", 404)
+
         taken = db.execute(
             "UPDATE cars SET status = 'booked' WHERE id = ? AND status = 'available'",
             (car_id,),
@@ -651,7 +724,7 @@ def register_routes(app):
             "INSERT INTO bookings"
             " (user_id, car_id, pickup, dropoff, trip_at, passengers, notes)"
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (g.user["id"], car_id, pickup, dropoff, trip_at, passengers, notes),
+            (user_id, car_id, pickup, dropoff, trip_at, passengers, notes),
         )
         db.commit()
         return jsonify({"ok": True, "id": cursor.lastrowid}), 201
@@ -686,6 +759,121 @@ def register_routes(app):
         db.commit()
         return jsonify({"ok": True, "status": new_status})
 
+    @app.patch("/api/bookings/<int:booking_id>")
+    @admin_required
+    def booking_update(booking_id):
+        data = body()
+        db = get_db()
+        booking = db.execute(
+            "SELECT * FROM bookings WHERE id = ?", (booking_id,)
+        ).fetchone()
+        if booking is None:
+            return error("This booking does not exist.", 404)
+
+        updates = {}
+        for field, maximum in (("pickup", 150), ("dropoff", 150), ("notes", 500)):
+            if field in data:
+                updates[field] = text_value(data, field, maximum)
+        if "passengers" in data:
+            try:
+                passengers = int(data["passengers"])
+            except (TypeError, ValueError):
+                return error("Passengers must be a number.", 400)
+            if not 1 <= passengers <= 60:
+                return error("Passengers must be between 1 and 60.", 400)
+            updates["passengers"] = passengers
+        if "trip_at" in data:
+            moment, problem = parse_trip_at(
+                data["trip_at"],
+                require_future=booking["status"] in ("pending", "confirmed"),
+            )
+            if problem:
+                return error(problem, 400)
+            updates["trip_at"] = moment
+
+        new_car_id = None
+        if "car_id" in data:
+            try:
+                car_id = int(data["car_id"])
+            except (TypeError, ValueError):
+                return error("Please choose a car.", 400)
+            car = db.execute("SELECT * FROM cars WHERE id = ?", (car_id,)).fetchone()
+            if car is None:
+                return error("This car does not exist.", 404)
+            if car_id != booking["car_id"]:
+                if booking["status"] in ("pending", "confirmed") and car["status"] != "available":
+                    return error("This car is not available. Please choose another car.", 409)
+                new_car_id = car_id
+            updates["car_id"] = car_id
+
+        if not updates:
+            return error("Nothing to update.", 400)
+
+        pickup = updates.get("pickup", booking["pickup"])
+        dropoff = updates.get("dropoff", booking["dropoff"])
+        if not pickup or not dropoff:
+            return error("Please fill in all the fields.", 400)
+        if pickup.casefold() == dropoff.casefold():
+            return error("Pick-up and drop-off places must be different.", 400)
+
+        final_car_id = updates.get("car_id", booking["car_id"])
+        car = db.execute("SELECT * FROM cars WHERE id = ?", (final_car_id,)).fetchone()
+        capacity = car_capacity(car)
+        if updates.get("passengers", booking["passengers"]) > capacity:
+            return error(f"This car can take up to {capacity} passengers.", 400)
+
+        # Field names come only from the validated keys above.
+        assignments = ", ".join(f"{field} = ?" for field in updates)
+        db.execute(
+            f"UPDATE bookings SET {assignments} WHERE id = ?",
+            (*updates.values(), booking_id),
+        )
+        if new_car_id is not None and booking["status"] in ("pending", "confirmed"):
+            # The trip moves to the new car: free the old one, take the new one.
+            db.execute(
+                "UPDATE cars SET status = 'available' WHERE id = ? AND status = 'booked'",
+                (booking["car_id"],),
+            )
+            db.execute(
+                "UPDATE cars SET status = 'booked' WHERE id = ? AND status = 'available'",
+                (new_car_id,),
+            )
+        db.commit()
+        return jsonify({"ok": True})
+
+    @app.post("/api/admin/bookings/<int:booking_id>/payment")
+    @admin_required
+    def admin_booking_payment(booking_id):
+        data = body()
+        try:
+            amount = round(float(data.get("amount")), 2)
+        except (TypeError, ValueError):
+            return error("Amount must be a number.", 400)
+        if amount < 0:
+            return error("Amount cannot be negative.", 400)
+        if amount > 1000000000:
+            return error("Amount is too large.", 400)
+        method = text_value(data, "method", 40)
+        if amount > 0 and not method:
+            return error("Please enter how the payment was made.", 400)
+
+        db = get_db()
+        booking = db.execute("SELECT * FROM bookings WHERE id = ?", (booking_id,)).fetchone()
+        if booking is None:
+            return error("This booking does not exist.", 404)
+        if booking["status"] == "cancelled":
+            return error("This booking was cancelled.", 400)
+
+        # An amount of 0 clears the recorded payment.
+        paid_at = datetime.now().isoformat(timespec="minutes") if amount > 0 else ""
+        paid_method = method if amount > 0 else ""
+        db.execute(
+            "UPDATE bookings SET paid_amount = ?, paid_method = ?, paid_at = ? WHERE id = ?",
+            (amount, paid_method, paid_at, booking_id),
+        )
+        db.commit()
+        return jsonify({"ok": True, "paid_amount": amount, "paid_method": paid_method})
+
     # ---------- admin report ----------
 
     @app.get("/api/report")
@@ -706,6 +894,11 @@ def register_routes(app):
             " SUM(status = 'completed') AS completed,"
             " SUM(status = 'cancelled') AS cancelled"
             " FROM bookings"
+        ).fetchone()
+        revenue = db.execute(
+            "SELECT COALESCE(SUM(paid_amount), 0) AS total,"
+            " COALESCE(SUM(paid_amount > 0), 0) AS paid_count"
+            " FROM bookings WHERE status != 'cancelled'"
         ).fetchone()
         comment_counts = db.execute(
             "SELECT COUNT(*) AS count, AVG(rating) AS average FROM comments"
@@ -739,6 +932,10 @@ def register_routes(app):
                     "completed": booking_counts["completed"] or 0,
                     "cancelled": booking_counts["cancelled"] or 0,
                 },
+                "revenue": {
+                    "total": revenue["total"],
+                    "paid_bookings": revenue["paid_count"],
+                },
                 "accounts": accounts,
                 "comments": {
                     "count": comment_counts["count"],
@@ -756,6 +953,282 @@ def register_routes(app):
                 ],
             }
         )
+
+    # ---------- admin records ----------
+
+    @app.get("/api/admin/users")
+    @admin_required
+    def admin_users():
+        rows = get_db().execute(
+            "SELECT id, first_name, last_name, email, phone, is_admin, active, created_at"
+            " FROM users ORDER BY id"
+        ).fetchall()
+        return jsonify(
+            [
+                {
+                    "id": row["id"],
+                    "name": f"{row['first_name']} {row['last_name']}".strip(),
+                    "email": row["email"],
+                    "phone": row["phone"],
+                    "admin": bool(row["is_admin"]),
+                    "active": bool(row["active"]),
+                    "created_at": row["created_at"],
+                }
+                for row in rows
+            ]
+        )
+
+    @app.post("/api/admin/users/<int:user_id>/admin")
+    @admin_required
+    def admin_user_role(user_id):
+        value = body().get("admin")
+        if not isinstance(value, bool):
+            return error("Send admin as true or false.", 400)
+
+        db = get_db()
+        target = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if target is None:
+            return error("This account does not exist.", 404)
+
+        if not value:
+            if user_id == g.user["id"]:
+                return error("You cannot remove your own admin access.", 400)
+            if target["is_admin"]:
+                admins = db.execute(
+                    "SELECT COUNT(*) AS n FROM users WHERE is_admin = 1"
+                ).fetchone()["n"]
+                if admins <= 1:
+                    return error("At least one admin account is required.", 400)
+
+        db.execute(
+            "UPDATE users SET is_admin = ? WHERE id = ?", (int(value), user_id)
+        )
+        db.commit()
+        updated = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return jsonify({"ok": True, "user": user_json(updated)})
+
+    @app.post("/api/admin/users/<int:user_id>/active")
+    @admin_required
+    def admin_user_active(user_id):
+        value = body().get("active")
+        if not isinstance(value, bool):
+            return error("Send active as true or false.", 400)
+
+        db = get_db()
+        target = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if target is None:
+            return error("This account does not exist.", 404)
+        if target["id"] == g.user["id"]:
+            return error("You cannot change the state of your own account.", 400)
+        if not value and target["is_admin"] and target["active"]:
+            active_admins = db.execute(
+                "SELECT COUNT(*) AS n FROM users WHERE is_admin = 1 AND active = 1"
+            ).fetchone()["n"]
+            if active_admins <= 1:
+                return error("At least one active admin account is required.", 400)
+
+        db.execute("UPDATE users SET active = ? WHERE id = ?", (int(value), user_id))
+        db.commit()
+        return jsonify({"ok": True, "active": value})
+
+    @app.post("/api/admin/users/<int:user_id>/password")
+    @admin_required
+    def admin_user_password(user_id):
+        password = str(body().get("password") or "")
+        if len(password) < 8:
+            return error("Use at least 8 characters for the password.", 400)
+
+        db = get_db()
+        exists = db.execute("SELECT 1 FROM users WHERE id = ?", (user_id,)).fetchone()
+        if exists is None:
+            return error("This account does not exist.", 404)
+        db.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (generate_password_hash(password), user_id),
+        )
+        db.commit()
+        return jsonify({"ok": True})
+
+    @app.get("/api/admin/messages")
+    @admin_required
+    def admin_messages():
+        rows = get_db().execute(
+            "SELECT id, name, email, phone, service, message, handled, created_at"
+            " FROM messages ORDER BY id DESC"
+        ).fetchall()
+        messages = []
+        for row in rows:
+            message = dict(row)
+            message["handled"] = bool(message["handled"])
+            messages.append(message)
+        return jsonify(messages)
+
+    @app.get("/api/admin/comments")
+    @admin_required
+    def admin_comments():
+        rows = get_db().execute(
+            "SELECT id, user_id, name, rating, text, created_at"
+            " FROM comments ORDER BY id DESC"
+        ).fetchall()
+        return jsonify([dict(row) for row in rows])
+
+    @app.post("/api/admin/messages/<int:message_id>/handled")
+    @admin_required
+    def admin_message_handled(message_id):
+        value = body().get("handled")
+        if not isinstance(value, bool):
+            return error("Send handled as true or false.", 400)
+
+        db = get_db()
+        message = db.execute("SELECT id FROM messages WHERE id = ?", (message_id,)).fetchone()
+        if message is None:
+            return error("This message does not exist.", 404)
+
+        db.execute("UPDATE messages SET handled = ? WHERE id = ?", (int(value), message_id))
+        db.commit()
+        return jsonify({"ok": True, "handled": value})
+
+    @app.delete("/api/admin/messages/<int:message_id>")
+    @admin_required
+    def admin_message_delete(message_id):
+        db = get_db()
+        deleted = db.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+        db.commit()
+        if deleted.rowcount == 0:
+            return error("This message does not exist.", 404)
+        return jsonify({"ok": True})
+
+    @app.delete("/api/admin/comments/<int:comment_id>")
+    @admin_required
+    def admin_comment_delete(comment_id):
+        db = get_db()
+        deleted = db.execute("DELETE FROM comments WHERE id = ?", (comment_id,))
+        db.commit()
+        if deleted.rowcount == 0:
+            return error("This comment does not exist.", 404)
+        return jsonify({"ok": True})
+
+    # ---------- admin fleet management ----------
+
+    @app.post("/api/admin/cars")
+    @admin_required
+    def admin_car_create():
+        data = body()
+        name = text_value(data, "name", CAR_TEXT_FIELDS["name"])
+        car_type = text_value(data, "type", CAR_TEXT_FIELDS["type"])
+        if not name or not car_type:
+            return error("Please fill in the car name and type.", 400)
+        capacity, problem = parse_capacity(data.get("capacity", 4))
+        if problem:
+            return error(problem, 400)
+
+        db = get_db()
+        cursor = db.execute(
+            "INSERT INTO cars (name, type, description, image, capacity, price, week, specs)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                name,
+                car_type,
+                text_value(data, "description", CAR_TEXT_FIELDS["description"]),
+                text_value(data, "image", CAR_TEXT_FIELDS["image"]),
+                capacity,
+                text_value(data, "price", CAR_TEXT_FIELDS["price"]),
+                text_value(data, "week", CAR_TEXT_FIELDS["week"]),
+                _car_specs_value(data.get("specs")),
+            ),
+        )
+        db.commit()
+        car = db.execute("SELECT * FROM cars WHERE id = ?", (cursor.lastrowid,)).fetchone()
+        return jsonify({"ok": True, "car": car_json(car)}), 201
+
+    @app.patch("/api/admin/cars/<int:car_id>")
+    @admin_required
+    def admin_car_update(car_id):
+        data = body()
+        db = get_db()
+        car = db.execute("SELECT * FROM cars WHERE id = ?", (car_id,)).fetchone()
+        if car is None:
+            return error("This car does not exist.", 404)
+
+        updates = {}
+        for field, maximum in CAR_TEXT_FIELDS.items():
+            if field in data:
+                if field == "specs":
+                    updates[field] = _car_specs_value(data[field])
+                else:
+                    updates[field] = text_value(data, field, maximum)
+        if "capacity" in data:
+            capacity, problem = parse_capacity(data["capacity"])
+            if problem:
+                return error(problem, 400)
+            updates["capacity"] = capacity
+        if not updates:
+            return error("Nothing to update.", 400)
+        if updates.get("name", car["name"]).strip() == "":
+            return error("Please fill in the car name and type.", 400)
+        if updates.get("type", car["type"]).strip() == "":
+            return error("Please fill in the car name and type.", 400)
+
+        # Field names come only from CAR_TEXT_FIELDS plus the validated
+        # "capacity" key above, so building the SET clause is safe.
+        assignments = ", ".join(f"{field} = ?" for field in updates)
+        db.execute(
+            f"UPDATE cars SET {assignments} WHERE id = ?",
+            (*updates.values(), car_id),
+        )
+        db.commit()
+        updated = db.execute("SELECT * FROM cars WHERE id = ?", (car_id,)).fetchone()
+        return jsonify({"ok": True, "car": car_json(updated)})
+
+    @app.delete("/api/admin/cars/<int:car_id>")
+    @admin_required
+    def admin_car_delete(car_id):
+        db = get_db()
+        car = db.execute("SELECT id FROM cars WHERE id = ?", (car_id,)).fetchone()
+        if car is None:
+            return error("This car does not exist.", 404)
+        used = db.execute(
+            "SELECT 1 FROM bookings WHERE car_id = ? LIMIT 1", (car_id,)
+        ).fetchone()
+        if used is not None:
+            return error(
+                "This car has bookings in its history. Set it to maintenance to hide it.",
+                409,
+            )
+        db.execute("DELETE FROM cars WHERE id = ?", (car_id,))
+        db.commit()
+        return jsonify({"ok": True})
+
+    # ---------- admin exports ----------
+
+    @app.get("/api/admin/export/bookings.csv")
+    @admin_required
+    def admin_export_bookings():
+        rows = get_db().execute(
+            "SELECT b.id, u.first_name || ' ' || u.last_name AS customer, u.email, u.phone,"
+            " c.name AS car, b.pickup, b.dropoff, b.trip_at, b.passengers, b.status,"
+            " b.paid_amount, b.paid_method, b.paid_at, b.created_at"
+            " FROM bookings b"
+            " JOIN cars c ON c.id = b.car_id"
+            " JOIN users u ON u.id = b.user_id"
+            " ORDER BY b.id"
+        ).fetchall()
+        header = [
+            "id", "customer", "email", "phone", "car", "pickup", "dropoff", "trip_at",
+            "passengers", "status", "paid_amount", "paid_method", "paid_at", "created_at",
+        ]
+        return _csv_response("bookings.csv", header, [tuple(r[k] for k in header) for r in rows])
+
+    @app.get("/api/admin/export/messages.csv")
+    @admin_required
+    def admin_export_messages():
+        rows = get_db().execute(
+            "SELECT id, name, email, phone, service, message,"
+            " CASE WHEN handled = 1 THEN 'yes' ELSE 'no' END AS handled, created_at"
+            " FROM messages ORDER BY id"
+        ).fetchall()
+        header = ["id", "name", "email", "phone", "service", "message", "handled", "created_at"]
+        return _csv_response("messages.csv", header, [tuple(r[k] for k in header) for r in rows])
 
     # ---------- comments and messages ----------
 

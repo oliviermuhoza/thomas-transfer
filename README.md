@@ -126,16 +126,23 @@ to run repeatedly.
 
 | Table | Holds |
 | --- | --- |
-| `users` | Accounts, password hashes, admin flag |
-| `cars` | Fleet entries, status (`available`, `booked`, `maintenance`) |
-| `bookings` | Customer bookings and their status |
+| `users` | Accounts, password hashes, admin flag, active flag |
+| `cars` | Fleet entries: capacity, display `price`/`week`/`specs`, status (`available`, `booked`, `maintenance`) |
+| `bookings` | Customer bookings, their status and recorded payments |
 | `comments` | Private feedback with a 1–5 rating |
-| `messages` | Support and contact messages |
+| `messages` | Support and contact messages with a `handled` flag |
 
-The car seed in `backend/db.py` mirrors the eight cards in the static fleet
-markup in `backend/templates/pages/cars.html`. If you add or rename a vehicle
-on the page, update the seed (or edit the `cars` table) so the "List of cars"
-and "Available cars" pages match.
+`CREATE TABLE IF NOT EXISTS` never alters an existing table, so additive column
+changes are applied by `_migrate()` in `backend/db.py` at startup:
+`messages.handled`, `cars.capacity/price/week/specs` (backfilled from the seed),
+`users.active`, and `bookings.paid_amount/paid_method/paid_at`.
+
+The car seed in `backend/db.py` inserts the initial fleet on the first run
+only. Every fleet page (`/cars`, "List of cars", "Available cars", booking
+validation, prices) reads the `cars` table, so the fleet is maintained from the
+admin portal — no code deploy needed for price changes. The `Popular vehicles`
+cards in `backend/templates/pages/home.html` link to fixed car ids with their
+own images, so keep those ids in mind when removing cars.
 
 Booking rules enforced by the API:
 
@@ -214,17 +221,34 @@ admin report, page routes, redirects, nav state and 404 handling.
 | POST | `/api/login` | Sign in (returns `user`, `csrf_token`) |
 | POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
 | POST | `/api/register` | Create account (returns `user`, `csrf_token`) |
-| GET | `/api/cars` | Fleet list; `?available=1` filters free cars. Rows include display-only `specs`, `price`, `week` |
+| GET | `/api/cars` | Fleet list from the `cars` table; `?available=1` filters free cars. Rows include `capacity` and display fields `specs` (list), `price`, `week` |
 | POST | `/api/cars/:id/status` | Set car status (admin) |
+| POST | `/api/admin/cars` | Create a car (admin) |
+| PATCH | `/api/admin/cars/:id` | Update car fields (admin) |
+| DELETE | `/api/admin/cars/:id` | Delete a car without bookings (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
-| POST | `/api/bookings` | Create a booking |
+| POST | `/api/bookings` | Create a booking; admins may pass `user_id` to book for a customer |
 | POST | `/api/bookings/:id/status` | Change booking status |
+| PATCH | `/api/bookings/:id` | Edit a booking (admin) |
+| POST | `/api/admin/bookings/:id/payment` | Record or clear a payment (admin) |
 | GET | `/api/report` | Admin summary |
+| GET | `/api/admin/users` | Account list without password hashes (admin) |
+| POST | `/api/admin/users/:id/admin` | Grant or revoke admin access (admin) |
+| POST | `/api/admin/users/:id/active` | Deactivate or reactivate an account (admin) |
+| POST | `/api/admin/users/:id/password` | Set an account's new password (admin) |
+| GET | `/api/admin/messages` | Contact messages with `handled` flag (admin) |
+| POST | `/api/admin/messages/:id/handled` | Mark a message handled or reopened (admin) |
+| DELETE | `/api/admin/messages/:id` | Delete a message (admin) |
+| GET | `/api/admin/comments` | All comments and ratings (admin) |
+| DELETE | `/api/admin/comments/:id` | Delete a comment (admin) |
+| GET | `/api/admin/export/bookings.csv` | Download all bookings as CSV (admin) |
+| GET | `/api/admin/export/messages.csv` | Download contact messages as CSV (admin) |
 | POST | `/api/comment` | Submit a private comment |
 | POST | `/api/contact` | Contact / support message |
 
-Mutating (`POST`) API requests require `Content-Type: application/json`, a valid
-`X-CSRF-Token`, and a same-origin request (Origin/Referer checked as defense in depth).
+Mutating (`POST`, `PUT`, `PATCH`, `DELETE`) API requests require
+`Content-Type: application/json`, a valid `X-CSRF-Token`, and a same-origin
+request (Origin/Referer checked as defense in depth).
 
 ## Deploying
 

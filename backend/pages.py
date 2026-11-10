@@ -6,7 +6,7 @@ sections because ``web/js/dashboard.js`` and ``web/js/auth-forms.js`` expect
 all of their forms and tables to exist on one page.
 """
 
-from flask import Blueprint, redirect, render_template
+from flask import Blueprint, redirect, render_template, session
 
 try:
     from .db import get_db
@@ -56,6 +56,10 @@ PAGE_META = {
         "Log in to book a car, see your bookings and manage your Thomas "
         "Transfer account.",
     ),
+    "admin": (
+        "Admin — Thomas Transfer",
+        "Manage bookings, fleet status, accounts, messages and feedback.",
+    ),
 }
 
 
@@ -68,20 +72,6 @@ def render_page(name, **extra):
         page_description=description,
         **extra,
     )
-
-
-# Display-only extras for the fleet page (prices/specs are not in the DB):
-# the car list itself always comes from the `cars` table.
-CAR_DISPLAY = {
-    1: {"specs": ["5 seats · A/C · Hybrid", "Excellent fuel economy"], "price": "45,000 RWF", "week": "31,500 RWF/day from 7 days"},
-    2: {"specs": ["7 seats · 4×4 · A/C", "Built for rough roads"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
-    3: {"specs": ["4–5 seats · AWD · A/C", "Great fuel economy"], "price": "50,000 RWF", "week": "35,000 RWF/day from 7 days"},
-    4: {"specs": ["5 seats · AWD · A/C", "VIP comfort and presence"], "price": "150,000 RWF", "week": "105,000 RWF/day from 7 days"},
-    5: {"specs": ["8–9 seats · A/C · large boot", "Roomy for groups and luggage"], "price": "120,000 RWF", "week": "84,000 RWF/day from 7 days"},
-    6: {"specs": ["5 seats · AWD · A/C", "Executive style and speed"], "price": "150,000 RWF", "week": "105,000 RWF/day from 7 days"},
-    7: {"specs": ["7 seats · AWD · A/C", "Family and business trips"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
-    8: {"specs": ["7 seats · large luggage space", "Comfortable seating"], "price": "70,000 RWF", "week": "49,000 RWF/day from 7 days"},
-}
 
 
 # ---------------------------------------------------------------------------
@@ -107,12 +97,13 @@ def tours():
 @pages.get("/cars")
 def cars():
     rows = get_db().execute(
-        "SELECT id, name, type, description, image, status FROM cars ORDER BY id"
+        "SELECT id, name, type, description, image, status,"
+        " capacity, price, week, specs FROM cars ORDER BY id"
     ).fetchall()
     cards = []
     for row in rows:
         card = dict(row)
-        card.update(CAR_DISPLAY.get(card["id"], {"specs": [], "price": "", "week": ""}))
+        card["specs"] = [line for line in card["specs"].split("\n") if line]
         cards.append(card)
     return render_page("cars", cars=cards)
 
@@ -140,6 +131,26 @@ def comment():
 @pages.get("/account")
 def account():
     return render_page("account")
+
+
+def _session_user():
+    """Return the signed-in user's id/admin flag without importing app.py."""
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    return get_db().execute(
+        "SELECT id, is_admin FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
+
+
+@pages.get("/admin")
+def admin():
+    user = _session_user()
+    if user is None:
+        return redirect("/account#login", code=302)
+    if not user["is_admin"]:
+        return redirect("/account", code=302)
+    return render_page("admin")
 
 
 # ---------------------------------------------------------------------------

@@ -13,54 +13,87 @@ BASE_DIR = Path(__file__).resolve().parent
 SCHEMA_PATH = BASE_DIR / "schema.sql"
 
 # Mirrors the eight car cards on the static fleet page, in the same order.
+# Fields: name, type, description, image, capacity, price, week, specs.
 SEED_CARS = [
     (
         "Toyota Corolla Hybrid",
         "Economy sedan",
         "Economical and comfortable for city rides and airport trips.",
         "/assets/images/cars/01-toyota-corolla-hybrid.jpg",
+        4,
+        "45,000 RWF",
+        "31,500 RWF/day from 7 days",
+        "5 seats · A/C · Hybrid\nExcellent fuel economy",
     ),
     (
         "Toyota Land Cruiser",
         "Large SUV",
         "Strong and spacious for long distance and rough roads.",
         "/assets/images/cars/02-toyota-land-cruiser.jpg",
+        7,
+        "70,000 RWF",
+        "49,000 RWF/day from 7 days",
+        "7 seats · 4×4 · A/C\nBuilt for rough roads",
     ),
     (
         "Toyota RAV4",
         "Compact SUV",
         "Modern, smooth and good for small families.",
         "/assets/images/cars/03-toyota-rav4.jpg",
+        5,
+        "50,000 RWF",
+        "35,000 RWF/day from 7 days",
+        "4–5 seats · AWD · A/C\nGreat fuel economy",
     ),
     (
         "Mercedes-Benz G-Class",
         "Luxury SUV",
         "A premium ride for special occasions and VIP guests.",
         "/assets/images/cars/04-mercedes-benz-g-class.jpg",
+        5,
+        "150,000 RWF",
+        "105,000 RWF/day from 7 days",
+        "5 seats · AWD · A/C\nVIP comfort and presence",
     ),
     (
         "Volkswagen Transporter",
         "Van",
         "Roomy and comfortable for groups with luggage.",
         "/assets/images/cars/05-volkswagen-transporter.jpg",
+        8,
+        "120,000 RWF",
+        "84,000 RWF/day from 7 days",
+        "8–9 seats · A/C · large boot\nRoomy for groups and luggage",
     ),
     (
         "Mercedes-AMG GLE Coupe",
         "Luxury SUV",
         "A fast, stylish ride for executive travel.",
         "/assets/images/cars/06-mercedes-amg-gle-coupe.jpg",
+        5,
+        "150,000 RWF",
+        "105,000 RWF/day from 7 days",
+        "5 seats · AWD · A/C\nExecutive style and speed",
     ),
     (
         "Toyota Land Cruiser Prado, black",
         "Mid-size SUV",
         "A reliable all-round vehicle for family and business trips.",
         "/assets/images/cars/07-toyota-land-cruiser-prado-black.jpg",
+        7,
+        "70,000 RWF",
+        "49,000 RWF/day from 7 days",
+        "7 seats · AWD · A/C\nFamily and business trips",
     ),
     (
         "Toyota Land Cruiser Prado, black (rear view)",
         "Mid-size SUV",
         "Large luggage space and comfortable seating.",
         "/assets/images/cars/08-toyota-land-cruiser-prado-rear.jpg",
+        7,
+        "70,000 RWF",
+        "49,000 RWF/day from 7 days",
+        "7 seats · large luggage space\nComfortable seating",
     ),
 ]
 
@@ -83,19 +116,56 @@ def close_db(exc=None):
 
 
 def init_db(admin_password=None, production=False, ephemeral=False):
-    """Create missing tables and seed the fleet plus the first admin account."""
+    """Create missing tables, apply additive migrations and seed data."""
     db = get_db()
     db.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+    _migrate(db)
     _seed_cars(db)
     _seed_admin(db, admin_password, production=production, ephemeral=ephemeral)
     db.commit()
+
+
+def _migrate(db):
+    """Add columns that CREATE TABLE IF NOT EXISTS cannot add to old tables."""
+    columns = {row["name"] for row in db.execute("PRAGMA table_info(messages)")}
+    if "handled" not in columns:
+        db.execute("ALTER TABLE messages ADD COLUMN handled INTEGER NOT NULL DEFAULT 0")
+
+    car_columns = {row["name"] for row in db.execute("PRAGMA table_info(cars)")}
+    if "capacity" not in car_columns:
+        db.execute("ALTER TABLE cars ADD COLUMN capacity INTEGER NOT NULL DEFAULT 4")
+        db.execute("ALTER TABLE cars ADD COLUMN price TEXT NOT NULL DEFAULT ''")
+        db.execute("ALTER TABLE cars ADD COLUMN week TEXT NOT NULL DEFAULT ''")
+        db.execute("ALTER TABLE cars ADD COLUMN specs TEXT NOT NULL DEFAULT ''")
+        _backfill_cars(db)
+
+    user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)")}
+    if "active" not in user_columns:
+        db.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+
+    booking_columns = {row["name"] for row in db.execute("PRAGMA table_info(bookings)")}
+    if "paid_amount" not in booking_columns:
+        db.execute("ALTER TABLE bookings ADD COLUMN paid_amount REAL NOT NULL DEFAULT 0")
+        db.execute("ALTER TABLE bookings ADD COLUMN paid_method TEXT NOT NULL DEFAULT ''")
+        db.execute("ALTER TABLE bookings ADD COLUMN paid_at TEXT NOT NULL DEFAULT ''")
+
+
+def _backfill_cars(db):
+    """Fill the new display columns for a fleet created before the change."""
+    rows = db.execute("SELECT id FROM cars ORDER BY id").fetchall()
+    for row, seed in zip(rows, SEED_CARS):
+        db.execute(
+            "UPDATE cars SET capacity = ?, price = ?, week = ?, specs = ? WHERE id = ?",
+            (seed[4], seed[5], seed[6], seed[7], row["id"]),
+        )
 
 
 def _seed_cars(db):
     if db.execute("SELECT 1 FROM cars LIMIT 1").fetchone():
         return
     db.executemany(
-        "INSERT INTO cars (name, type, description, image) VALUES (?, ?, ?, ?)",
+        "INSERT INTO cars (name, type, description, image, capacity, price, week, specs)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         SEED_CARS,
     )
 
