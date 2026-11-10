@@ -520,7 +520,7 @@ h2{font-size:2rem;margin-bottom:8px}
 .rate-price{font-family:var(--font-heading);color:#C6F432;font-size:1.3rem;font-weight:700}
 .rate-per{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:#8f9284}
 .rate-week{color:#35d07f;font-size:.79rem;font-weight:700;margin-top:3px}
-.reserve-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;color:#0B0B0C;background:var(--yellow);border:1.5px solid transparent;border-radius:999px;padding:11px 24px;font-weight:800;transition:background .2s,color .2s,border-color .2s}
+.reserve-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;font:inherit;font-weight:800;cursor:pointer;color:#0B0B0C;background:var(--yellow);border:1.5px solid transparent;border-radius:999px;padding:11px 24px;transition:background .2s,color .2s,border-color .2s}
 .reserve-btn:hover{background:var(--yellow-dark);border-color:transparent;color:#0B0B0C}
 @media (max-width:620px){.car-foot{flex-direction:column;align-items:flex-start}.reserve-btn{width:100%;text-align:center}}
 .tour-itinerary{list-style:none;margin:16px 0 18px;padding:0;display:grid;gap:12px}
@@ -726,7 +726,13 @@ body.msg-open main{visibility:hidden}
 .msg-dialog h3{color:var(--heading);margin-bottom:2px;padding-right:36px}
 .msg-dialog .msg-close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
 .msg-dialog .msg-close:hover{background:var(--line)}
-.rent-dialog{width:min(600px,calc(100vw - 24px));max-height:92vh;overflow:auto;background:#0B0B0C;border-color:rgba(255,255,255,.12);color:#FFFFFF}
+.rent-dialog{width:min(380px,100vw);height:100vh;height:100dvh;max-height:100dvh;margin:0 0 0 auto;border-radius:0;padding:22px;overflow:auto;background:#0B0B0C;border-color:rgba(255,255,255,.12);color:#FFFFFF}
+.rent-dialog[open]{animation:rent-in .25s ease both}
+@keyframes rent-in{from{transform:translateX(28px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.rent-dialog[open]{animation:none}}
+.rent-dialog label{margin-top:12px}
+.rent-dialog .btn{margin-top:16px}
+body.reserve-open{overflow:hidden}
 .rent-dialog h3{color:#fff}
 .rent-dialog .rent-intro{color:rgba(255,255,255,.7)}
 .rent-dialog .rent-days{color:#C6F432}
@@ -847,7 +853,7 @@ img.thumb{width:86px;height:62px;object-fit:cover;border-radius:6px;display:bloc
 footer{--f-ink:rgb(255,255,255);--f-sub:rgb(200,205,220);--f-a:#171718;--f-b:#0B0B0C;--f-c:#050506;--f-line:rgba(255,255,255,.12);--f-chip:#2a2a2e;--f-chip-ink:#fff;
   background:linear-gradient(180deg,var(--f-a) 0%,var(--f-b) 50%,var(--f-c) 100%);color:var(--f-sub);border-top:1px solid var(--yellow);margin-top:auto}
 :root[data-theme="dark"] footer{--f-ink:#fff;--f-sub:rgb(200,205,220);--f-a:#171718;--f-b:#0B0B0C;--f-c:#050506;--f-line:rgba(255,255,255,.12);--f-chip:#2a2a2e;--f-chip-ink:#fff}
-.foot{display:grid;grid-template-columns:2fr 1fr 1.4fr;gap:34px;padding:46px 0 26px}
+.foot{display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:34px;padding:46px 0 26px}
 footer h4{color:var(--f-ink);font-family:var(--font-heading);font-size:1.15rem;margin-bottom:14px;position:relative;padding-bottom:9px}
 footer h4::after{content:"";position:absolute;left:0;bottom:0;width:34px;height:3px;border-radius:3px;background:var(--yellow)}
 footer p{color:var(--f-sub)}
