@@ -186,6 +186,7 @@ configuration.
 | `TURSO_DATABASE_URL` | unset | Remote Turso/libSQL URL. When set, all data lives there and no local file is used. |
 | `TURSO_AUTH_TOKEN` | unset | Token for `TURSO_DATABASE_URL`. Required with it. |
 | `TT_DB_DRIVER` | detected from the path | Force `sqlite` or `libsql`. Used by the tests to run the suite through libSQL. |
+| `TT_ALLOW_EPHEMERAL_DB` | off | Set to `1` to let a production deployment run on `/tmp`. Disposable demos only; data is lost on restart. |
 | `TT_ADMIN_EMAIL` | `tomsafaris@gmail.com` | Seeded admin email |
 | `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
 | `TT_SMTP_HOST` | unset | SMTP host for password reset email. Unset means nothing is sent (the link is logged outside production). |
@@ -332,11 +333,13 @@ The deployment filesystem is read-only except for `/tmp`, so a database file
 cannot survive there. `/tmp` is wiped on every deploy and cold start, which is
 why SQLite-based Vercel deployments appear to "reset". Set
 `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` (the Turso integration in the Vercel
-Marketplace injects both) to keep data in a managed libSQL database; with them
-unset the backend still picks a writable path (`TT_DATABASE`, then
-`backend/data/`, then `/tmp/thomas-transfer-data/`) so the function never
-crashes — it just loses data on the next cold start. In production the app logs
-a warning when it detects that ephemeral path.
+Marketplace injects both) to keep data in a managed libSQL database.
+
+A live deployment (TT_ENV=production, or `VERCEL_ENV=production`) **refuses to
+boot** when the database resolves to an ephemeral path, instead of silently
+losing data. `TT_ALLOW_EPHEMERAL_DB=1` overrides that for a disposable demo and
+logs a warning. Preview deployments may still use `/tmp`; they log the same
+warning.
 
 Vercel installs the **root** `requirements.txt`, not `backend/requirements.txt`.
 Keep the two in sync — a missing `libsql` there makes every request fail with

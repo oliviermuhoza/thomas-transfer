@@ -321,9 +321,21 @@ def test_unwritable_database_falls_back(monkeypatch, tmp_path):
     assert app.test_client().get("/api/me").status_code == 200
 
 
-def test_vercel_production_boots_without_secret(monkeypatch, tmp_path):
+def test_vercel_production_refuses_ephemeral_database(monkeypatch, tmp_path):
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.setenv("TT_ENV", "production")
+    monkeypatch.delenv("TT_ALLOW_EPHEMERAL_DB", raising=False)
+    monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
+
+    with pytest.raises(RuntimeError, match="persistent database"):
+        create_app(database=str(tmp_path / "vercel.db"), production=True)
+
+
+def test_allow_ephemeral_flag_boots_without_secret(monkeypatch, tmp_path):
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("TT_ENV", "production")
+    monkeypatch.setenv("TT_ALLOW_EPHEMERAL_DB", "1")
+    monkeypatch.delenv("TURSO_DATABASE_URL", raising=False)
     monkeypatch.delenv("SECRET_KEY", raising=False)
     monkeypatch.delenv("TT_COOKIE_SECURE", raising=False)
     monkeypatch.delenv("TT_ADMIN_PASSWORD", raising=False)

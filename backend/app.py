@@ -155,6 +155,19 @@ def create_app(
             "Set TT_ENV=production only when served behind HTTPS."
         )
 
+    # A live deployment must not boot on a throwaway database: it would look
+    # healthy while losing every booking on the next deploy or cold start.
+    allow_ephemeral = _truthy_env("TT_ALLOW_EPHEMERAL_DB")
+    vercel_env = os.environ.get("VERCEL_ENV", "").strip().lower()
+    live = production or (_truthy_env("VERCEL") and vercel_env == "production")
+    if live and ephemeral and not allow_ephemeral:
+        raise RuntimeError(
+            "No persistent database: the app resolved to an ephemeral location "
+            f"({database}). Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN, or point "
+            "TT_DATABASE at persistent storage. Set TT_ALLOW_EPHEMERAL_DB=1 only "
+            "for a disposable demo."
+        )
+
     app = Flask(__name__, static_folder=None)
     rate_limit_backend = os.environ.get("TT_RATE_LIMIT_BACKEND", "memory").strip().lower()
     app.config.update(
@@ -206,11 +219,11 @@ def create_app(
     else:
         app.logger.info("Database backend: sqlite (%s)", database)
 
-    if production and ephemeral:
+    if ephemeral and (production or _truthy_env("VERCEL")):
         app.logger.warning(
-            "The database lives on an ephemeral filesystem; bookings and admin "
-            "edits will be lost on the next deploy or cold start. Set "
-            "TURSO_DATABASE_URL and TURSO_AUTH_TOKEN to persist data."
+            "The database resolves to an ephemeral path; bookings and admin "
+            "edits are lost on the next restart. Set TURSO_DATABASE_URL and "
+            "TURSO_AUTH_TOKEN for persistent storage."
         )
 
     with app.app_context():
