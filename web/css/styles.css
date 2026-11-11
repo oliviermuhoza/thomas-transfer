@@ -62,7 +62,7 @@ a{color:inherit}
 /* ===== HEADER + NAVBAR ===== */
 header{background:transparent;color:var(--white);position:sticky;top:0;z-index:10;border-bottom:1px solid transparent}
 header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 0;flex-wrap:wrap;min-height:76px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;row-gap:6px;padding:14px 0;min-height:76px;flex-wrap:wrap}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--font-heading);font-size:1.3rem;font-weight:bold;color:var(--white)}
 .logo b{color:var(--yellow);font-weight:700}
 .logo-img{display:none}
@@ -70,7 +70,7 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 .logo-mark svg{display:block}
 /* All navbar rules are scoped to .bar: the admin portal has its own <nav>
    inside the sidebar and must not inherit these. */
-.bar nav ul{list-style:none;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.bar .nav-links{list-style:none;display:flex;gap:2px;align-items:center}
 .bar nav a{display:block;padding:10px 9px;border-radius:7px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--white);min-height:44px;transition:color .2s ease,background-color .2s ease}
 .bar nav a:hover{background:var(--surface);color:var(--white)}
 .bar nav a.cta{background:var(--yellow);color:#0B0B0C}
@@ -96,7 +96,7 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.bar nav a[aria-current="page"]{animation:none}}
 
 /* ===== NAVBAR TOOLS: dark mode + language ===== */
-.bar nav ul{align-items:center}
+.bar .nav-links{align-items:center}
 .tool-btn{display:flex;align-items:center;gap:8px;font:inherit;font-weight:600;cursor:pointer;color:var(--white);
   background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 16px}
 .tool-btn:hover{background:var(--line)}
@@ -104,36 +104,51 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 .ico-sun{display:none}
 :root[data-theme="dark"] .ico-sun{display:block}
 :root[data-theme="dark"] .ico-moon{display:none}
-.lang{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.lang button{font:inherit;font-weight:700;cursor:pointer;border:0;background:transparent;color:var(--white);padding:8px 12px}
-.lang button:hover{background:var(--surface-2)}
-.lang button[aria-pressed="true"]{background:var(--yellow);color:#0B0B0C}
+/* EN / RW is a quiet toggle: the pressed state gets a hairline, not a fill. */
+.lang{display:flex;align-items:center;gap:2px;border:0;border-radius:0;overflow:visible;background:transparent}
+.lang button{font:inherit;font-weight:700;font-size:.82rem;letter-spacing:.02em;cursor:pointer;border:0;background:transparent;color:var(--muted);padding:9px 5px;box-shadow:inset 0 -2px 0 transparent;transition:color .18s ease,box-shadow .18s ease}
+.lang button:hover{color:var(--white)}
+.lang button[aria-pressed="true"]{background:transparent;color:var(--white);box-shadow:inset 0 -2px 0 var(--yellow)}
 
 /* ===== HEADER BAR ===== */
-.bar nav{display:flex;align-items:center;gap:6px}
+.main-nav{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+.nav-panel{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+/* DOM order puts the search first so the mobile drawer reads top-down; on
+   desktop the links come back in front of it. */
+.nav-panel .nav-links{order:1}
+.nav-panel .search{order:2}
+.nav-panel .nav-tools{order:3}
+.nav-actions{display:flex;align-items:center;gap:4px}
+.nav-icon{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;
+  border:1px solid transparent;border-radius:9px;background:transparent;color:var(--white);cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease}
+.nav-icon:hover{background:var(--surface);border-color:var(--line)}
+.nav-icon svg{width:22px;height:22px;display:block}
+.nav-actions .nav-search-mobile{display:none}
+.logo[aria-current="page"] > span:last-child{border-bottom:2px solid var(--yellow);padding-bottom:1px}
+.nav-toggle{display:none}
+.nav-toggle .ico-close{display:none}
+body.nav-open .nav-toggle .ico-close{display:block}
+body.nav-open .nav-toggle .ico-menu{display:none}
+.nav-tools{display:flex;align-items:center;gap:8px}
 .brand{display:flex;align-items:center;gap:10px}
-@media (max-width:800px){
-  .bar{gap:8px 12px;padding:10px 0}
-  .brand{min-width:0}
-  .logo{font-size:1.05rem}
-  .logo-img{height:34px}
-  .bar nav{width:100%;order:3;flex-wrap:wrap;gap:6px}
-  .bar nav ul{flex-wrap:wrap;gap:2px}
-  .bar nav a{white-space:nowrap;padding:8px 10px;font-size:.85rem;min-height:40px}
-  .bar nav a.nav-book{margin-left:auto}
-}
+
+/* Desktop: the search field is collapsed behind its icon and expands in place. */
+.bar .search{position:relative;flex:0 0 auto;width:0;min-width:0;opacity:0;visibility:hidden;
+  pointer-events:none;transition:width .18s ease,opacity .18s ease}
+.bar.search-open .search{width:210px;opacity:1;visibility:visible;pointer-events:auto}
 
 /* ===== SEARCH (navbar) ===== */
-.search{position:relative;flex:0 1 110px;min-width:90px}
-.search > svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;color:rgb(190,205,230)}
-.search input{width:100%;padding:9px 12px 9px 36px;color:var(--white);background:rgb(40,70,120);border:1px solid rgb(70,100,150);
-  border-radius:999px;font:inherit;font-size:.95rem}
-.search input::placeholder{color:rgb(170,190,220)}
-.search input:focus{background:rgb(30,58,106);border-color:var(--yellow);box-shadow:0 0 0 3px rgba(198,244,50,.45);outline:none}
+.search{position:relative}
+.search > svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;color:var(--muted)}
+.search input{width:100%;padding:9px 12px 9px 38px;color:var(--white);background:var(--surface-2);border:1px solid var(--line);
+  border-radius:999px;font:inherit;font-size:.9rem}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{background:var(--surface-2);border-color:var(--yellow);box-shadow:0 0 0 3px rgba(198,244,50,.18);outline:none}
 .search input::-webkit-search-cancel-button{filter:invert(1)}
-.search-results{list-style:none;position:absolute;right:0;top:calc(100% + 12px);z-index:20;width:330px;max-width:calc(100vw - 24px);
+.search-results{display:block;list-style:none;position:absolute;right:0;top:calc(100% + 10px);z-index:20;width:330px;max-width:calc(100vw - 24px);
   max-height:70vh;overflow:auto;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px;
-  box-shadow:0 14px 34px rgba(11,29,58,.35)}
+  box-shadow:0 14px 34px rgba(0,0,0,.45)}
 .sr-group{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px 10px 4px}
 .sr-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer}
 .sr-item.on,.sr-item:hover{background:var(--surface-2)}
@@ -142,7 +157,37 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 .sr-text span{display:block;font-weight:400;font-size:.82rem;color:var(--muted)}
 .sr-text b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sr-none{padding:12px 10px;color:var(--muted)}
-@media (max-width:800px){.search{flex:1 1 100%;min-width:0}.search input,.search input:focus{width:100%}.search-results{left:0;right:0;width:auto}}
+
+/* Below 1100px the links move into a drawer and the bar stays one 66px row. */
+@media (max-width:1099px){
+  .bar{padding:10px 0;min-height:66px;gap:10px}
+  .logo{font-size:1.1rem}
+  .logo-mark{width:42px;height:42px;border-radius:10px}
+  .logo-mark svg{width:26px;height:26px}
+  .main-nav{margin-left:auto}
+  html.js .nav-toggle{display:inline-flex}
+  .nav-tools .nav-search{display:none}
+  .nav-actions .nav-search-mobile{display:inline-flex}
+  .bar .search{flex:1 1 100%;width:auto;overflow:visible;opacity:1;visibility:visible;pointer-events:auto;order:0;margin:0 0 8px}
+  .nav-panel .nav-links{order:0}
+  .nav-panel{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;
+    padding:8px 20px 20px;background:var(--navy);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    box-shadow:0 24px 44px rgba(0,0,0,.55)}
+  html.js .nav-panel{display:none}
+  html.js body.nav-open .nav-panel{display:flex}
+  html:not(.js) .nav-panel{position:static;box-shadow:none;border-top:0;padding-top:0}
+  body.nav-open{overflow:hidden}
+  body.nav-open header{background:var(--navy);border-bottom-color:var(--line)}
+  .nav-panel .nav-links{flex-direction:column;align-items:stretch;gap:0;width:100%}
+  .nav-panel .nav-links li{width:100%}
+  .bar nav .nav-links a{display:flex;align-items:center;min-height:50px;padding:12px 4px;font-size:1rem;
+    border-bottom:1px solid var(--line-soft);border-radius:0}
+  .bar nav .nav-links a[aria-current="page"]{box-shadow:inset 2px 0 0 var(--yellow);padding-left:12px}
+  .nav-tools{flex-wrap:wrap;gap:10px;margin-top:12px}
+  .nav-login{padding:10px 18px}
+  .bar nav a.nav-book{order:3;flex:1 1 100%;justify-content:center;min-height:48px}
+  .search-results{left:0;right:0;width:auto}
+}
 
 /* ===== SOCIAL ICONS ===== */
 .social{display:flex;gap:8px}

@@ -662,7 +662,8 @@
   "Manage": "Genzura",
   "Work": "Akazi",
   "Catalogue": "Ibyo dukodesha",
-  "Inbox": "Ubutumwa"
+  "Inbox": "Ubutumwa",
+  "Menu": "Menyu"
 };
   var REV = {}; for (var k in RW) { REV[RW[k]] = k; }
   var lang = 'en';

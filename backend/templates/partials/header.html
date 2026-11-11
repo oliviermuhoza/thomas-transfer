@@ -1,29 +1,44 @@
 <header>
   <div class="container bar">
     <div class="brand">
-      <a class="logo" href="/">
+      <a class="logo" href="/"{% if page == 'home' %} aria-current="page"{% endif %}>
         <span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" aria-hidden="true"><path d="M8 14h24v18H8z" stroke="#0B0B0C" stroke-width="3" stroke-linejoin="round"/><path d="M32 20h6l5 6v6H32" stroke="#0B0B0C" stroke-width="3" stroke-linejoin="round"/><path d="M4 22l8-4M4 28l8-3M4 34l8-2" stroke="#0B0B0C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="15" cy="36" r="4" stroke="#0B0B0C" stroke-width="3"/><circle cx="37" cy="36" r="4" stroke="#0B0B0C" stroke-width="3"/><path d="M19 36h14" stroke="#0B0B0C" stroke-width="3" stroke-linecap="round"/></svg></span> <span>Thomas <b>Transfer</b></span>
       </a>
     </div>
-    <nav aria-label="Main">
-      <ul>
-        <li><a href="/"{% if page == 'home' %} aria-current="page"{% endif %}>Home</a></li>
-        <li><a href="/transport"{% if page == 'transport' %} aria-current="page"{% endif %}>Transport</a></li>
-        <li><a href="/tours"{% if page == 'tours' %} aria-current="page"{% endif %}>Tour packages</a></li>
-        <li><a href="/cars"{% if page == 'cars' %} aria-current="page"{% endif %}>Car rental</a></li>
-        <li><a href="/contact"{% if page == 'contact' %} aria-current="page"{% endif %}>Contact</a></li>
-        <li><a href="/pay"{% if page == 'pay' %} aria-current="page"{% endif %}>Pay online</a></li>
-        <li class="nav-account-item"><a href="/account"{% if page == 'account' %} aria-current="page"{% endif %}>Account</a></li>
-        <li class="nav-admin-item"><a href="/admin"{% if page == 'admin' %} aria-current="page"{% endif %}>Admin</a></li>
-      </ul>
-      <form class="search" id="site-search" role="search" autocomplete="off">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <input id="search-input" type="search" placeholder="Search..." aria-label="Search" aria-expanded="false" aria-controls="search-results" autocomplete="off">
-        <ul class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></ul>
-      </form>
-      <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
-       <a class="nav-login" href="/account#login">Login</a>
-       <a class="nav-book" href="https://wa.me/250783689231?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
+    <nav class="main-nav" aria-label="Main">
+      <div class="nav-panel" id="nav-panel">
+        <form class="search" id="site-search" role="search" autocomplete="off">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input id="search-input" type="search" placeholder="Search..." aria-label="Search" aria-expanded="false" aria-controls="search-results" autocomplete="off">
+          <ul class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></ul>
+        </form>
+        <ul class="nav-links">
+          <li><a href="/transport"{% if page == 'transport' %} aria-current="page"{% endif %}>Transport</a></li>
+          <li><a href="/tours"{% if page == 'tours' %} aria-current="page"{% endif %}>Tour packages</a></li>
+          <li><a href="/cars"{% if page == 'cars' %} aria-current="page"{% endif %}>Car rental</a></li>
+          <li><a href="/contact"{% if page == 'contact' %} aria-current="page"{% endif %}>Contact</a></li>
+          <li><a href="/pay"{% if page == 'pay' %} aria-current="page"{% endif %}>Pay online</a></li>
+          <li class="nav-account-item"><a href="/account"{% if page == 'account' %} aria-current="page"{% endif %}>Account</a></li>
+          <li class="nav-admin-item"><a href="/admin"{% if page == 'admin' %} aria-current="page"{% endif %}>Admin</a></li>
+        </ul>
+        <div class="nav-tools">
+          <button class="nav-icon nav-search" id="search-toggle" type="button" aria-expanded="false" aria-controls="site-search" aria-label="Search" data-search-toggle>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
+          <a class="nav-login" href="/account#login">Login</a>
+          <a class="nav-book" href="https://wa.me/250783689231?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="nav-icon nav-search-mobile" type="button" aria-expanded="false" aria-controls="site-search" aria-label="Search" data-search-toggle>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="nav-icon nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-panel" aria-label="Menu">
+          <svg class="ico-menu" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="ico-close" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </nav>
   </div>
 </header>
