@@ -2,12 +2,16 @@
 
 import os
 import secrets
-import sqlite3
 import sys
 from pathlib import Path
 
 from flask import current_app, g
 from werkzeug.security import generate_password_hash
+
+try:
+    from .dbdriver import connect
+except ImportError:  # deployment root is backend/ itself
+    from dbdriver import connect
 
 BASE_DIR = Path(__file__).resolve().parent
 SCHEMA_PATH = BASE_DIR / "schema.sql"
@@ -113,9 +117,18 @@ SEED_FARES = [
 def get_db():
     """Return the connection for the current request, opening it on first use."""
     if "db" not in g:
-        connection = sqlite3.connect(current_app.config["DATABASE"])
-        connection.row_factory = sqlite3.Row
-        connection.execute("PRAGMA foreign_keys = ON")
+        connection = connect(
+            current_app.config["DATABASE"],
+            current_app.config.get("DB_DRIVER"),
+            auth_token=current_app.config.get("DB_AUTH_TOKEN"),
+        )
+        try:
+            connection.execute("PRAGMA foreign_keys = ON")
+        except Exception:
+            # Some managed SQLite endpoints refuse PRAGMA; keep serving and say so.
+            if current_app.config.get("DB_DRIVER") != "libsql":
+                raise
+            current_app.logger.warning("Could not enable foreign keys on libSQL.")
         g.db = connection
     return g.db
 

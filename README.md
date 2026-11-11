@@ -125,7 +125,11 @@ flask --app backend.app run
 
 ## Database
 
-SQLite, using Python's built-in `sqlite3` module (no ORM). The default file is
+SQLite. Locally that is Python's built-in `sqlite3` module (no ORM). In
+production on Vercel it is a remote **Turso/libSQL** database, reached through
+the `libsql` driver, because serverless functions have no persistent disk. The
+rest of the app is unaware of the difference: `backend/dbdriver.py` adapts
+libSQL rows to the `sqlite3.Row` behaviour the routes use. The default file is
 `backend/data/thomas.db`; the `backend/data/` directory is ignored by git. The
 schema in `backend/schema.sql` is applied automatically on startup and is safe
 to run repeatedly.
@@ -178,7 +182,10 @@ configuration.
 | --- | --- | --- |
 | `TT_ENV` | unset | Set to `production` to enable production checks (HTTPS cookie required, `SECRET_KEY` required, no generated admin password printed). |
 | `SECRET_KEY` | generated in `backend/data/secret_key` (non-production) | Signs session cookies. **Required in production.** |
-| `TT_DATABASE` | `backend/data/thomas.db` | SQLite file path |
+| `TT_DATABASE` | `backend/data/thomas.db` | SQLite file path. A `libsql://`/`https://` value selects the libSQL driver. |
+| `TURSO_DATABASE_URL` | unset | Remote Turso/libSQL URL. When set, all data lives there and no local file is used. |
+| `TURSO_AUTH_TOKEN` | unset | Token for `TURSO_DATABASE_URL`. Required with it. |
+| `TT_DB_DRIVER` | detected from the path | Force `sqlite` or `libsql`. Used by the tests to run the suite through libSQL. |
 | `TT_ADMIN_EMAIL` | `tomsafaris@gmail.com` | Seeded admin email |
 | `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
 | `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
@@ -308,14 +315,31 @@ or `backend/app.py`), `backend/app.py` imports its siblings either as a package
 has no rewrites, so `api/index.py` (legacy file-based function) is no longer
 used.
 
-The deployment filesystem is read-only except for `/tmp`. The backend picks the
-first writable database location at startup (`TT_DATABASE`, then
-`backend/data/`, then `/tmp/thomas-transfer-data/`), so a bad `TT_DATABASE`
-value no longer crashes the function. SQLite data on Vercel is ephemeral and is
-recreated on cold starts; use a managed database for persistence.
+The deployment filesystem is read-only except for `/tmp`, so a database file
+cannot survive there. `/tmp` is wiped on every deploy and cold start, which is
+why SQLite-based Vercel deployments appear to "reset". Set
+`TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` (the Turso integration in the Vercel
+Marketplace injects both) to keep data in a managed libSQL database; with them
+unset the backend still picks a writable path (`TT_DATABASE`, then
+`backend/data/`, then `/tmp/thomas-transfer-data/`) so the function never
+crashes — it just loses data on the next cold start. In production the app logs
+a warning when it detects that ephemeral path.
 
 Recommended Vercel environment variables: `SECRET_KEY` (stable sessions),
-`TT_ADMIN_PASSWORD` (enables admin login), and optionally `TT_ADMIN_EMAIL`.
-`TT_ENV=production` works on Vercel without extra settings: secure cookies are
-enabled automatically because Vercel serves HTTPS, and the app boots even when
-`TT_ADMIN_PASSWORD` is missing (the admin account is simply not created).
+`TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `TT_ADMIN_PASSWORD` (enables admin
+login), and optionally `TT_ADMIN_EMAIL`. `TT_ENV=production` works on Vercel
+without extra settings: secure cookies are enabled automatically because Vercel
+serves HTTPS, and the app boots even when `TT_ADMIN_PASSWORD` is missing (the
+admin account is simply not created).
+
+Moving an existing Vercel deployment to Turso:
+
+1. Install the Turso integration from the Vercel Marketplace and connect a
+   database to the project. It injects `TURSO_DATABASE_URL` and
+   `TURSO_AUTH_TOKEN`.
+2. Redeploy. The schema and the first-run seed (fleet, fares, admin) are
+   created in the remote database automatically.
+3. Keep `TT_ADMIN_PASSWORD` set so the admin account exists; sign in and adjust
+   the fleet and fares in the portal.
+4. Anything created while the app was on `/tmp` is already gone; export the
+   admin pages first if that data still matters.

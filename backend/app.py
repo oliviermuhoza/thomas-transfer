@@ -116,17 +116,32 @@ def create_app(
     admin_password=None,
     production=None,
     admin_email=None,
+    db_driver=None,
 ):
     production = (
         os.environ.get("TT_ENV", "").strip().lower() == "production"
         if production is None
         else bool(production)
     )
-    # Vercel's filesystem is read-only except for /tmp. Resolve to a writable
-    # database path instead of crashing the function at import time.
-    database = _resolve_database(database or os.environ.get("TT_DATABASE"))
-    ephemeral = _truthy_env("VERCEL") or _is_ephemeral_db(database)
-    data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
+    # Turso/libSQL is remote, so the file-path probing below does not apply.
+    # TURSO_DATABASE_URL is injected by the Vercel Turso integration.
+    turso_url = os.environ.get("TURSO_DATABASE_URL", "").strip()
+    db_driver = db_driver or os.environ.get("TT_DB_DRIVER", "").strip().lower() or None
+    if turso_url:
+        if not os.environ.get("TURSO_AUTH_TOKEN", "").strip():
+            raise RuntimeError(
+                "TURSO_AUTH_TOKEN is required when TURSO_DATABASE_URL is set."
+            )
+        database = turso_url
+        db_driver = "libsql"
+        ephemeral = False
+        data_dir = Path(tempfile.gettempdir()) / "thomas-transfer-data"
+    else:
+        # Vercel's filesystem is read-only except for /tmp. Resolve to a writable
+        # database path instead of crashing the function at import time.
+        database = _resolve_database(database or os.environ.get("TT_DATABASE"))
+        ephemeral = _truthy_env("VERCEL") or _is_ephemeral_db(database)
+        data_dir = PACKAGE_DIR / "data" if database == ":memory:" else Path(database).parent
 
     # Vercel serves the app over HTTPS, so secure cookies are the correct default.
     cookie_secure = _truthy_env("TT_COOKIE_SECURE") or _truthy_env("VERCEL")
@@ -141,6 +156,8 @@ def create_app(
     app.config.update(
         PRODUCTION=production,
         DATABASE=database,
+        DB_DRIVER=db_driver,
+        DB_AUTH_TOKEN=os.environ.get("TURSO_AUTH_TOKEN", "").strip(),
         SECRET_KEY=secret_key
         or _load_secret_key(data_dir, production=production, allow_ephemeral=ephemeral),
         SESSION_COOKIE_HTTPONLY=True,
@@ -177,6 +194,13 @@ def create_app(
             "and TT_REDIS_URL for shared limits across workers, or enforce limits at the edge/WAF."
         )
     app.teardown_appcontext(close_db)
+
+    if production and ephemeral:
+        app.logger.warning(
+            "The database lives on an ephemeral filesystem; bookings and admin "
+            "edits will be lost on the next deploy or cold start. Set "
+            "TURSO_DATABASE_URL and TURSO_AUTH_TOKEN to persist data."
+        )
 
     with app.app_context():
         init_db(
