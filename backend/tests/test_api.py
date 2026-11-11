@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import backend.app as backend_app  # noqa: E402
 from backend.app import create_app  # noqa: E402
+from backend.db import get_db, init_db  # noqa: E402
 
 ADMIN_EMAIL = "tomsafaris@gmail.com"
 ADMIN_PASSWORD = "admin-test-pass"
@@ -192,6 +193,44 @@ def test_booking_flow(client):
     assert report["per_car"][0]["completed"] == 1
 
 
+def test_confirming_booking_sends_confirmation_email(client, monkeypatch):
+    sent = []
+
+    def fake_send(to, subject, body):
+        sent.append({"to": to, "subject": subject, "body": body})
+
+    monkeypatch.setattr(backend_app, "mail_configured", lambda: True)
+    monkeypatch.setattr(backend_app, "send_email", fake_send)
+
+    register(client)
+    booking_id = api_post(client, "/api/bookings", json=booking_payload()).get_json()["id"]
+    assert sent == []
+
+    admin = client.application.test_client()
+    assert login(admin).status_code == 200
+    assert (
+        api_post(
+            admin, f"/api/bookings/{booking_id}/status", json={"status": "confirmed"}
+        ).status_code
+        == 200
+    )
+
+    assert len(sent) == 1
+    assert sent[0]["to"] == "jane@example.com"
+    assert "confirmed" in sent[0]["subject"]
+    assert "Kigali International Airport" in sent[0]["body"]
+    assert "Toyota Corolla Hybrid" in sent[0]["body"]
+
+    # Cancelling afterwards sends no further email.
+    assert (
+        api_post(
+            admin, f"/api/bookings/{booking_id}/status", json={"status": "cancelled"}
+        ).status_code
+        == 200
+    )
+    assert len(sent) == 1
+
+
 def test_customer_can_cancel_and_car_is_released(client):
     register(client)
     booking_id = api_post(client, "/api/bookings", json=booking_payload()).get_json()["id"]
@@ -346,6 +385,42 @@ def test_allow_ephemeral_flag_boots_without_secret(monkeypatch, tmp_path):
     assert app.config["SESSION_COOKIE_SECURE"] is True
     assert app.config["SECRET_KEY"]
     assert app.test_client().get("/api/me").status_code == 200
+
+
+def test_auto_init_can_be_disabled(tmp_path):
+    app = create_app(
+        database=str(tmp_path / "manual.db"),
+        secret_key="test-secret",
+        admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
+        auto_init=False,
+    )
+    with app.app_context():
+        tables = {
+            row["name"]
+            for row in get_db().execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        assert "users" not in tables
+
+        init_db(ADMIN_PASSWORD, admin_email=ADMIN_EMAIL)
+        assert get_db().execute("SELECT COUNT(*) FROM cars").fetchone()[0] == 8
+        assert get_db().execute("SELECT COUNT(*) FROM fares").fetchone()[0] >= 5
+
+
+def test_live_deployment_requires_an_initialised_database(monkeypatch, tmp_path):
+    monkeypatch.setenv("TT_COOKIE_SECURE", "1")
+    monkeypatch.delenv("VERCEL", raising=False)
+    monkeypatch.setattr(backend_app, "_is_ephemeral_db", lambda database: False)
+
+    with pytest.raises(RuntimeError, match="no schema"):
+        create_app(
+            database=str(tmp_path / "empty.db"),
+            secret_key="test-secret",
+            admin_password=ADMIN_PASSWORD,
+            production=True,
+        )
 
 
 def test_production_requires_secure_cookie(monkeypatch, tmp_path):

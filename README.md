@@ -130,9 +130,9 @@ production on Vercel it is a remote **Turso/libSQL** database, reached through
 the `libsql` driver, because serverless functions have no persistent disk. The
 rest of the app is unaware of the difference: `backend/dbdriver.py` adapts
 libSQL rows to the `sqlite3.Row` behaviour the routes use. The default file is
-`backend/data/thomas.db`; the `backend/data/` directory is ignored by git. The
-schema in `backend/schema.sql` is applied automatically on startup and is safe
-to run repeatedly.
+`backend/data/thomas.db`; the `backend/data/` directory is ignored by git.
+Development and the tests apply the schema automatically on startup; live
+deployments do not (see *Initialising a database* below).
 
 | Table | Holds |
 | --- | --- |
@@ -154,6 +154,22 @@ validation, prices) reads the `cars` table, so the fleet is maintained from the
 admin portal — no code deploy needed for price changes. The `Popular vehicles`
 cards in `backend/templates/pages/home.html` link to fixed car ids with their
 own images, so keep those ids in mind when removing cars.
+
+### Initialising a database
+
+Development and the test suite create the schema and seed data on startup. A
+live deployment (`TT_ENV=production`, or `VERCEL_ENV=production`) never touches
+schema or seed data while serving. Provision or migrate a database once, from a
+machine that has the production environment variables:
+
+```powershell
+python -m backend.initdb
+```
+
+It applies `schema.sql`, the additive migrations and the first-run seeds, then
+prints the row counts. Re-run it after changing `schema.sql`. A live deployment
+whose database has no `users` table refuses to boot with a message telling you
+to run it.
 
 Booking rules enforced by the API:
 
@@ -189,7 +205,7 @@ configuration.
 | `TT_ALLOW_EPHEMERAL_DB` | off | Set to `1` to let a production deployment run on `/tmp`. Disposable demos only; data is lost on restart. |
 | `TT_ADMIN_EMAIL` | `tomsafaris@gmail.com` | Seeded admin email |
 | `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
-| `TT_SMTP_HOST` | unset | SMTP host for password reset email. Unset means nothing is sent (the link is logged outside production). |
+| `TT_SMTP_HOST` | unset | SMTP host for transactional email (password reset, booking confirmation). Unset means nothing is sent (reset links are logged outside production). |
 | `TT_SMTP_PORT` | `587` | SMTP port |
 | `TT_SMTP_USER` / `TT_SMTP_PASSWORD` | unset | SMTP credentials, when the relay requires them |
 | `TT_SMTP_FROM` | unset | From address. Required in practice: `Thomas Transfer <no-reply@…>` |
@@ -252,6 +268,11 @@ admin report, page routes, redirects, nav state and 404 handling.
   out every other session. Mail goes through `backend/mailer.py` (stdlib SMTP).
   Without `TT_SMTP_HOST` the API still answers generically, but the link is only
   written to the log outside production; in production it logs an error.
+- **Booking confirmation**: when an admin moves a booking from `pending` to
+  `confirmed`, the customer gets a confirmation email with the car, route,
+  date/time and passenger count. Like password reset mail it goes through
+  `backend/mailer.py` and never fails the status change; without `TT_SMTP_HOST`
+  it is logged instead of sent.
 
 ## API endpoints
 
@@ -275,7 +296,7 @@ admin report, page routes, redirects, nav state and 404 handling.
 | DELETE | `/api/admin/fares/:id` | Delete a fare (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
 | POST | `/api/bookings` | Create a booking; admins may pass `user_id` to book for a customer |
-| POST | `/api/bookings/:id/status` | Change booking status |
+| POST | `/api/bookings/:id/status` | Change booking status; confirming (`pending` → `confirmed`) emails the customer |
 | PATCH | `/api/bookings/:id` | Edit a booking (admin) |
 | POST | `/api/admin/bookings/:id/payment` | Record or clear a payment (admin) |
 | GET | `/api/report` | Admin summary |
@@ -339,7 +360,9 @@ A live deployment (TT_ENV=production, or `VERCEL_ENV=production`) **refuses to
 boot** when the database resolves to an ephemeral path, instead of silently
 losing data. `TT_ALLOW_EPHEMERAL_DB=1` overrides that for a disposable demo and
 logs a warning. Preview deployments may still use `/tmp`; they log the same
-warning.
+warning. Live deployments also skip schema and seed work: run
+`python -m backend.initdb` once against the production database (and after any
+`schema.sql` change) before relying on the new code.
 
 Vercel installs the **root** `requirements.txt`, not `backend/requirements.txt`.
 Keep the two in sync — a missing `libsql` there makes every request fail with
@@ -357,9 +380,10 @@ Moving an existing Vercel deployment to Turso:
 1. Install the Turso integration from the Vercel Marketplace and connect a
    database to the project. It injects `TURSO_DATABASE_URL` and
    `TURSO_AUTH_TOKEN`.
-2. Redeploy. The schema and the first-run seed (fleet, fares, admin) are
-   created in the remote database automatically.
-3. Keep `TT_ADMIN_PASSWORD` set so the admin account exists; sign in and adjust
-   the fleet and fares in the portal.
+2. Put the two values in your local `.env` and initialise the database once:
+   `python -m backend.initdb`. It creates the schema and the first-run seed
+   (fleet, fares, admin).
+3. Redeploy. Keep `TT_ADMIN_PASSWORD` set so the admin account exists; sign in
+   and adjust the fleet and fares in the portal.
 4. Anything created while the app was on `/tmp` is already gone; export the
    admin pages first if that data still matters.

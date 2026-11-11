@@ -121,6 +121,7 @@ def create_app(
     production=None,
     admin_email=None,
     db_driver=None,
+    auto_init=True,
 ):
     production = (
         os.environ.get("TT_ENV", "").strip().lower() == "production"
@@ -175,6 +176,7 @@ def create_app(
         DATABASE=database,
         DB_DRIVER=db_driver,
         DB_AUTH_TOKEN=os.environ.get("TURSO_AUTH_TOKEN", "").strip(),
+        EPHEMERAL_DB=ephemeral,
         SECRET_KEY=secret_key
         or _load_secret_key(data_dir, production=production, allow_ephemeral=ephemeral),
         SESSION_COOKIE_HTTPONLY=True,
@@ -226,13 +228,31 @@ def create_app(
             "TURSO_AUTH_TOKEN for persistent storage."
         )
 
-    with app.app_context():
-        init_db(
-            admin_password,
-            production=production,
-            ephemeral=ephemeral,
-            admin_email=admin_email,
-        )
+    if auto_init:
+        if not live or allow_ephemeral:
+            with app.app_context():
+                init_db(
+                    admin_password,
+                    production=production,
+                    ephemeral=ephemeral,
+                    admin_email=admin_email,
+                )
+        else:
+            # Live deployments leave schema and seed data alone. Applying them
+            # from every cold start is unnecessary and turns a config mistake
+            # into unexplained data loss; run `python -m backend.initdb` once.
+            app.logger.info(
+                "Automatic schema/seed disabled for this deployment; "
+                "run `python -m backend.initdb` after schema changes."
+            )
+            with app.app_context():
+                try:
+                    get_db().execute("SELECT 1 FROM users LIMIT 1").fetchone()
+                except Exception as exc:
+                    raise RuntimeError(
+                        "The database has no schema (or is unreachable). Run "
+                        "`python -m backend.initdb` once against it, then redeploy."
+                    ) from exc
 
     register_routes(app)
     app.register_blueprint(pages)
@@ -625,6 +645,47 @@ def _send_password_reset_email(user, link):
     else:
         current_app.logger.warning(
             "Password reset link for %s: %s", user["email"], link
+        )
+    return False
+
+
+def _send_booking_confirmation_email(customer, booking, car_name):
+    """Tell the customer their booking was confirmed; never raise."""
+    name = f"{customer['first_name']} {customer['last_name']}".strip() or "there"
+    when = str(booking["trip_at"]).replace("T", " ")
+    body = (
+        f"Hello {name},\n\n"
+        "Good news — your Thomas Transfer booking is confirmed.\n\n"
+        f"Booking #{booking['id']}\n"
+        f"Car: {car_name}\n"
+        f"From: {booking['pickup']}\n"
+        f"To: {booking['dropoff']}\n"
+        f"Date and time: {when}\n"
+        f"Passengers: {booking['passengers']}\n\n"
+        "Your driver will meet you on time. If your plans change, reply to "
+        "this email or message us on WhatsApp.\n"
+    )
+    if mail_configured():
+        try:
+            send_email(
+                customer["email"],
+                f"Booking #{booking['id']} confirmed — Thomas Transfer",
+                body,
+            )
+            return True
+        except Exception as exc:
+            current_app.logger.error("Booking confirmation email failed: %s", exc)
+            return False
+    if current_app.config.get("PRODUCTION"):
+        current_app.logger.error(
+            "Booking confirmation email not sent: set TT_SMTP_HOST (and TT_SMTP_FROM) "
+            "in the environment."
+        )
+    else:
+        current_app.logger.warning(
+            "Booking #%s confirmed for %s (email not configured).",
+            booking["id"],
+            customer["email"],
         )
     return False
 
@@ -1026,6 +1087,18 @@ def register_routes(app):
                 (booking["car_id"],),
             )
         db.commit()
+        if new_status == "confirmed":
+            customer = db.execute(
+                "SELECT first_name, last_name, email FROM users WHERE id = ?",
+                (booking["user_id"],),
+            ).fetchone()
+            car = db.execute(
+                "SELECT name FROM cars WHERE id = ?", (booking["car_id"],)
+            ).fetchone()
+            if customer is not None and customer["email"]:
+                _send_booking_confirmation_email(
+                    customer, booking, car["name"] if car else "your car"
+                )
         return jsonify({"ok": True, "status": new_status})
 
     @app.patch("/api/bookings/<int:booking_id>")
