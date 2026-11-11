@@ -990,7 +990,7 @@ body[data-page="admin"] .admin-view.active{display:block}
 .admin-filter{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
 .admin-filter input,.admin-filter select{width:auto;flex:0 1 280px;max-width:320px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:10px 12px;font:inherit;font-size:.9rem;min-height:44px;min-width:180px}
 .admin-filter input:focus,.admin-filter select:focus{outline:3px solid var(--yellow);outline-offset:1px}
-.admin-view .mini{min-height:44px}
+.admin-view .mini{min-height:36px}
 /* Chart classes are namespaced tt-* : bare .bar already means the header row. */
 .tt-bars{display:flex;align-items:flex-end;gap:10px;height:150px;margin:8px 0 20px}
 .tt-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
@@ -1000,6 +1000,50 @@ body[data-page="admin"] .admin-view.active{display:block}
 .admin-view .sub{color:var(--muted);font-size:.85rem}
 .admin-view .tiles{margin:16px 0 30px}
 .admin-view .tiles .tile{box-shadow:none}
+
+/* ===== PORTAL: PAGE HEAD, PULSE STRIP, PANELS, CHART ===== */
+/* Hierarchy rule for the portal: the number carries the meaning, the icon does
+   not. Accent is spent on one action per view plus selection state. */
+.view-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:0 0 18px}
+.view-head h3{margin:0 0 4px}
+.view-head .admin-sub{margin:0}
+.pulse{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.pulse-cell{display:flex;flex-direction:column;min-width:0;padding:16px 20px;border-left:1px solid var(--line-soft)}
+.pulse-cell:first-child{border-left:0}
+.pulse-value{font-family:var(--font-heading);font-size:1.7rem;font-weight:700;line-height:1.05;letter-spacing:-.01em;color:var(--heading);font-variant-numeric:tabular-nums}
+.pulse-label{margin-top:7px;font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.pulse-cap{margin-top:3px;font-size:.8rem;color:var(--muted)}
+.pulse-note{margin:10px 2px 0;font-size:.8rem;line-height:1.6;color:var(--muted)}
+.pulse-note:empty{display:none}
+.pulse-note b{color:var(--heading);font-weight:700;font-variant-numeric:tabular-nums}
+.panel{margin-top:26px;padding:18px 20px 20px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:16px}
+.panel-head h4{margin:0;font-size:1rem;font-weight:600;letter-spacing:-.01em;color:var(--heading)}
+.panel-meta{font-size:.8rem;color:var(--muted)}
+.chart{position:relative}
+.chart-svg{display:block;width:100%;height:180px;overflow:visible}
+.chart-x{position:relative;height:18px;margin-top:8px}
+.chart-x span{position:absolute;top:0;transform:translateX(-50%);font-size:.7rem;font-weight:600;color:var(--muted);white-space:nowrap}
+.insight{display:block;margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line-soft);font-size:.82rem;line-height:1.6;color:var(--muted)}
+.insight b{color:var(--heading);font-weight:700;font-variant-numeric:tabular-nums}
+/* Chart: colors come from classes because SVG attributes cannot read var(). */
+.chart-grid{stroke:rgba(255,255,255,.07);stroke-width:1;stroke-dasharray:4 6;vector-effect:non-scaling-stroke}
+.chart-base{stroke:rgba(255,255,255,.14);stroke-width:1;vector-effect:non-scaling-stroke}
+.chart-area{fill:var(--lime-soft)}
+.chart-line{fill:none;stroke:var(--yellow);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.chart-dot{fill:var(--yellow);stroke:var(--surface);stroke-width:2}
+@media (max-width:900px){
+  .pulse{grid-template-columns:1fr 1fr}
+  .pulse-cell:nth-child(3){border-left:0;border-top:1px solid var(--line-soft)}
+  .pulse-cell:nth-child(4){border-top:1px solid var(--line-soft)}
+}
+@media (max-width:560px){
+  .pulse{grid-template-columns:1fr}
+  .pulse-cell{border-left:0;border-top:1px solid var(--line-soft);padding:14px 16px}
+  .pulse-cell:first-child{border-top:0}
+  .panel{padding:16px;margin-top:20px}
+  .panel-head{flex-direction:column;gap:4px;align-items:flex-start}
+}
 
 /* ===== TABLES, BADGES, SMALL BUTTONS ===== */
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
@@ -1023,6 +1067,65 @@ img.thumb{width:86px;height:62px;object-fit:cover;border-radius:6px;display:bloc
 .mini.warn{background:rgb(190,60,60);color:rgb(255,255,255)}
 .mini.ghost{background:transparent;color:var(--heading);border-color:var(--heading)}
 .mini:hover{filter:brightness(1.1)}
+
+/* ===== PORTAL: LIST PANEL, ROW ACTIONS, STATUS PILLS ===== */
+/* Row actions are text buttons; the only filled control on a list view is the
+   .primary "New …" button in the toolbar. */
+.admin-view .mini{min-height:36px;padding:7px 10px;font-size:.8rem;border-radius:6px}
+.admin-view .mini.ok{background:transparent;color:var(--green-text);border:1px solid transparent}
+.admin-view .mini.warn{background:transparent;color:var(--red-text);border:1px solid transparent}
+.admin-view .mini.ok:hover,.admin-view .mini.warn:hover{filter:none;background:var(--surface-2)}
+.admin-view .mini.ghost{border:1px solid var(--line);color:var(--muted)}
+.admin-view .mini.ghost:hover{border-color:var(--heading);color:var(--heading)}
+.admin-view .mini.primary{min-height:40px;padding:9px 15px;border:1px solid transparent;border-radius:8px;background:var(--yellow);color:#0B0B0C;font-weight:700}
+.admin-view .mini.primary:hover{filter:none;background:var(--yellow-dark)}
+/* One panel per list view: toolbar on top, rows below, hairlines between. */
+.panel-list{padding:0;overflow:hidden}
+.panel-list .panel-head{margin:0;padding:14px 16px 12px;border-bottom:1px solid var(--line-soft)}
+.panel-list .admin-filter{margin:0;padding:14px 16px;border-bottom:1px solid var(--line-soft)}
+.panel-list .form-box{margin:0;padding:18px 14px 20px;max-width:none;background:transparent;border:0;border-bottom:1px solid var(--line-soft);border-radius:0}
+.panel-list .form-box h3{margin:0 0 10px;font-size:1rem;font-weight:600}
+.panel-list .form-box input,
+.panel-list .form-box textarea,
+.panel-list .form-box select,
+.panel-list .form-box .tt-sel,
+.panel-list .form-box .row{max-width:860px}
+.panel-list .form-box .btn{width:auto;min-width:140px;min-height:40px;margin-top:16px;padding:9px 18px;font-size:.9rem;box-shadow:none}
+.panel-list .table-wrap{border:0;border-radius:0;background:transparent}
+.admin-view .panel-list table.data th{background:transparent;color:var(--muted);font-size:.68rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:10px 14px;border-bottom:1px solid var(--line);white-space:normal}
+.admin-view .panel-list table.data td{padding:13px 14px;font-size:.84rem;border-top:1px solid var(--line-soft)}
+.admin-view .panel-list table.data td .contact{white-space:nowrap}
+/* Actions stay on one line each; the cell may wrap between buttons. */
+.admin-view .panel-list table.data td:last-child{text-align:right}
+.admin-view .panel-list table.data th:last-child{text-align:right}
+.admin-view .panel-list tbody .mini{white-space:nowrap;padding:7px 8px;margin:2px 0 2px 4px}
+/* Buttons inside a cell pack from the right and wrap as a group. */
+.admin-view .panel-list .row-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+/* Nine columns need room; below this the panel scrolls instead of crushing. */
+#admin-bookings{min-width:1100px}
+/* The row menu is the third action; it reads as text with a caret. */
+.admin-view .panel-list tbody .rowmenu-btn{min-height:36px;padding:6px 8px;font-size:.8rem;font-weight:700;border-color:transparent;background:transparent;color:var(--muted);gap:5px}
+.admin-view .panel-list tbody .rowmenu-btn:hover,
+.admin-view .panel-list tbody .rowmenu-btn[aria-expanded="true"]{background:var(--surface-2);border-color:transparent;color:var(--heading)}
+/* Neutral row actions (Set maintenance, Record payment) read as text, not chips. */
+.admin-view .panel-list tbody .mini.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:7px 10px}
+.admin-view .panel-list tbody .mini.ghost:hover{background:var(--surface-2);border-color:transparent;color:var(--heading)}
+.admin-view .panel-list table.data tbody tr:first-child td{border-top:0}
+.admin-view .panel-list table.data tbody tr:hover{background:rgba(255,255,255,.025)}
+/* Status: one dot + label instead of a saturated fill. */
+.admin-view .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--ink);font-size:.72rem;font-weight:600}
+.admin-view .badge::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.admin-view .badge.available::before,
+.admin-view .badge.completed::before,
+.admin-view .badge.handled::before,
+.admin-view .badge.active::before{background:var(--yellow)}
+.admin-view .badge.pending::before,
+.admin-view .badge.open::before{background:rgb(222,160,0)}
+.admin-view .badge.confirmed::before{background:rgb(120,170,255)}
+.admin-view .badge.booked::before,
+.admin-view .badge.cancelled::before,
+.admin-view .badge.inactive::before{background:var(--red)}
+.admin-view .badge.maintenance::before{background:rgb(210,150,60)}
 a.mini{display:inline-flex;align-items:center;text-decoration:none}
 
 /* Row action dropdown, used where a row offers several actions */
@@ -1040,13 +1143,24 @@ a.mini{display:inline-flex;align-items:center;text-decoration:none}
 .rowmenu-item.ok{color:var(--green-text)}
 .login-note{max-width:520px;margin:0 auto 24px;text-align:center}
 .login-note p{margin-bottom:6px;color:var(--ink)}
-#available .form-box,#bookings .form-box,#report .form-box{margin-left:auto;margin-right:auto}
-#available .cars{margin-top:34px}
+/* These ids also exist as admin section ids (e.g. #bookings), so the account
+   layout rules are scoped to the account page and cannot leak into /admin. */
+body[data-page="account"] #available .form-box,
+body[data-page="account"] #bookings .form-box,
+body[data-page="account"] #report .form-box{margin-left:auto;margin-right:auto}
+body[data-page="account"] #available .cars{margin-top:34px}
 .form-box h3{margin-bottom:4px}
-#car-list h2,#car-list .lead,#bookings h2,#bookings .lead,#report h2,#report .lead{text-align:center}
-#car-list .lead,#bookings .lead,#report .lead{margin-left:auto;margin-right:auto}
-#report h3{margin:6px 0 10px}
-#report .tiles{margin:10px auto 30px}
+body[data-page="account"] #car-list h2,
+body[data-page="account"] #car-list .lead,
+body[data-page="account"] #bookings h2,
+body[data-page="account"] #bookings .lead,
+body[data-page="account"] #report h2,
+body[data-page="account"] #report .lead{text-align:center}
+body[data-page="account"] #car-list .lead,
+body[data-page="account"] #bookings .lead,
+body[data-page="account"] #report .lead{margin-left:auto;margin-right:auto}
+body[data-page="account"] #report h3{margin:6px 0 10px}
+body[data-page="account"] #report .tiles{margin:10px auto 30px}
 @media print{header,footer,.btn,.cta-band{display:none !important}body{background:#fff}}
 
 /* ===== FORM STATUS ===== */
@@ -1191,8 +1305,8 @@ footer .social.dark a:hover{background:var(--yellow);color:var(--navy);border-co
 .booking-panel-slot{min-width:0}
 .booking-panel{position:sticky;top:94px;scroll-margin-top:96px}
 .booking-panel.inline{position:static;grid-column:1/-1;margin:2px 0 8px}
-.booking-panel-inner{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--yellow);
-  border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);position:relative}
+.booking-panel-inner{background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;box-shadow:0 18px 44px rgba(0,0,0,.28);position:relative}
 .sheet-close{position:absolute;top:14px;right:14px;z-index:2;width:38px;height:38px;border-radius:50%;
   border:1px solid var(--line);background:var(--surface-2);color:var(--heading);font:inherit;font-size:1.4rem;
   line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;transition:border-color .2s,color .2s}
@@ -1209,12 +1323,20 @@ footer .social.dark a:hover{background:var(--yellow);color:var(--navy);border-co
 
 .booking-intro{padding:24px 22px 22px}
 .booking-intro .eyebrow{font-size:.62rem;letter-spacing:.2em;margin-bottom:18px}
-.booking-steps-list{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:18px}
-.booking-steps-list li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;align-items:start}
-.booking-step-num{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(198,244,50,.14);border:1px solid rgba(198,244,50,.45);color:var(--yellow);
-  font-weight:700;font-size:.9rem}
-.booking-steps-list strong{display:block;color:var(--heading);font-size:.95rem;margin-bottom:2px}
+/* Numbered rail: the numbers sit on a 1px line, and only the step the visitor
+   is on carries the accent. */
+.booking-steps-list{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:0}
+.booking-steps-list li{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);gap:13px;
+  align-items:start;padding:0 0 20px}
+.booking-steps-list li:last-child{padding-bottom:0}
+.booking-steps-list li:not(:last-child)::after{content:"";position:absolute;left:13.5px;top:32px;bottom:4px;
+  width:1px;background:var(--line)}
+.booking-step-num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  font-weight:700;font-size:.8rem;font-variant-numeric:tabular-nums}
+.booking-steps-list li.current .booking-step-num{background:var(--lime-soft);border-color:var(--yellow);color:var(--yellow)}
+.booking-steps-list strong{display:block;color:var(--ink);font-size:.92rem;margin-bottom:2px}
+.booking-steps-list li.current strong{color:var(--heading)}
 .booking-steps-list p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.5}
 .booking-intro-note{margin:0;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);
   font-size:.82rem;line-height:1.5}
@@ -1299,6 +1421,25 @@ footer .social.dark a:hover{background:var(--yellow);color:var(--navy);border-co
 .reserve-btn[aria-pressed="true"]{background:transparent;color:var(--yellow);
   border-color:rgba(198,244,50,.65)}
 .reserve-btn[aria-pressed="true"]:hover{background:rgba(198,244,50,.12);color:var(--yellow)}
+
+/* /account fleet: plain hairline cards. Lime is reserved for the one selected
+   card and its Book pill, so eight cards do not compete for the eye. */
+.booking-fleet .car-card{background:var(--surface);border-color:var(--line)}
+.booking-fleet .car-card:hover{border-color:rgba(255,255,255,.2);box-shadow:0 16px 36px rgba(0,0,0,.34)}
+.booking-fleet .car-card.is-selected{border-color:var(--yellow);box-shadow:0 0 0 1px rgba(198,244,50,.3)}
+.booking-fleet .car-photo{border-bottom:1px solid var(--line-soft)}
+.booking-fleet .car-badge{border-color:var(--line);color:var(--muted);letter-spacing:.12em}
+.booking-fleet .rate-price{color:var(--heading)}
+/* Availability and the weekly rate are facts, not actions: muted, with the
+   status dot as the only colour cue on a card. */
+.booking-fleet .car-status{color:var(--muted);border-color:var(--line);background:rgba(11,11,12,.86)}
+/* Status green, not brand lime: lime stays reserved for the selected card. */
+.booking-fleet .car-status::before{background:rgb(53,208,127);box-shadow:none}
+.booking-fleet .rate-week{color:var(--muted);font-weight:600}
+.booking-fleet .reserve-btn{background:transparent;color:var(--heading);border:1px solid var(--line)}
+.booking-fleet .reserve-btn:hover{background:var(--surface-2);border-color:var(--heading);color:var(--heading)}
+.booking-fleet .reserve-btn[aria-pressed="true"]{background:var(--yellow);color:#0B0B0C;border-color:transparent}
+.booking-fleet .reserve-btn[aria-pressed="true"]:hover{background:var(--yellow-dark);color:#FFFFFF}
 
 @media (max-width:1080px){
   .booking-layout{grid-template-columns:minmax(0,1fr) 320px}

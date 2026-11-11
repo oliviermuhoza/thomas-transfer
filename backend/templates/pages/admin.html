@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+﻿{% extends "layout.html" %}
 {% block content %}
 {# Sidebar icons: 24px inline strokes, same technique as the row-menu caret in
    admin.js (no icon library, no build step). Labels stay visible at all sizes. #}
@@ -47,13 +47,33 @@
 
   <!-- ================= OVERVIEW ================= -->
   <section id="overview" class="admin-view{% if view == 'overview' %} active{% endif %}">
-    <h3>At a glance</h3>
-    <div class="tiles" id="admin-tiles"></div>
-    <h3>Bookings per month</h3>
-    <div class="tt-bars" id="admin-chart" aria-label="Bookings per month"></div>
-    <h3>Needs attention</h3>
-    <p class="lead admin-sub">Pending bookings waiting for a decision.</p>
-    <div class="table-wrap"><table class="data" id="admin-pending"></table></div>
+    <div class="view-head">
+      <div>
+        <h3>At a glance</h3>
+        <p class="lead admin-sub">What needs a decision today, and how the last six months look.</p>
+      </div>
+    </div>
+
+    <div class="pulse" id="admin-pulse"></div>
+    <p class="pulse-note" id="admin-pulse-note"></p>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h4>Bookings per month</h4>
+        <span class="panel-meta">Last 6 months</span>
+      </div>
+      <div class="chart" id="admin-chart" role="img" aria-label="Bookings per month"></div>
+      <p class="insight" id="admin-insight" hidden></p>
+    </section>
+
+    <section class="panel panel-list">
+      <div class="panel-head">
+        <h4>Needs attention</h4>
+        <span class="panel-meta">Pending bookings waiting for a decision.</span>
+      </div>
+      <div class="table-wrap"><table class="data" id="admin-pending"></table></div>
+    </section>
+
     <p id="admin-overview-status" class="status" role="status"></p>
   </section>
 
@@ -61,6 +81,9 @@
   <section id="bookings" class="admin-view{% if view == 'bookings' %} active{% endif %}">
     <h3>All bookings</h3>
     <p class="lead admin-sub">Every customer trip and its current status.</p>
+    <!-- One panel per view: the toolbar, the optional form and the rows share
+         a single surface. Rows are separated by hairlines, not by cards. -->
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="bookings-filter" type="search" placeholder="Filter bookings..." aria-label="Filter bookings">
       <select id="bookings-status" aria-label="Filter by status">
@@ -70,7 +93,7 @@
         <option value="completed">Completed</option>
         <option value="cancelled">Cancelled</option>
       </select>
-      <button id="booking-new" class="mini ok" type="button">New booking</button>
+      <button id="booking-new" class="mini primary" type="button">New booking</button>
       <a class="mini ghost" href="/api/admin/export/bookings.csv" download>Download CSV</a>
     </div>
     <form id="ab-form" class="form-box" hidden>
@@ -93,6 +116,7 @@
       <button type="button" id="ab-cancel" class="mini ghost">Cancel</button>
     </form>
     <div class="table-wrap"><table class="data" id="admin-bookings"></table></div>
+    </section>
     <p id="admin-bookings-status" class="status" role="status"></p>
   </section>
 
@@ -100,6 +124,7 @@
   <section id="fleet" class="admin-view{% if view == 'fleet' %} active{% endif %}">
     <h3>Fleet</h3>
     <p class="lead admin-sub">Vehicles and whether they are free now.</p>
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="fleet-filter" type="search" placeholder="Filter cars..." aria-label="Filter cars">
       <select id="fleet-status" aria-label="Filter by status">
@@ -108,7 +133,7 @@
         <option value="booked">Booked</option>
         <option value="maintenance">Maintenance</option>
       </select>
-      <button id="car-new" class="mini ok" type="button">New car</button>
+      <button id="car-new" class="mini primary" type="button">New car</button>
     </div>
     <form id="car-form" class="form-box" hidden>
       <h3 id="car-form-title">New car</h3>
@@ -132,6 +157,7 @@
       <button type="button" id="car-cancel" class="mini ghost">Cancel</button>
     </form>
     <div class="table-wrap"><table class="data" id="admin-fleet"></table></div>
+    </section>
     <p id="admin-fleet-status" class="status" role="status"></p>
   </section>
 
@@ -139,9 +165,10 @@
   <section id="accounts" class="admin-view{% if view == 'accounts' %} active{% endif %}">
     <h3>Accounts</h3>
     <p class="lead admin-sub">Registered customers and admin access.</p>
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="accounts-filter" type="search" placeholder="Filter accounts..." aria-label="Filter accounts">
-      <button id="account-new" class="mini ok" type="button">New account</button>
+      <button id="account-new" class="mini primary" type="button">New account</button>
     </div>
     <form id="account-form" class="form-box" hidden>
       <h3 id="account-form-title">New account</h3>
@@ -162,6 +189,7 @@
       <button type="button" id="af-cancel" class="mini ghost">Cancel</button>
     </form>
     <div class="table-wrap"><table class="data" id="admin-accounts"></table></div>
+    </section>
     <p id="admin-accounts-status" class="status" role="status"></p>
   </section>
 
@@ -169,6 +197,7 @@
   <section id="messages" class="admin-view{% if view == 'messages' %} active{% endif %}">
     <h3>Messages</h3>
     <p class="lead admin-sub">Contact and support requests from the site.</p>
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="messages-filter" type="search" placeholder="Filter messages..." aria-label="Filter messages">
       <select id="messages-status" aria-label="Filter by status">
@@ -179,6 +208,7 @@
       <a class="mini ghost" href="/api/admin/export/messages.csv" download>Download CSV</a>
     </div>
     <div class="table-wrap"><table class="data" id="admin-messages"></table></div>
+    </section>
     <p id="admin-messages-status" class="status" role="status"></p>
   </section>
 
@@ -186,10 +216,12 @@
   <section id="comments" class="admin-view{% if view == 'comments' %} active{% endif %}">
     <h3>Comments</h3>
     <p class="lead admin-sub">Private feedback and ratings.</p>
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="comments-filter" type="search" placeholder="Filter comments..." aria-label="Filter comments">
     </div>
     <div class="table-wrap"><table class="data" id="admin-comments"></table></div>
+    </section>
     <p id="admin-comments-status" class="status" role="status"></p>
   </section>
 
@@ -197,9 +229,10 @@
   <section id="fares" class="admin-view{% if view == 'fares' %} active{% endif %}">
     <h3>Payment fares</h3>
     <p class="lead admin-sub">The standard amounts shown on the Pay online page.</p>
+    <section class="panel panel-list">
     <div class="admin-filter">
       <input id="fares-filter" type="search" placeholder="Filter fares..." aria-label="Filter fares">
-      <button id="fare-new" class="mini ok" type="button">New fare</button>
+      <button id="fare-new" class="mini primary" type="button">New fare</button>
     </div>
     <form id="fare-form" class="form-box" hidden>
       <h3 id="fare-form-title">New fare</h3>
@@ -223,6 +256,7 @@
       <button type="button" id="fare-cancel" class="mini ghost">Cancel</button>
     </form>
     <div class="table-wrap"><table class="data" id="admin-fares"></table></div>
+    </section>
     <p id="admin-fares-status" class="status" role="status"></p>
   </section>
   </div><!-- /admin-main -->

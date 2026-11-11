@@ -1,4 +1,4 @@
-/* Admin portal: overview, bookings, fleet, accounts, messages and comments.
+﻿/* Admin portal: overview, bookings, fleet, accounts, messages and comments.
    Everything shown comes from the same JSON API the account dashboard uses. */
 (function () {
   var body = document.body;
@@ -302,12 +302,30 @@
     }
     table.appendChild(tb);
   }
-  function tile(label, value, cls, sym) {
-    var t = el('div', 'tile'), w = el('div');
-    t.appendChild(el('div', 'ico ' + cls, sym));
-    w.appendChild(el('b', '', String(value)));
-    w.appendChild(el('span', '', T(label)));
-    t.appendChild(w); return t;
+  /* Pulse strip: value first, label second, caption third — no icon tile. */
+  function pulseCell(label, value, cap) {
+    var c = el('div', 'pulse-cell');
+    c.appendChild(el('div', 'pulse-value', String(value)));
+    c.appendChild(el('div', 'pulse-label', T(label)));
+    if (cap) { c.appendChild(el('div', 'pulse-cap', T(cap))); }
+    return c;
+  }
+  function skelPulse(box, n) {
+    if (!box) { return; }
+    clear(box);
+    for (var i = 0; i < n; i++) {
+      var c = el('div', 'pulse-cell');
+      var v = el('div', 'skel'); v.style.width = '54px'; v.style.height = '22px'; v.style.marginBottom = '12px';
+      var l = el('div', 'skel'); l.style.width = '86px'; l.style.height = '10px';
+      c.appendChild(v); c.appendChild(l); box.appendChild(c);
+    }
+  }
+  /* "3 Messages" — the number is its own node so the label stays a translatable key. */
+  function countLine(value, label) {
+    var s = el('span');
+    s.appendChild(el('b', '', String(value)));
+    s.appendChild(document.createTextNode(' ' + T(label)));
+    return s;
   }
   function matches(row, keys, q) {
     if (!q) { return true; }
@@ -394,21 +412,113 @@
     else { say(node, '', ''); }
     done();
   }
+  /* Trip cell: pick-up on the first line, drop-off as a muted second line, so
+     the route never breaks in the middle of a place name. */
+  function tripCell(tr, b) {
+    var td = cell(tr, b.pickup);
+    td.appendChild(el('div', 'sub', '\u2192 ' + b.dropoff));
+    return td;
+  }
+  /* Action cell: one flex row that packs from the right, so buttons wrap as a
+     group instead of one per line when the column is narrow. */
+  function actionsCell(tr) {
+    var td = cell(tr, '');
+    var box = el('div', 'row-actions');
+    td.appendChild(box);
+    return box;
+  }
   function bookingActions(b, node, done) {
-    var ta = cell(b.row, '');
+    var box = actionsCell(b.row);
     if (b.status === 'pending') {
-      ta.appendChild(small('Confirm', 'ok', function () { changeBooking(b.id, 'confirmed', node, done); }));
+      box.appendChild(small('Confirm', 'ok', function () { changeBooking(b.id, 'confirmed', node, done); }));
     }
     if (b.status === 'confirmed') {
-      ta.appendChild(small('Complete', 'ok', function () { changeBooking(b.id, 'completed', node, done); }));
+      box.appendChild(small('Complete', 'ok', function () { changeBooking(b.id, 'completed', node, done); }));
     }
     if (b.status === 'pending' || b.status === 'confirmed') {
-      ta.appendChild(small('Cancel', 'warn', function () { changeBooking(b.id, 'cancelled', node, done); }));
+      box.appendChild(small('Cancel', 'warn', function () { changeBooking(b.id, 'cancelled', node, done); }));
     }
+    return box;
   }
 
   /* ---------- overview ---------- */
-  function renderTrend(rows) {
+  /* The chart is one lime line over a 12% fill, drawn from /api/report data.
+     Geometry is measured from the box so dots stay round at any width. */
+  var trend = {months: [], peak: 0};
+  function svgNode(tag, attrs) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) { if (attrs.hasOwnProperty(k)) { n.setAttribute(k, attrs[k]); } }
+    return n;
+  }
+  function drawTrend() {
+    var box = $('admin-chart');
+    if (!box || !trend.months.length || !trend.peak || !box.offsetParent) { return; }
+    clear(box);
+    var width = Math.max(280, Math.round(box.clientWidth || 600));
+    var H = 180, TOP = 14, BASE = H - 14;
+    var max = Math.max(4, trend.peak);
+    var step = width / trend.months.length;
+    var pts = trend.months.map(function (m, i) {
+      return {
+        x: step * i + step / 2,
+        y: BASE - (m.n / max) * (BASE - TOP),
+        n: m.n, label: m.label, key: m.key
+      };
+    });
+
+    var svg = svgNode('svg', {
+      'class': 'chart-svg', viewBox: '0 0 ' + width + ' ' + H,
+      width: width, height: H, 'aria-hidden': 'true', focusable: 'false'
+    });
+    [0.25, 0.5, 0.75].forEach(function (f) {
+      var y = BASE - f * (BASE - TOP);
+      svg.appendChild(svgNode('line', {'class': 'chart-grid', x1: 0, x2: width, y1: y, y2: y}));
+    });
+    svg.appendChild(svgNode('line', {'class': 'chart-base', x1: 0, x2: width, y1: BASE, y2: BASE}));
+
+    var dArea = 'M ' + pts[0].x + ' ' + BASE + ' ' +
+      pts.map(function (p) { return 'L ' + p.x + ' ' + p.y; }).join(' ') +
+      ' L ' + pts[pts.length - 1].x + ' ' + BASE + ' Z';
+    svg.appendChild(svgNode('path', {'class': 'chart-area', d: dArea}));
+
+    var dLine = pts.map(function (p, i) {
+      return (i ? 'L ' : 'M ') + p.x + ' ' + p.y;
+    }).join(' ');
+    svg.appendChild(svgNode('path', {'class': 'chart-line', d: dLine}));
+
+    pts.forEach(function (p) {
+      svg.appendChild(svgNode('circle', {'class': 'chart-dot', cx: p.x, cy: p.y, r: 3.5}));
+    });
+    box.appendChild(svg);
+
+    var axis = el('div', 'chart-x');
+    pts.forEach(function (p) {
+      var s = el('span', '', p.label);
+      s.style.left = (p.x / width * 100) + '%';
+      axis.appendChild(s);
+    });
+    box.appendChild(axis);
+
+    box.setAttribute('aria-label', T('Bookings per month') + ': ' + pts.map(function (p) {
+      return p.label + ' ' + p.n;
+    }).join(', '));
+  }
+  function setInsight(thisMonth, d) {
+    var box = $('admin-insight');
+    if (!box) { return; }
+    clear(box);
+    var waiting = d && d.bookings ? d.bookings.pending : 0;
+    if (!thisMonth && !waiting) { box.hidden = true; return; }
+    var parts = [];
+    if (thisMonth) { parts.push(countLine(thisMonth, 'bookings this month')); }
+    if (waiting) { parts.push(countLine(waiting, 'waiting for a decision')); }
+    parts.forEach(function (n, i) {
+      if (i) { box.appendChild(document.createTextNode(' \u00B7 ')); }
+      box.appendChild(n);
+    });
+    box.hidden = false;
+  }
+  function renderTrend(rows, d) {
     var box = $('admin-chart');
     if (!box) { return; }
     clear(box);
@@ -418,38 +528,34 @@
       counts[key] = (counts[key] || 0) + 1;
     });
     var now = new Date();
-    var months = [];
+    trend.months = [];
     for (var i = 5; i >= 0; i--) {
-      var d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-      var key = d.toISOString().slice(0, 7);
-      months.push({
+      var dt = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+      var key = dt.toISOString().slice(0, 7);
+      trend.months.push({
         key: key,
-        label: d.toLocaleString('en', {month: 'short', timeZone: 'UTC'}),
-        n: counts[key] || 0,
+        label: dt.toLocaleString('en', {month: 'short', timeZone: 'UTC'}),
+        n: counts[key] || 0
       });
     }
-    var max = 1;
-    months.forEach(function (m) { if (m.n > max) { max = m.n; } });
-    if (max === 1 && !months.some(function (m) { return m.n; })) {
+    trend.peak = 0;
+    trend.months.forEach(function (m) { if (m.n > trend.peak) { trend.peak = m.n; } });
+    if (!trend.peak) {
       window.ttEmptyState(box, {size: 'compact', title: 'No bookings in the last six months.'});
+      setInsight(0, d);
       return;
     }
-    months.forEach(function (m) {
-      var col = el('div', 'tt-bar-col');
-      var bar = el('div', 'tt-bar');
-      bar.style.height = Math.max(2, Math.round((m.n / max) * 100)) + '%';
-      bar.title = m.key + ': ' + m.n;
-      col.appendChild(bar);
-      col.appendChild(el('span', 'tt-bar-label', m.label));
-      box.appendChild(col);
-    });
+    drawTrend();
+    setInsight(trend.months[trend.months.length - 1].n, d);
   }
   async function loadOverview() {
-    var st = $('admin-overview-status'), tiles = $('admin-tiles');
+    var st = $('admin-overview-status'), pulse = $('admin-pulse'), note = $('admin-pulse-note');
+    var insight = $('admin-insight');
     say(st, '', T('Loading...'));
     skelRows('admin-pending', 3);
-    clear(tiles);
-    for (var i = 0; i < 7; i++) { tiles.appendChild(skel('skel-tile', '100%')); }
+    skelPulse(pulse, 4);
+    if (note) { clear(note); }
+    if (insight) { insight.hidden = true; }
 
     var report, bookings;
     try { report = await api('/api/report'); } catch (e) { report = {ok: false}; }
@@ -458,17 +564,24 @@
     if (!bookings.ok) { fail(st, bookings); return; }
 
     var d = report.data;
-    clear(tiles);
+    clear(pulse);
     setNavCount('bookings', d.bookings.pending, 'pending');
-    [['Pending', d.bookings.pending, 'gold', '\u23F1'],
-     ['Confirmed', d.bookings.confirmed, 'green', '\u2713'],
-     ['Available cars', d.cars.available, 'green', '\u25A0'],
-     ['Booked cars', d.cars.booked, 'red', '\u2605'],
-     ['Accounts', d.accounts, 'navy', '\u263A'],
-     ['Messages', d.messages, 'navy', '\u2709'],
-     ['Revenue', Math.round(d.revenue.total), 'green', '\u00A5']
-    ].forEach(function (t) { tiles.appendChild(tile(t[0], t[1], t[2], t[3])); });
-    renderTrend(bookings.data);
+    pulse.appendChild(pulseCell('Pending', d.bookings.pending, 'waiting for a decision'));
+    pulse.appendChild(pulseCell('Confirmed', d.bookings.confirmed, 'upcoming trips'));
+    pulse.appendChild(pulseCell('Available cars', d.cars.available, 'ready to book'));
+    pulse.appendChild(pulseCell('Revenue', Math.round(d.revenue.total), 'recorded payments'));
+
+    if (note) {
+      clear(note);
+      [countLine(d.accounts, 'Accounts'),
+       countLine(d.messages, 'Messages'),
+       countLine(d.cars.booked, 'Booked cars')].forEach(function (n, i) {
+        if (i) { note.appendChild(document.createTextNode(' \u00B7 ')); }
+        note.appendChild(n);
+      });
+    }
+
+    renderTrend(bookings.data, d);
 
     var pending = bookings.data.filter(function (b) { return b.status === 'pending'; });
     if (!pending.length) {
@@ -485,9 +598,9 @@
       var tr = el('tr');
       cell(tr, String(b.id));
       var tc = cell(tr, b.customer);
-      tc.appendChild(el('div', 'sub', b.phone || b.email));
+      tc.appendChild(el('div', 'sub contact', b.phone || b.email));
       cell(tr, b.car_name);
-      cell(tr, b.pickup + ' \u2192 ' + b.dropoff);
+      tripCell(tr, b);
       cell(tr, b.trip_at.replace('T', ' '));
       bookingActions({id: b.id, status: b.status, row: tr}, st, loadOverview);
       tb.appendChild(tr);
@@ -534,21 +647,24 @@
       var tr = el('tr');
       cell(tr, String(b.id));
       var tc = cell(tr, b.customer);
-      tc.appendChild(el('div', 'sub', b.phone || b.email));
+      tc.appendChild(el('div', 'sub contact', b.phone || b.email));
       cell(tr, b.car_name);
-      cell(tr, b.pickup + ' \u2192 ' + b.dropoff);
+      tripCell(tr, b);
       cell(tr, b.trip_at.replace('T', ' '));
       cell(tr, String(b.passengers));
       cell(tr, '').appendChild(badge(b.status));
       cell(tr, b.paid_amount > 0 ? String(b.paid_amount) + ' · ' + b.paid_method : '-');
-      bookingActions({id: b.id, status: b.status, row: tr}, $('admin-bookings-status'), loadBookings);
-      var ta = tr.cells[tr.cells.length - 1];
-      ta.appendChild(small('Edit', 'ghost', function () { openBookingForm(b); }));
+      var acts = bookingActions({id: b.id, status: b.status, row: tr}, $('admin-bookings-status'), loadBookings);
+      /* Secondary actions live in the row menu so the status action stays the
+         one thing the eye lands on, and the row keeps a single action line. */
+      var more = [{label: 'Edit', run: function () { openBookingForm(b); }}];
       if (b.status !== 'cancelled') {
-        ta.appendChild(small(b.paid_amount > 0 ? 'Edit payment' : 'Record payment', 'ghost', function () {
-          recordPayment(b, $('admin-bookings-status'));
-        }));
+        more.push({
+          label: b.paid_amount > 0 ? 'Edit payment' : 'Record payment',
+          run: function () { recordPayment(b, $('admin-bookings-status')); }
+        });
       }
+      acts.appendChild(rowMenu(more));
       tb.appendChild(tr);
     });
     say($('admin-bookings-status'), '', '');
@@ -672,7 +788,7 @@
       nameCell.appendChild(el('div', 'sub', T('Passengers') + ': ' + c.capacity));
       cell(tr, T(c.type));
       cell(tr, '').appendChild(badge(c.status));
-      var ta = cell(tr, '');
+      var ta = actionsCell(tr);
       if (c.status !== 'booked') {
         var inMaint = c.status === 'maintenance';
         ta.appendChild(small(inMaint ? 'Set available' : 'Set maintenance', 'ghost', function () {
@@ -764,7 +880,7 @@
       cell(tr, T(u.admin ? 'Admin' : 'Customer'));
       cell(tr, '').appendChild(badge(u.active ? 'active' : 'inactive'));
       cell(tr, u.created_at);
-      var ta = cell(tr, '');
+      var ta = actionsCell(tr);
       var actions = [];
       if (me && me.id === u.id) {
         ta.appendChild(el('span', 'sub', T('You')));
@@ -873,7 +989,7 @@
       cell(tr, m.message);
       cell(tr, m.created_at);
       cell(tr, '').appendChild(badge(m.handled ? 'handled' : 'open'));
-      var ta = cell(tr, '');
+      var ta = actionsCell(tr);
       ta.appendChild(small(m.handled ? 'Reopen' : 'Mark handled', m.handled ? 'ghost' : 'ok', function () {
         changeMessage(m.id, !m.handled, $('admin-messages-status'), loadMessages);
       }));
@@ -927,7 +1043,7 @@
       cell(tr, c.text);
       cell(tr, c.created_at);
       cell(tr, '').appendChild(badge(c.handled ? 'handled' : 'open'));
-      var ta = cell(tr, '');
+      var ta = actionsCell(tr);
       ta.appendChild(small(c.handled ? 'Reopen' : 'Mark handled', c.handled ? 'ghost' : 'ok', function () {
         changeComment(c.id, !c.handled, $('admin-comments-status'), loadComments);
       }));
@@ -982,7 +1098,7 @@
       cell(tr, f.note || '-');
       cell(tr, f.flw_link ? T('Set') : T('WhatsApp'));
       cell(tr, '').appendChild(badge(f.active ? 'active' : 'inactive'));
-      var ta = cell(tr, '');
+      var ta = actionsCell(tr);
       ta.appendChild(small('Edit', 'ok', function () { openFareForm(f); }));
       ta.appendChild(small(f.active ? 'Hide' : 'Show', 'ghost', function () {
         patch('/api/admin/fares/' + f.id, {active: !f.active}).then(function (res) {
@@ -1091,6 +1207,13 @@
   on('fare-new', 'click', function () { openFareForm(null); });
   on('fare-cancel', 'click', closeFareForm);
   on('fare-form', 'submit', saveFare);
+
+  /* The chart is measured from its box, so redraw it when the column resizes. */
+  var trendTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(trendTimer);
+    trendTimer = setTimeout(drawTrend, 120);
+  });
 
   refresh();
 })();
