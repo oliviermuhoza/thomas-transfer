@@ -170,7 +170,7 @@ Environment variables:
 | `TT_ENV` | unset | Set to `production` to enable production checks (HTTPS cookie required, `SECRET_KEY` required, no generated admin password printed). |
 | `SECRET_KEY` | generated in `backend/data/secret_key` (non-production) | Signs session cookies. **Required in production.** |
 | `TT_DATABASE` | `backend/data/thomas.db` | SQLite file path |
-| `TT_ADMIN_EMAIL` | `admin@thomastransfer.com` | Seeded admin email |
+| `TT_ADMIN_EMAIL` | `tomsafaris@gmail.com` | Seeded admin email |
 | `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
 | `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
 | `TT_PORT` | `5000` | Port used by `python -m backend.app` |
@@ -217,7 +217,7 @@ admin report, page routes, redirects, nav state and 404 handling.
   Google Sans with the generic `sans-serif` fallback.
 - **Theme and language** are stored in `localStorage` under `tt-theme` and
   `tt-lang`.
-- **Contact details** (`0783882549`, `wa.me/250783882549`) are repeated inline
+- **Contact details** (`0788652120`, `wa.me/250788652120`) are repeated inline
   in the markup and a few scripts.
 - **Payments** are not processed by the backend. The fare list on `/pay` comes
   from the `fares` table (managed in `/admin/fares`). Each fare can carry a

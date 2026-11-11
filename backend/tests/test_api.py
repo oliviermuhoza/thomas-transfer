@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 import backend.app as backend_app  # noqa: E402
 from backend.app import create_app  # noqa: E402
 
-ADMIN_EMAIL = "admin@thomastransfer.com"
+ADMIN_EMAIL = "tomsafaris@gmail.com"
 ADMIN_PASSWORD = "admin-test-pass"
 
 

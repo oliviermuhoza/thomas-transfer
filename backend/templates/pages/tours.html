@@ -10,24 +10,15 @@
         <p class="banner-slide-up">Five signature journeys — savannah safaris, ancient rainforests, volcano country, lakeside calm and royal heritage. Private transport, expert driver-guides, effortless booking.</p>
       </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 24px">
-      <button class="svc-book" type="button">ALL</button>
-      <button class="svc-book" type="button">Nation Parks</button>
-      <button class="svc-book" type="button">Lakes&Leisure</button>
-      <button class="svc-book" type="button">Culture&Heritage</button>
+    <div class="tour-filters">
+      <button class="svc-book is-active" type="button" data-filter="all" aria-pressed="true">ALL</button>
+      <button class="svc-book" type="button" data-filter="parks" aria-pressed="false">Nation Parks</button>
+      <button class="svc-book" type="button" data-filter="lakes" aria-pressed="false">Lakes&Leisure</button>
+      <button class="svc-book" type="button" data-filter="culture" aria-pressed="false">Culture&Heritage</button>
     </div>
-    <div class="airport-feature">
-      <div class="af-media"><img src="/assets/images/tour-kigali.jpg" alt="Tour" loading="lazy"></div>
-      <div class="af-copy">
-        <p class="eyebrow">Tour packages</p>
-        <h3>Discover Rwanda</h3>
-        <p>Private transport, expert driver-guides, effortless booking.</p>
-      </div>
-    </div>
-    <h2>Tour packages</h2>
-    <p class="lead">Discover Rwanda with a car and a driver who knows the roads.</p>
     <div class="cars">
-      <article class="car-card">
+      <article class="car-card" data-cat="parks">
+        <img class="car-photo" src="/assets/images/akagera-safari.jpg" alt="Giraffe among acacia trees in Akagera National Park" loading="lazy">
         <div class="car-info">
           <span class="car-badge">Full-day safari · Eastern Province</span>
           <h3>Akagera National Park</h3>
@@ -45,17 +36,173 @@
               <span class="rate-price"><span class="tour-price-old">$390</span>$350</span>
               <span class="rate-per">Per person</span>
             </div>
-            <a class="reserve-btn" href="/contact">Book</a>
+            <button class="reserve-btn" type="button" data-tour-book>Book</button>
           </div>
         </div>
       </article>
+      <article class="car-card" data-cat="parks">
+        <img class="car-photo" src="/assets/images/volcanoes-national-park.jpg" alt="Hikers walking below a Virunga volcano in Volcanoes National Park" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Full-day tour · Northern Province</span>
+          <h3>Volcanoes National Park</h3>
+          <p>The realm of the mountain gorilla. Explore Musanze and the foothills of the five Virunga volcanoes — with golden monkey treks, Dian Fossey's legacy and the Twin Lakes nearby.</p>
+          <ul class="tour-itinerary">
+            <li><time>06:00</time><span>Depart Kigali; highland drive to Musanze (±2 hrs)</span></li>
+            <li><time>08:30</time><span>Park briefing at Kinigi headquarters</span></li>
+            <li><time>09:00</time><span>Guided experience: golden monkey trek or Buhanga eco-park walk (gorilla permits arranged separately on request)</span></li>
+            <li><time>13:00</time><span>Lunch in Musanze town</span></li>
+            <li><time>14:30</time><span>Twin Lakes Burera &amp; Ruhondo viewpoint, or Musanze caves tour</span></li>
+            <li><time>18:30</time><span>Return to Kigali</span></li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price"><span class="tour-price-old">$300</span>$270</span>
+              <span class="rate-per">Per person</span>
+            </div>
+            <button class="reserve-btn" type="button" data-tour-book>Book</button>
+          </div>
+        </div>
+      </article>
+      <article class="car-card" data-cat="parks">
+        <img class="car-photo" src="/assets/images/nyungwe-canopy-walk.jpg" alt="Visitors crossing the canopy walkway in Nyungwe National Park" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Full-day tour · Southern Province</span>
+          <h3>Nyungwe National Park</h3>
+          <p>One of Africa's oldest montane rainforests and a UNESCO World Heritage Site — home to chimpanzees, 13 primate species and East Africa's only canopy walkway, 60 metres above the forest floor.</p>
+          <ul class="tour-itinerary">
+            <li><time>05:00</time><span>Early departure from Kigali through tea country (±5 hrs, with scenic stops)</span></li>
+            <li><time>10:30</time><span>Igishigishigi trail &amp; the famous Canopy Walkway</span></li>
+            <li><time>13:00</time><span>Lunch near Gisakura tea estate</span></li>
+            <li><time>14:30</time><span>Waterfall trail or colobus monkey tracking (chimp trekking available with overnight option)</span></li>
+            <li><time>16:30</time><span>Return drive — or extend to an overnight stay on request</span></li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price"><span class="tour-price-old">$300</span>$270</span>
+              <span class="rate-per">Per person</span>
+            </div>
+            <button class="reserve-btn" type="button" data-tour-book>Book</button>
+          </div>
+        </div>
+      </article>
+      <article class="car-card" data-cat="lakes">
+        <img class="car-photo" src="/assets/images/gisenyi-lake-kivu.jpg" alt="Lake Kivu shoreline at Gisenyi" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Full-day escape · Lake Kivu</span>
+          <h3>Gisenyi — Lake Kivu</h3>
+          <p>Rwanda's riviera. Sandy beaches, the Rubona peninsula, lakeside coffee and one of the Great Lakes' most beautiful sunsets — a complete change of pace from the capital.</p>
+          <ul class="tour-itinerary">
+            <li><time>06:30</time><span>Depart Kigali; ridge-top views over a thousand hills (±3.5 hrs)</span></li>
+            <li><time>10:30</time><span>Gisenyi public beach &amp; waterfront promenade</span></li>
+            <li><time>12:30</time><span>Fresh fish lunch on the lakeshore</span></li>
+            <li><time>14:00</time><span>Boat ride on Lake Kivu &amp; Rubona hot springs</span></li>
+            <li><time>16:00</time><span>Coffee-washing station visit, then sunset by the water</span></li>
+            <li><time>17:30</time><span>Return — or stay overnight and we collect you the next day</span></li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price"><span class="tour-price-old">$250</span>$225</span>
+              <span class="rate-per">Per person</span>
+            </div>
+            <button class="reserve-btn" type="button" data-tour-book>Book</button>
+          </div>
+        </div>
+      </article>
+      <article class="car-card" data-cat="culture">
+        <img class="car-photo" src="/assets/images/kings-palace-museum.jpg" alt="Thatched royal palace hut at the King's Palace Museum in Nyanza" loading="lazy">
+        <div class="car-info">
+          <span class="car-badge">Half-day heritage · Nyanza</span>
+          <h3>King's Palace Museum</h3>
+          <p>Step into pre-colonial Rwanda at Nyanza — the reconstructed royal residence, the modern palace of King Mutara III Rudahigwa, and the sacred Inyambo long-horned cattle with their singing keepers.</p>
+          <ul class="tour-itinerary">
+            <li><time>08:00</time><span>Pickup in Kigali; southern drive through the hills (±2 hrs)</span></li>
+            <li><time>10:00</time><span>Guided tour of the traditional thatched royal palace</span></li>
+            <li><time>11:30</time><span>Meet the Inyambo royal cattle &amp; their traditional herders</span></li>
+            <li><time>12:30</time><span>Lunch in Nyanza town</span></li>
+            <li><time>14:00</time><span>Rwesero Art Gallery (former palace), then return to Kigali</span></li>
+          </ul>
+          <div class="car-foot">
+            <div class="car-rate">
+              <span class="rate-price"><span class="tour-price-old">$100</span>$90</span>
+              <span class="rate-per">Per person</span>
+            </div>
+            <button class="reserve-btn" type="button" data-tour-book>Book</button>
+          </div>
+        </div>
+      </article>
+      <div class="tour-includes">
+      <p class="eyebrow">Good to know</p>
+      <h2>Every package includes</h2>
+      <ul class="tour-includes-list">
+        <li>Private 4×4 or SUV transport from/to your Kigali address</li>
+        <li>English- and Kinyarwanda-speaking driver-guide</li>
+        <li>Fuel, bottled water and all vehicle costs</li>
+        <li>Flexible itinerary — tell us what to add or skip</li>
+      </ul>
+      <p class="tour-includes-note">Park entry fees, meals and activity permits (e.g. gorilla trekking, chimp permits, boat safaris) are payable separately at official RDB rates — we're happy to arrange them for you. Prices are per person; group discounts available for 4+ travellers.</p>
+      <div class="tour-includes-foot">
+        <span class="tour-includes-tag">Custom trips welcome</span>
+        <a class="tour-includes-cta" href="/contact">Plan mine</a>
+      </div>
     </div>
-    <div class="services">
-      <div class="card"><h3>City tours</h3><p>Kigali city tours, markets and cultural sites in one day.</p><span class="tag">Half day or full day</span></div>
-      <div class="card"><h3>National parks</h3><p>Trips to Akagera, Volcanoes and Nyungwe in a comfortable vehicle.</p><span class="tag">Multi-day trips</span></div>
-      <div class="card"><h3>Custom tours</h3><p>Tell us your plan and we will build the trip around you.</p><span class="tag">Made for you</span></div>
     </div>
-    <p style="margin-top:28px"><a class="btn" href="/contact">Request a tour</a></p>
+    <section class="cta-ready tour-offer" aria-labelledby="tour-offer-title">
+      <img class="cta-ready-bg" src="/assets/images/Nyungwe-Forest-National-Park-740x450.jpg" alt="" loading="lazy">
+      <div class="cta-ready-inner">
+        <p class="eyebrow">Limited-time offer</p>
+        <h2 id="tour-offer-title">10% off every package — book this season</h2>
+        <p>Discounted prices are already shown. Lock in your date with a single WhatsApp message.</p>
+        <a class="cta-ready-btn" href="https://wa.me/250783689231?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20claim%20the%2010%25%20discount%20on%20a%20tour%20package." target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Claim your discount</a>
+      </div>
+    </section>
   </div>
 </section>
+
+<dialog id="tour-dialog" class="msg-dialog rent-dialog tour-dialog" aria-labelledby="tour-book-title">
+  <button type="button" class="msg-close" id="tour-book-close" aria-label="Close">&times;</button>
+  <h3 id="tour-book-title">Book this tour</h3>
+  <p class="rent-intro">Tell us your date and group size — we confirm availability shortly. <strong class="rent-days" id="tour-book-name"></strong></p>
+  <form id="tour-book-form" class="tour-book-form">
+    <div class="form-row">
+      <div>
+        <label for="tour-first">First name</label>
+        <input id="tour-first" type="text" autocomplete="given-name" required>
+      </div>
+      <div>
+        <label for="tour-last">Last name</label>
+        <input id="tour-last" type="text" autocomplete="family-name" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="tour-email">Email</label>
+        <input id="tour-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+      <div>
+        <label for="tour-phone">Phone number</label>
+        <input id="tour-phone" type="tel" autocomplete="tel" placeholder="+250 ..." required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="tour-date">Preferred date</label>
+        <input id="tour-date" type="date" required>
+      </div>
+      <div>
+        <label for="tour-travellers">Travellers</label>
+        <input id="tour-travellers" type="number" min="1" max="40" value="1" required>
+      </div>
+    </div>
+    <label for="tour-pickup">Pick-up location</label>
+    <input id="tour-pickup" type="text" placeholder="Hotel or address in Kigali" required>
+    <label for="tour-message">Message</label>
+    <textarea id="tour-message" placeholder="Anything else — dietary needs, extra stops, overnight options (optional)"></textarea>
+    <button class="btn" type="submit">Send booking request</button>
+    <p id="tour-book-status" class="status" role="status"></p>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script src="/js/tours-filter.js"></script>
+<script src="/js/tours-book.js"></script>
 {% endblock %}
