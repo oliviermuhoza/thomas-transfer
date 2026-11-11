@@ -155,7 +155,7 @@ body.logged-in .nav-user{display:flex}
 .avatar-menu a:hover{background:var(--surface-2)}
 .avatar-menu a[hidden]{display:none}
 .avatar-sep{height:1px;background:var(--line-soft);margin:6px 8px}
-.nav-user-logout{display:none}
+.bar nav .nav-user-logout{display:none}
 
 /* Desktop: the search field is collapsed behind its icon and expands in place. */
 .bar .search{position:relative;flex:0 0 auto;width:0;min-width:0;opacity:0;visibility:hidden;
@@ -213,15 +213,16 @@ body.logged-in .nav-user{display:flex}
   .search-results{left:0;right:0;width:auto}
 
   /* Signed-in identity row at the top of the drawer; no popover on touch. */
-  .nav-user{order:-1;width:100%;margin:0 0 10px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+  .nav-panel .nav-user{order:-1;width:100%;margin:0 0 10px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
   .nav-user .avatar-btn{width:40px;height:40px;font-size:.85rem}
   .nav-user-text{display:block;min-width:0}
   .nav-user-name{display:block;font-size:.95rem;font-weight:700;color:var(--white)}
   .nav-user-email{display:block;font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .avatar-menu{display:none !important}
-  body.logged-in .nav-user-logout{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:12px;
-    border-top:1px solid var(--line-soft);padding-top:10px;color:var(--muted);text-decoration:none;font-weight:600}
-  body.logged-in .nav-user-logout:hover{color:var(--yellow)}
+  body.logged-in .bar nav .nav-user-logout{display:flex;align-items:center;justify-content:center;min-height:44px;
+    order:4;flex:1 1 100%;margin-top:12px;border-top:1px solid var(--line-soft);padding-top:10px;
+    color:var(--muted);text-decoration:none;font-weight:600}
+  body.logged-in .bar nav .nav-user-logout:hover{color:var(--yellow)}
 }
 
 /* ===== SOCIAL ICONS ===== */
