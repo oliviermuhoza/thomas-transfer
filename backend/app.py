@@ -199,6 +199,13 @@ def create_app(
         )
     app.teardown_appcontext(close_db)
 
+    if turso_url:
+        app.logger.info(
+            "Database backend: libsql (%s)", urlparse(database).hostname or database
+        )
+    else:
+        app.logger.info("Database backend: sqlite (%s)", database)
+
     if production and ephemeral:
         app.logger.warning(
             "The database lives on an ephemeral filesystem; bookings and admin "
