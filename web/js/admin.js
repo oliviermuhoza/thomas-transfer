@@ -45,6 +45,112 @@
     return b;
   }
 
+  /* Initials avatars: no profile photos in the data, so people are marked by
+     circles of first letters (two from the name, else the email start). */
+  function initials(name, email) {
+    var src = (name || '').trim() || (email || '?').trim();
+    var parts = src.split(/\s+/);
+    var ini = parts.length > 1 ? parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+                               : src.slice(0, 2);
+    return ini.toUpperCase();
+  }
+  function avatarEl(name, email) {
+    var a = el('span', 'avatar', initials(name, email));
+    a.setAttribute('aria-hidden', 'true');
+    return a;
+  }
+  function whoCell(row, u) {
+    var td = cell(row, '');
+    var w = el('div', 'who');
+    w.appendChild(avatarEl(u.name, u.email));
+    var box = el('div', 'who-text');
+    box.appendChild(el('div', 'who-name', u.name));
+    box.appendChild(el('div', 'who-mail', u.email));
+    w.appendChild(box);
+    td.appendChild(w);
+    return td;
+  }
+  function renderMe() {
+    var box = $('admin-me');
+    if (!box) { return; }
+    var u = window.ttUser;
+    box.textContent = '';
+    box.hidden = !u;
+    if (u) {
+      box.appendChild(avatarEl(u.name, u.email));
+      var txt = el('div', 'admin-me-text');
+      txt.appendChild(el('div', 'admin-me-name', u.name));
+      if (u.email) { txt.appendChild(el('div', 'admin-me-mail', u.email)); }
+      box.appendChild(txt);
+    }
+  }
+
+  /* Sidebar counts: the two numbers that mean "something needs you" — pending
+     bookings and messages nobody has handled yet. They are decoration on top of
+     a server-rendered nav, so any failure just leaves the rail as it was. */
+  var countsBusy = false;
+  function setNavCount(key, n, word) {
+    var pill = document.querySelector('.nav-count[data-count="' + key + '"]');
+    if (!pill) { return; }
+    var link = pill.parentNode;
+    var label = link.querySelector('.nav-label');
+    if (!n) {
+      pill.hidden = true;
+      pill.textContent = '';
+      link.removeAttribute('aria-label');
+      return;
+    }
+    pill.textContent = n > 99 ? '99+' : String(n);
+    pill.hidden = false;
+    link.setAttribute('aria-label',
+      (label ? label.textContent : key) + ', ' + n + ' ' + T(word));
+  }
+  async function refreshNavCounts() {
+    if (countsBusy) { return; }
+    countsBusy = true;
+    var view = currentView();
+    try {
+      var jobs = [];
+      /* The view's own loader already reads these endpoints, and it sets the
+         count it just fetched — no second request on Overview or Messages. */
+      if (view !== 'overview') {
+        jobs.push(api('/api/report').catch(function () { return {ok: false}; }).then(function (r) {
+          if (r.ok && r.data && r.data.bookings) {
+            setNavCount('bookings', r.data.bookings.pending, 'pending');
+          }
+        }));
+      }
+      if (view !== 'messages') {
+        jobs.push(api('/api/admin/messages').catch(function () { return {ok: false}; }).then(function (r) {
+          if (r.ok && Array.isArray(r.data)) {
+            setNavCount('messages', r.data.filter(function (m) { return !m.handled; }).length, 'open');
+          }
+        }));
+      }
+      if (view !== 'comments') {
+        jobs.push(api('/api/admin/comments').catch(function () { return {ok: false}; }).then(function (r) {
+          if (r.ok && Array.isArray(r.data)) {
+            setNavCount('comments', r.data.filter(function (c) { return !c.handled; }).length, 'open');
+          }
+        }));
+      }
+      await Promise.all(jobs);
+    } finally {
+      countsBusy = false;
+    }
+  }
+
+  /* On phones the nav is a horizontal strip; centre the current section so it
+     is never the one chip scrolled out of sight. Assigning scrollLeft (instead
+     of scrollIntoView) cannot drag the page itself. */
+  function centerActiveNav() {
+    var nav = document.querySelector('.admin-nav');
+    var cur = nav && nav.querySelector('a[aria-current="page"]');
+    if (!nav || !cur || nav.scrollWidth <= nav.clientWidth + 1) { return; }
+    var offset = cur.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;
+    nav.scrollLeft = Math.max(0, offset - (nav.clientWidth - cur.offsetWidth) / 2);
+  }
+
   /* Row action menu. A row can offer three or four actions; stacking that many
      buttons in the last cell squeezed the table, so they live in one "Manage"
      control instead. The panel is positioned fixed so the table's horizontal
@@ -160,10 +266,19 @@
   }
   function makeTable(table, cols) {
     clear(table);
+    window.ttEmptyState.clear(table.parentNode);
     var tr = el('tr');
     cols.forEach(function (c) { tr.appendChild(el('th', '', T(c))); });
     var head = el('thead'); head.appendChild(tr); table.appendChild(head);
     var bodyEl = el('tbody'); table.appendChild(bodyEl); return bodyEl;
+  }
+  function emptyTable(tableId, opts) {
+    var table = $(tableId);
+    window.ttEmptyState(table.parentNode, opts);
+  }
+  function clearFilters(ids, render) {
+    ids.forEach(function (id) { var n = $(id); if (n) { n.value = ''; } });
+    render();
   }
   function cell(row, text, cls) { var td = el('td', cls || '', text); row.appendChild(td); return td; }
   function skel(cls, w) {
@@ -175,6 +290,7 @@
   function skelRows(tableId, n) {
     var table = $(tableId);
     if (!table) { return; }
+    window.ttEmptyState.clear(table.parentNode);
     clear(table);
     var tb = el('tbody');
     for (var i = 0; i < n; i++) {
@@ -208,6 +324,7 @@
     if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); }
     else { say(node, '', ''); }
     done();
+    refreshNavCounts();
   }
   async function changeCar(id, status, node, done) {
     var res = await post('/api/cars/' + id + '/status', {status: status});
@@ -226,6 +343,14 @@
     if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); }
     else { say(node, '', ''); }
     done();
+    refreshNavCounts();
+  }
+  async function changeComment(id, handled, node, done) {
+    var res = await post('/api/admin/comments/' + id + '/handled', {handled: handled});
+    if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); }
+    else { say(node, '', ''); }
+    done();
+    refreshNavCounts();
   }
   async function changeActive(id, active, node, done) {
     var res = await post('/api/admin/users/' + id + '/active', {active: active});
@@ -305,6 +430,10 @@
     }
     var max = 1;
     months.forEach(function (m) { if (m.n > max) { max = m.n; } });
+    if (max === 1 && !months.some(function (m) { return m.n; })) {
+      window.ttEmptyState(box, {size: 'compact', title: 'No bookings in the last six months.'});
+      return;
+    }
     months.forEach(function (m) {
       var col = el('div', 'tt-bar-col');
       var bar = el('div', 'tt-bar');
@@ -330,6 +459,7 @@
 
     var d = report.data;
     clear(tiles);
+    setNavCount('bookings', d.bookings.pending, 'pending');
     [['Pending', d.bookings.pending, 'gold', '\u23F1'],
      ['Confirmed', d.bookings.confirmed, 'green', '\u2713'],
      ['Available cars', d.cars.available, 'green', '\u25A0'],
@@ -341,6 +471,15 @@
     renderTrend(bookings.data);
 
     var pending = bookings.data.filter(function (b) { return b.status === 'pending'; });
+    if (!pending.length) {
+      window.ttEmptyState($('admin-pending').parentNode, {
+        icon: 'clock',
+        title: 'Nothing needs attention.',
+        text: 'New booking requests will appear here as they arrive.'
+      });
+      say(st, '', '');
+      return;
+    }
     var tb = makeTable($('admin-pending'), ['#', 'Customer', 'Car', 'Trip', 'Date and time', 'Action']);
     pending.forEach(function (b) {
       var tr = el('tr');
@@ -353,7 +492,7 @@
       bookingActions({id: b.id, status: b.status, row: tr}, st, loadOverview);
       tb.appendChild(tr);
     });
-    say(st, '', pending.length ? '' : T('No pending bookings.'));
+    say(st, '', '');
   }
 
   /* ---------- bookings ---------- */
@@ -374,6 +513,21 @@
       return (!status || b.status === status) &&
         matches(b, ['id', 'customer', 'car_name', 'pickup', 'dropoff', 'trip_at', 'email', 'phone'], q);
     });
+    if (!rows.length) {
+      emptyTable('admin-bookings', state.bookings.length ? {
+        icon: 'tray',
+        title: 'No bookings match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['bookings-filter', 'bookings-status'], renderBookings);
+        }}
+      } : {
+        icon: 'tray',
+        title: 'No bookings yet.',
+        text: 'Bookings from customers will appear here.'
+      });
+      say($('admin-bookings-status'), '', '');
+      return;
+    }
     var tb = makeTable($('admin-bookings'),
       ['#', 'Customer', 'Car', 'Trip', 'Date and time', 'Passengers', 'Status', 'Paid', 'Action']);
     rows.forEach(function (b) {
@@ -397,7 +551,7 @@
       }
       tb.appendChild(tr);
     });
-    say($('admin-bookings-status'), '', rows.length ? '' : T('No bookings yet.'));
+    say($('admin-bookings-status'), '', '');
   }
 
   /* ---------- booking form (create and edit) ---------- */
@@ -494,6 +648,21 @@
     var rows = state.cars.filter(function (c) {
       return (!status || c.status === status) && matches(c, ['id', 'name', 'type', 'description'], q);
     });
+    if (!rows.length) {
+      emptyTable('admin-fleet', state.cars.length ? {
+        icon: 'car',
+        title: 'No cars match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['fleet-filter', 'fleet-status'], renderFleet);
+        }}
+      } : {
+        icon: 'car',
+        title: 'No cars in the fleet yet.',
+        text: 'Cars you add will appear here and on the public fleet page.'
+      });
+      say($('admin-fleet-status'), '', '');
+      return;
+    }
     var tb = makeTable($('admin-fleet'), ['Photo', 'Car', 'Type', 'Status', 'Action']);
     rows.forEach(function (c) {
       var tr = el('tr'), td = el('td'), img = el('img', 'thumb');
@@ -517,7 +686,7 @@
       }));
       tb.appendChild(tr);
     });
-    say($('admin-fleet-status'), '', rows.length ? '' : T('No cars found.'));
+    say($('admin-fleet-status'), '', '');
   }
 
   /* ---------- fleet form (create and edit) ---------- */
@@ -569,14 +738,28 @@
     var rows = state.accounts.filter(function (u) {
       return matches(u, ['id', 'name', 'email', 'phone'], q);
     });
+    if (!rows.length) {
+      emptyTable('admin-accounts', state.accounts.length ? {
+        icon: 'users',
+        title: 'No accounts match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['accounts-filter'], renderAccounts);
+        }}
+      } : {
+        icon: 'users',
+        title: 'No accounts yet.',
+        text: 'Registered customers and admins will appear here.'
+      });
+      say($('admin-accounts-status'), '', '');
+      return;
+    }
     var tb = makeTable($('admin-accounts'),
-      ['#', 'Name', 'Email', 'Phone', 'Role', 'Status', 'Joined', 'Action']);
+      ['#', 'People', 'Phone', 'Role', 'Status', 'Joined', 'Action']);
     var me = window.ttUser;
     rows.forEach(function (u) {
       var tr = el('tr');
       cell(tr, String(u.id));
-      cell(tr, u.name);
-      cell(tr, u.email);
+      whoCell(tr, u);
       cell(tr, u.phone || '-');
       cell(tr, T(u.admin ? 'Admin' : 'Customer'));
       cell(tr, '').appendChild(badge(u.active ? 'active' : 'inactive'));
@@ -601,10 +784,48 @@
         label: 'Reset password',
         run: function () { resetPassword(u, $('admin-accounts-status')); }
       });
+      if (!me || me.id !== u.id) {
+        actions.push({
+          label: 'Delete account',
+          tone: 'warn',
+          run: function () {
+            removeRecord('/api/admin/users/' + u.id, 'Delete this account?',
+              $('admin-accounts-status'), loadAccounts);
+          }
+        });
+      }
       ta.appendChild(rowMenu(actions));
       tb.appendChild(tr);
     });
-    say($('admin-accounts-status'), '', rows.length ? '' : T('No accounts yet.'));
+    say($('admin-accounts-status'), '', '');
+  }
+
+  /* ---------- account form ---------- */
+  function openAccountForm() {
+    var form = $('account-form');
+    form.reset();
+    form.hidden = false;
+    $('af-first').focus();
+  }
+  function closeAccountForm() {
+    var form = $('account-form');
+    if (form) { form.hidden = true; }
+  }
+  async function saveAccount(event) {
+    event.preventDefault();
+    var st = $('admin-accounts-status');
+    var res = await post('/api/admin/users', {
+      first_name: $('af-first').value,
+      last_name: $('af-last').value,
+      email: $('af-email').value,
+      phone: $('af-phone').value,
+      password: $('af-pass').value,
+      admin: $('af-admin').checked
+    });
+    if (!res.ok) { say(st, 'bad', T((res.data && res.data.error) || NOSERVER)); return; }
+    say(st, '', '');
+    closeAccountForm();
+    loadAccounts();
   }
 
   /* ---------- messages ---------- */
@@ -616,6 +837,7 @@
     try { r = await api('/api/admin/messages'); } catch (e) { r = {ok: false}; }
     if (!r.ok) { fail(st, r); return; }
     state.messages = r.data;
+    setNavCount('messages', r.data.filter(function (m) { return !m.handled; }).length, 'open');
     renderMessages();
   }
   function renderMessages() {
@@ -624,6 +846,21 @@
       return (!status || (status === 'handled' ? m.handled : !m.handled)) &&
         matches(m, ['id', 'name', 'email', 'phone', 'service', 'message'], q);
     });
+    if (!rows.length) {
+      emptyTable('admin-messages', state.messages.length ? {
+        icon: 'message',
+        title: 'No messages match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['messages-filter', 'messages-status'], renderMessages);
+        }}
+      } : {
+        icon: 'message',
+        title: 'No messages yet.',
+        text: 'Contact and support requests will appear here.'
+      });
+      say($('admin-messages-status'), '', '');
+      return;
+    }
     var tb = makeTable($('admin-messages'),
       ['#', 'Name', 'Email', 'Phone', 'Service', 'Message', 'Received', 'Status', 'Action']);
     rows.forEach(function (m) {
@@ -646,7 +883,7 @@
       }));
       tb.appendChild(tr);
     });
-    say($('admin-messages-status'), '', rows.length ? '' : T('No messages yet.'));
+    say($('admin-messages-status'), '', '');
   }
 
   /* ---------- comments ---------- */
@@ -658,6 +895,7 @@
     try { r = await api('/api/admin/comments'); } catch (e) { r = {ok: false}; }
     if (!r.ok) { fail(st, r); return; }
     state.comments = r.data;
+    setNavCount('comments', r.data.filter(function (c) { return !c.handled; }).length, 'open');
     renderComments();
   }
   function renderComments() {
@@ -665,7 +903,22 @@
     var rows = state.comments.filter(function (c) {
       return matches(c, ['id', 'name', 'rating', 'text'], q);
     });
-    var tb = makeTable($('admin-comments'), ['#', 'Name', 'Rating', 'Comment', 'Received', 'Action']);
+    if (!rows.length) {
+      emptyTable('admin-comments', state.comments.length ? {
+        icon: 'star',
+        title: 'No comments match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['comments-filter'], renderComments);
+        }}
+      } : {
+        icon: 'star',
+        title: 'No comments yet.',
+        text: 'Ratings and private feedback will appear here.'
+      });
+      say($('admin-comments-status'), '', '');
+      return;
+    }
+    var tb = makeTable($('admin-comments'), ['#', 'Name', 'Rating', 'Comment', 'Received', 'Status', 'Action']);
     rows.forEach(function (c) {
       var tr = el('tr');
       cell(tr, String(c.id));
@@ -673,14 +926,18 @@
       cell(tr, c.rating + ' / 5');
       cell(tr, c.text);
       cell(tr, c.created_at);
+      cell(tr, '').appendChild(badge(c.handled ? 'handled' : 'open'));
       var ta = cell(tr, '');
+      ta.appendChild(small(c.handled ? 'Reopen' : 'Mark handled', c.handled ? 'ghost' : 'ok', function () {
+        changeComment(c.id, !c.handled, $('admin-comments-status'), loadComments);
+      }));
       ta.appendChild(small('Delete', 'warn', function () {
         removeRecord('/api/admin/comments/' + c.id, 'Delete this comment?',
           $('admin-comments-status'), loadComments);
       }));
       tb.appendChild(tr);
     });
-    say($('admin-comments-status'), '', rows.length ? '' : T('No comments yet.'));
+    say($('admin-comments-status'), '', '');
   }
 
   /* ---------- fares ---------- */
@@ -699,6 +956,21 @@
     var rows = state.fares.filter(function (f) {
       return matches(f, ['key', 'tag', 'name', 'note', 'currency'], q);
     });
+    if (!rows.length) {
+      emptyTable('admin-fares', state.fares.length ? {
+        icon: 'tag',
+        title: 'No fares match these filters.',
+        action: {label: 'Clear filters', run: function () {
+          clearFilters(['fares-filter'], renderFares);
+        }}
+      } : {
+        icon: 'tag',
+        title: 'No fares yet.',
+        text: 'Fares you add will appear on the Pay online page.'
+      });
+      say($('admin-fares-status'), '', '');
+      return;
+    }
     var tb = makeTable($('admin-fares'),
       ['Code', 'Name', 'Price', 'Note', 'Payment link', 'Status', 'Action']);
     rows.forEach(function (f) {
@@ -724,7 +996,7 @@
       }));
       tb.appendChild(tr);
     });
-    say($('admin-fares-status'), '', rows.length ? '' : T('No fares yet.'));
+    say($('admin-fares-status'), '', '');
   }
 
   /* ---------- fare form (create and edit) ---------- */
@@ -767,27 +1039,33 @@
   }
 
   /* ---------- which view is open ---------- */
+  /* Views are real routes (/admin/fleet), rendered and marked active by the
+     server. The nav is a full page load, so no hashchange handling here. */
   var LOADERS = {
     overview: loadOverview, bookings: loadBookings, fleet: loadFleet,
     accounts: loadAccounts, messages: loadMessages, comments: loadComments,
     fares: loadFares
   };
+  function currentView() {
+    var m = /^\/admin\/([a-z-]+)/.exec(location.pathname);
+    var view = m ? m[1] : 'overview';
+    return LOADERS[view] ? view : 'overview';
+  }
   function refresh() {
-    var view = (location.hash || '#overview').replace('#', '');
-    if (!LOADERS[view]) { view = 'overview'; }
+    var view = currentView();
+    renderMe();
     if (view !== 'fleet') { closeCarForm(); }
     if (view !== 'bookings') { closeBookingForm(); }
     if (view !== 'fares') { closeFareForm(); }
-    document.querySelectorAll('.admin-nav a').forEach(function (a) {
-      if (a.getAttribute('data-view') === view) { a.setAttribute('aria-current', 'page'); }
-      else { a.removeAttribute('aria-current'); }
-    });
+    if (view !== 'accounts') { closeAccountForm(); }
     LOADERS[view]();
+    refreshNavCounts();
+    centerActiveNav();
   }
   window.ttPages = {refresh: refresh};
-  window.addEventListener('hashchange', refresh);
   window.addEventListener('tt:user', function () {
-    if ((location.hash || '') === '#accounts' && state.accounts.length) { renderAccounts(); }
+    renderMe();
+    if (currentView() === 'accounts' && state.accounts.length) { renderAccounts(); }
   });
 
   /* Filters re-render cached rows; they never refetch. */
@@ -803,6 +1081,9 @@
   on('car-new', 'click', function () { openCarForm(null); });
   on('car-cancel', 'click', closeCarForm);
   on('car-form', 'submit', saveCar);
+  on('account-new', 'click', openAccountForm);
+  on('af-cancel', 'click', closeAccountForm);
+  on('account-form', 'submit', saveAccount);
   on('booking-new', 'click', function () { openBookingForm(null); });
   on('ab-cancel', 'click', closeBookingForm);
   on('ab-form', 'submit', saveBooking);

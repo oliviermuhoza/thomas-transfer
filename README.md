@@ -46,6 +46,7 @@ comments and messages in SQLite.
 │   │   ├── date-picker.js      # Shared date/time picker used by the booking form
 │   │   ├── admin.js            # /admin portal: all operations views (admin only)
 │   │   ├── search.js           # Navbar search (cars + pages, real URLs)
+│   │   ├── select.js           # Wraps every <select> in a themed custom listbox
 │   │   ├── faq.js              # FAQ open/close buttons
 │   │   ├── comment.js          # Comment form -> POST /api/comment
 │   │   ├── pay-fares.js        # Fixed-fare payment buttons (fares come from the DB)
@@ -82,12 +83,14 @@ Marketing pages are Jinja templates with real URLs:
 | `/pay` | `pages/pay.html` |
 | `/comment` | `pages/comment.html` |
 | `/account` | `pages/account.html` (hash sections: `#car-list`, `#available`, `#bookings`, `#report`, `#login`, `#create-account`, `#logout`) |
+| `/admin` | `pages/admin.html` (real section routes: `/admin/overview`, `/admin/bookings`, `/admin/fleet`, `/admin/accounts`, `/admin/messages`, `/admin/comments`, `/admin/fares`; unknown views 404, non-admins are redirected) |
 
 `/` and `/index.html` redirect to the template home page. Old bookmarks
 (`/login`, `/register`, `/car-list`, `/available`, `/bookings`, `/report`,
 `/logout`) are 302 redirects to the matching `/account#...` section, and
 `legacy-hash.js` maps old `/#hash` links to the new routes on the client
-(servers never see fragments).
+(servers never see fragments). Old admin bookmarks like `/admin#fleet`
+are rewritten to `/admin/fleet` the same way.
 
 The nav marks the current page with `aria-current="page"` (set server-side),
 not CSS `:target`.
@@ -197,10 +200,12 @@ admin report, page routes, redirects, nav state and 404 handling.
 
 ## Runtime notes
 
-- **Page routing** is real URLs rendered by Jinja; `/account` and `/admin`
-  sections use URL hashes (`.page` hiding rules are scoped to
-  `body[data-page="account"]`). `legacy-hash.js` redirects old `/#hash`
-  bookmarks but never rewrites `/admin` hashes.
+- **Page routing** is real URLs rendered by Jinja. `/admin` sections are real
+  routes (`/admin/fleet` etc.) and the active one is server-rendered; only
+  `/account` still uses URL hash sections (`.page` hiding rules are scoped to
+  `body[data-page="account"]`, admin `.admin-view` hiding is class-based).
+  `legacy-hash.js` redirects old `/#hash` bookmarks and rewrites old
+  `/admin#section` hashes to `/admin/section`.
 - **Script order matters.** `legacy-hash.js` must run first in the head,
   `i18n.js` defines the global `T()` translation helper, and `dashboard.js`
   (account) or `admin.js` (portal) defines `window.ttPages`. Keep the order in
@@ -215,7 +220,7 @@ admin report, page routes, redirects, nav state and 404 handling.
 - **Contact details** (`0783882549`, `wa.me/250783882549`) are repeated inline
   in the markup and a few scripts.
 - **Payments** are not processed by the backend. The fare list on `/pay` comes
-  from the `fares` table (managed in `/admin#fares`). Each fare can carry a
+  from the `fares` table (managed in `/admin/fares`). Each fare can carry a
   Flutterwave payment link; the button opens it when set, otherwise it opens
   WhatsApp with the current fare text. `js/pay-custom.js` behaves the same with
   one globally configured link for custom amounts.
@@ -245,6 +250,8 @@ admin report, page routes, redirects, nav state and 404 handling.
 | POST | `/api/admin/bookings/:id/payment` | Record or clear a payment (admin) |
 | GET | `/api/report` | Admin summary |
 | GET | `/api/admin/users` | Account list without password hashes (admin) |
+| POST | `/api/admin/users` | Create an account, optionally with admin access (admin) |
+| DELETE | `/api/admin/users/:id` | Delete an account without booking history (admin) |
 | POST | `/api/admin/users/:id/admin` | Grant or revoke admin access (admin) |
 | POST | `/api/admin/users/:id/active` | Deactivate or reactivate an account (admin) |
 | POST | `/api/admin/users/:id/password` | Set an account's new password (admin) |

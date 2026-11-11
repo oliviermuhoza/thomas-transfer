@@ -102,6 +102,113 @@ def test_admin_users_lists_accounts_without_hashes(client):
     assert customer["admin"] is False
 
 
+def test_admin_creates_account(client):
+    assert login_admin(client).status_code == 200
+    response = api_post(
+        client,
+        "/api/admin/users",
+        {
+            "first_name": "Grace",
+            "last_name": "Uwase",
+            "email": "Grace@Example.com",
+            "phone": "+250788111222",
+            "password": "welcome123",
+            "admin": False,
+        },
+    )
+    assert response.status_code == 201
+    user = response.get_json()["user"]
+    assert user["name"] == "Grace Uwase"
+    assert user["email"] == "grace@example.com"
+    assert user["admin"] is False
+    assert user["active"] is True
+    assert "password_hash" not in user
+    assert any(
+        row["email"] == "grace@example.com"
+        for row in client.get("/api/admin/users").get_json()
+    )
+
+    # The new account can sign in with the password the admin chose.
+    fresh = client.application.test_client()
+    login = api_post(
+        fresh, "/api/login", {"email": "grace@example.com", "password": "welcome123"}
+    )
+    assert login.status_code == 200
+
+
+def test_admin_create_account_validation(client):
+    assert register_customer(client).status_code == 201
+    assert login_admin(client).status_code == 200
+    base = {
+        "first_name": "A",
+        "last_name": "B",
+        "email": "new@example.com",
+        "phone": "",
+        "password": "longenough",
+    }
+
+    assert api_post(
+        client, "/api/admin/users", {**base, "email": "jane@example.com"}
+    ).status_code == 409
+    assert api_post(
+        client, "/api/admin/users", {**base, "password": "short"}
+    ).status_code == 400
+    assert api_post(
+        client, "/api/admin/users", {**base, "email": "not-an-email"}
+    ).status_code == 400
+    assert api_post(
+        client, "/api/admin/users", {**base, "first_name": ""}
+    ).status_code == 400
+    assert api_post(
+        client, "/api/admin/users", {**base, "phone": "abc"}
+    ).status_code == 400
+    assert api_post(
+        client, "/api/admin/users", {**base, "admin": "yes"}
+    ).status_code == 400
+    assert all(
+        row["email"] != "new@example.com"
+        for row in client.get("/api/admin/users").get_json()
+    )
+
+
+def test_admin_deletes_account(client):
+    created = register_customer(client).get_json()["user"]
+    admin = client.application.test_client()
+    assert login_admin(admin).status_code == 200
+
+    assert api_delete(admin, f"/api/admin/users/{created['id']}").status_code == 200
+    assert all(
+        row["id"] != created["id"] for row in admin.get("/api/admin/users").get_json()
+    )
+    assert api_delete(admin, f"/api/admin/users/{created['id']}").status_code == 404
+
+
+def test_admin_cannot_delete_self_or_account_with_bookings(client):
+    created = register_customer(client).get_json()["user"]
+    admin = client.application.test_client()
+    assert login_admin(admin).status_code == 200
+    own_id = admin.get("/api/me").get_json()["user"]["id"]
+
+    assert api_delete(admin, f"/api/admin/users/{own_id}").status_code == 400
+
+    booking = api_post(
+        admin,
+        "/api/bookings",
+        {
+            "user_id": created["id"],
+            "car_id": 1,
+            "pickup": "Airport",
+            "dropoff": "Downtown",
+            "trip_at": "2030-05-01T09:00",
+            "passengers": 2,
+        },
+    )
+    assert booking.status_code == 201
+    blocked = api_delete(admin, f"/api/admin/users/{created['id']}")
+    assert blocked.status_code == 409
+    assert "bookings" in blocked.get_json()["error"]
+
+
 def test_admin_messages_and_comments_reflect_submissions(client):
     assert api_post(
         client,
@@ -176,6 +283,31 @@ def test_message_handled_flag_and_delete(client):
     assert api_delete(client, f"/api/admin/messages/{message_id}").status_code == 404
 
 
+def test_comment_handled_flag(client):
+    assert api_post(
+        client, "/api/comment", {"name": "Bob", "rating": 5, "text": "Great driver."}
+    ).status_code == 201
+    assert login_admin(client).status_code == 200
+
+    comments = client.get("/api/admin/comments").get_json()
+    assert comments[0]["handled"] is False
+    comment_id = comments[0]["id"]
+
+    marked = api_post(client, f"/api/admin/comments/{comment_id}/handled", {"handled": True})
+    assert marked.status_code == 200
+    assert marked.get_json() == {"ok": True, "handled": True}
+    assert client.get("/api/admin/comments").get_json()[0]["handled"] is True
+
+    reopened = api_post(client, f"/api/admin/comments/{comment_id}/handled", {"handled": False})
+    assert reopened.status_code == 200
+    assert client.get("/api/admin/comments").get_json()[0]["handled"] is False
+
+    bad = api_post(client, f"/api/admin/comments/{comment_id}/handled", {"handled": "yes"})
+    assert bad.status_code == 400
+    missing = api_post(client, "/api/admin/comments/9999/handled", {"handled": True})
+    assert missing.status_code == 404
+
+
 def test_admin_comment_delete(client):
     assert api_post(
         client, "/api/comment", {"name": "Bob", "rating": 5, "text": "Great driver."}
@@ -192,11 +324,14 @@ def test_admin_comment_delete(client):
     ("method", "url"),
     [
         ("post", "/api/admin/messages/1/handled"),
+        ("post", "/api/admin/comments/1/handled"),
         ("delete", "/api/admin/messages/1"),
         ("delete", "/api/admin/comments/1"),
         ("post", "/api/admin/cars"),
         ("patch", "/api/admin/cars/1"),
         ("delete", "/api/admin/cars/1"),
+        ("post", "/api/admin/users"),
+        ("delete", "/api/admin/users/1"),
         ("post", "/api/admin/users/1/active"),
         ("post", "/api/admin/users/1/password"),
         ("patch", "/api/bookings/1"),
@@ -208,7 +343,7 @@ def test_admin_comment_delete(client):
 )
 def test_admin_write_endpoints_require_login(client, method, url):
     if method == "post":
-        payload = {"handled": True} if "messages" in url else {}
+        payload = {"handled": True} if ("messages" in url or "comments" in url) else {}
         assert api_post(client, url, payload).status_code == 401
     elif method == "patch":
         assert api_patch(client, url, {"price": "1"}).status_code == 401
@@ -220,11 +355,14 @@ def test_admin_write_endpoints_require_login(client, method, url):
     ("method", "url"),
     [
         ("post", "/api/admin/messages/1/handled"),
+        ("post", "/api/admin/comments/1/handled"),
         ("delete", "/api/admin/messages/1"),
         ("delete", "/api/admin/comments/1"),
         ("post", "/api/admin/cars"),
         ("patch", "/api/admin/cars/1"),
         ("delete", "/api/admin/cars/1"),
+        ("post", "/api/admin/users"),
+        ("delete", "/api/admin/users/1"),
         ("post", "/api/admin/users/1/active"),
         ("post", "/api/admin/users/1/password"),
         ("patch", "/api/bookings/1"),
@@ -237,7 +375,7 @@ def test_admin_write_endpoints_require_login(client, method, url):
 def test_admin_write_endpoints_reject_customers(client, method, url):
     assert register_customer(client).status_code == 201
     if method == "post":
-        payload = {"handled": True} if "messages" in url else {}
+        payload = {"handled": True} if ("messages" in url or "comments" in url) else {}
         assert api_post(client, url, payload).status_code == 403
     elif method == "patch":
         assert api_patch(client, url, {"price": "1"}).status_code == 403
@@ -273,6 +411,37 @@ def test_startup_migrates_old_messages_table(tmp_path):
     assert len(messages) == 1
     assert messages[0]["name"] == "Old"
     assert messages[0]["handled"] is False
+
+
+def test_startup_migrates_old_comments_table(tmp_path):
+    """A comments table created before `handled` gains it on first start."""
+    db_path = tmp_path / "old-comments.db"
+    connection = sqlite3.connect(db_path)
+    connection.execute(
+        "CREATE TABLE comments (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        " user_id INTEGER, name TEXT NOT NULL,"
+        " rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),"
+        " text TEXT NOT NULL,"
+        " created_at TEXT NOT NULL DEFAULT (datetime('now')))"
+    )
+    connection.execute(
+        "INSERT INTO comments (name, rating, text) VALUES ('Old', 4, 'Good trip')"
+    )
+    connection.commit()
+    connection.close()
+
+    app = create_app(
+        database=str(db_path),
+        secret_key="test-secret",
+        admin_password=ADMIN_PASSWORD,
+    )
+    admin = app.test_client()
+    assert login_admin(admin).status_code == 200
+
+    comments = admin.get("/api/admin/comments").get_json()
+    assert len(comments) == 1
+    assert comments[0]["name"] == "Old"
+    assert comments[0]["handled"] is False
 
 
 def test_startup_backfills_car_display_columns(tmp_path):
@@ -938,6 +1107,7 @@ def test_admin_page_guards(client):
     response = client.get("/admin")
     assert response.status_code == 302
     assert response.headers["Location"] == "/account"
+    assert client.get("/admin/fleet").headers["Location"] == "/account"
 
     assert login_admin(client).status_code == 200
     page = client.get("/admin")
@@ -945,9 +1115,29 @@ def test_admin_page_guards(client):
     assert b"Admin" in page.data
     assert b"/js/admin.js" in page.data
     assert b"Admin sections" in page.data
+    assert b'class="admin-side"' in page.data
+    assert b'id="admin-me"' in page.data
+    assert b'href="/account#logout"' in page.data
     assert b'class="nav-admin-item"' in page.data
     assert b'href="/admin" aria-current="page"' in page.data
+    assert b'href="/admin/overview" aria-current="page"' in page.data
     assert b'data-view="comments"' in page.data
     assert b'data-view="fares"' in page.data
     assert b'id="messages-status"' in page.data
     assert client.get("/js/admin.js").status_code == 200
+
+
+def test_admin_views_are_real_routes(client):
+    assert login_admin(client).status_code == 200
+
+    fleet = client.get("/admin/fleet")
+    assert fleet.status_code == 200
+    assert b'href="/admin/fleet" aria-current="page"' in fleet.data
+    assert b'id="fleet" class="admin-view active"' in fleet.data
+    assert b'id="overview" class="admin-view">' in fleet.data
+
+    overview = client.get("/admin")
+    assert b'id="overview" class="admin-view active"' in overview.data
+
+    assert client.get("/admin/no-such-view").status_code == 404
+    assert client.get("/admin/report").status_code == 404

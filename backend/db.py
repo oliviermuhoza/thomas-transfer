@@ -153,6 +153,10 @@ def _migrate(db):
     if "handled" not in columns:
         db.execute("ALTER TABLE messages ADD COLUMN handled INTEGER NOT NULL DEFAULT 0")
 
+    comment_columns = {row["name"] for row in db.execute("PRAGMA table_info(comments)")}
+    if "handled" not in comment_columns:
+        db.execute("ALTER TABLE comments ADD COLUMN handled INTEGER NOT NULL DEFAULT 0")
+
     car_columns = {row["name"] for row in db.execute("PRAGMA table_info(cars)")}
     if "capacity" not in car_columns:
         db.execute("ALTER TABLE cars ADD COLUMN capacity INTEGER NOT NULL DEFAULT 4")

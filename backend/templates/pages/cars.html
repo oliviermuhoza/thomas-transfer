@@ -54,6 +54,14 @@
       </div>
       {% endfor %}
     </div>
+    {% if not cars %}
+    <div class="empty-state empty-state--inline">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3.8 14.8v-2.3l1.9-4.2A2.2 2.2 0 0 1 7.7 7h8.6a2.2 2.2 0 0 1 2 1.3l1.9 4.2v2.3"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" d="M3.8 14.8h16.4"/><circle fill="none" stroke="currentColor" stroke-width="1.7" cx="7.4" cy="16" r="1.7"/><circle fill="none" stroke="currentColor" stroke-width="1.7" cx="16.6" cy="16" r="1.7"/></svg>
+      <p class="empty-state-title">No cars are listed right now.</p>
+      <p class="empty-state-text">Check back soon or message us on WhatsApp.</p>
+      <div class="empty-state-actions"><a class="btn outline" href="/contact">Contact us</a></div>
+    </div>
+    {% endif %}
     <div class="rent-steps">
       <p class="eyebrow">Simple terms</p>
       <h2>How renting works</h2>

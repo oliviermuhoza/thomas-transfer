@@ -1025,6 +1025,95 @@ def register_routes(app):
             ]
         )
 
+    @app.post("/api/admin/users")
+    @admin_required
+    def admin_user_create():
+        data = body()
+        first_name = text_value(data, "first_name", 50)
+        last_name = text_value(data, "last_name", 50)
+        email = text_value(data, "email", 150).lower()
+        phone = text_value(data, "phone", 30)
+        password = str(data.get("password") or "")
+        admin = data.get("admin", False)
+
+        if not isinstance(admin, bool):
+            return error("Send admin as true or false.", 400)
+        if not first_name or not last_name or not email or not password:
+            return error("Please fill in all the fields.", 400)
+        if not EMAIL_RE.match(email):
+            return error("Please enter a valid email address.", 400)
+        if not valid_phone(phone):
+            return error("Please enter a valid phone number.", 400)
+        if len(password) < 8:
+            return error("Use at least 8 characters for the password.", 400)
+
+        db = get_db()
+        if db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+            return error("Could not create the account with that email.", 409)
+
+        cursor = db.execute(
+            "INSERT INTO users (first_name, last_name, email, phone, password_hash,"
+            " is_admin) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                first_name,
+                last_name,
+                email,
+                phone,
+                generate_password_hash(password),
+                int(admin),
+            ),
+        )
+        db.commit()
+        created = db.execute(
+            "SELECT id, first_name, last_name, email, phone, is_admin, active,"
+            " created_at FROM users WHERE id = ?",
+            (cursor.lastrowid,),
+        ).fetchone()
+        return (
+            jsonify(
+                {
+                    "ok": True,
+                    "user": {
+                        "id": created["id"],
+                        "name": f"{created['first_name']} {created['last_name']}".strip(),
+                        "email": created["email"],
+                        "phone": created["phone"],
+                        "admin": bool(created["is_admin"]),
+                        "active": bool(created["active"]),
+                        "created_at": created["created_at"],
+                    },
+                }
+            ),
+            201,
+        )
+
+    @app.delete("/api/admin/users/<int:user_id>")
+    @admin_required
+    def admin_user_delete(user_id):
+        db = get_db()
+        target = db.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        if target is None:
+            return error("This account does not exist.", 404)
+        if user_id == g.user["id"]:
+            return error("You cannot delete your own account.", 400)
+        if target["is_admin"]:
+            admins = db.execute(
+                "SELECT COUNT(*) AS n FROM users WHERE is_admin = 1"
+            ).fetchone()["n"]
+            if admins <= 1:
+                return error("At least one admin account is required.", 400)
+        used = db.execute(
+            "SELECT 1 FROM bookings WHERE user_id = ? LIMIT 1", (user_id,)
+        ).fetchone()
+        if used is not None:
+            return error(
+                "This account has bookings in its history. Deactivate it instead.",
+                409,
+            )
+        db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        db.commit()
+        return jsonify({"ok": True})
+
     @app.post("/api/admin/users/<int:user_id>/admin")
     @admin_required
     def admin_user_role(user_id):
@@ -1114,10 +1203,15 @@ def register_routes(app):
     @admin_required
     def admin_comments():
         rows = get_db().execute(
-            "SELECT id, user_id, name, rating, text, created_at"
+            "SELECT id, user_id, name, rating, text, handled, created_at"
             " FROM comments ORDER BY id DESC"
         ).fetchall()
-        return jsonify([dict(row) for row in rows])
+        comments = []
+        for row in rows:
+            comment = dict(row)
+            comment["handled"] = bool(comment["handled"])
+            comments.append(comment)
+        return jsonify(comments)
 
     @app.post("/api/admin/messages/<int:message_id>/handled")
     @admin_required
@@ -1132,6 +1226,22 @@ def register_routes(app):
             return error("This message does not exist.", 404)
 
         db.execute("UPDATE messages SET handled = ? WHERE id = ?", (int(value), message_id))
+        db.commit()
+        return jsonify({"ok": True, "handled": value})
+
+    @app.post("/api/admin/comments/<int:comment_id>/handled")
+    @admin_required
+    def admin_comment_handled(comment_id):
+        value = body().get("handled")
+        if not isinstance(value, bool):
+            return error("Send handled as true or false.", 400)
+
+        db = get_db()
+        comment = db.execute("SELECT id FROM comments WHERE id = ?", (comment_id,)).fetchone()
+        if comment is None:
+            return error("This comment does not exist.", 404)
+
+        db.execute("UPDATE comments SET handled = ? WHERE id = ?", (int(value), comment_id))
         db.commit()
         return jsonify({"ok": True, "handled": value})
 

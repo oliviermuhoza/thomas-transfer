@@ -22,6 +22,10 @@
   --heading: rgb(255, 255, 255);      /* headings and link text */
   --green-text: rgb(216, 255, 122);
   --red-text: rgb(255, 128, 128);
+  /* derived (portal): hairline dividers inside cards, tinted lime fills.
+     Both come from existing colors; no new hue enters the palette. */
+  --line-soft: rgba(255, 255, 255, .07);
+  --lime-soft: rgba(198, 244, 50, .12);
 }
 /* ===== DARK MODE ===== */
 :root[data-theme="dark"]{
@@ -64,33 +68,35 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 .logo-img{display:none}
 .logo-mark{display:grid;place-items:center;width:48px;height:48px;border-radius:12px;background:var(--yellow);box-shadow:0 4px 14px rgba(198,244,50,.35);flex:none}
 .logo-mark svg{display:block}
-nav ul{list-style:none;display:flex;gap:4px;flex-wrap:wrap}
-nav a{display:block;padding:10px 9px;border-radius:7px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--white);min-height:44px;transition:color .2s ease,background-color .2s ease}
-nav a:hover{background:var(--surface);color:var(--white)}
-nav a.cta{background:var(--yellow);color:#0B0B0C}
-nav a.cta:hover{background:var(--yellow-dark);color:#FFFFFF}
-nav a.nav-rent{background:var(--yellow);color:#0B0B0C}
-nav a.nav-rent:hover{background:var(--yellow-dark);color:#FFFFFF}
-nav a.nav-call{background:#22c55e;color:#052e12}
-nav a.nav-call:hover{background:#16a34a;color:#052e12}
+/* All navbar rules are scoped to .bar: the admin portal has its own <nav>
+   inside the sidebar and must not inherit these. */
+.bar nav ul{list-style:none;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.bar nav a{display:block;padding:10px 9px;border-radius:7px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--white);min-height:44px;transition:color .2s ease,background-color .2s ease}
+.bar nav a:hover{background:var(--surface);color:var(--white)}
+.bar nav a.cta{background:var(--yellow);color:#0B0B0C}
+.bar nav a.cta:hover{background:var(--yellow-dark);color:#FFFFFF}
+.bar nav a.nav-rent{background:var(--yellow);color:#0B0B0C}
+.bar nav a.nav-rent:hover{background:var(--yellow-dark);color:#FFFFFF}
+.bar nav a.nav-call{background:#22c55e;color:#052e12}
+.bar nav a.nav-call:hover{background:#16a34a;color:#052e12}
 /* WhatsApp button + Book now button in the navbar */
-nav a.nav-wa{display:flex;align-items:center;gap:6px;background:#25d366;color:#0b2a17;padding:6px 9px;border-radius:999px;font-weight:700;font-size:.85rem;white-space:nowrap}
-nav a.nav-wa:hover{background:#1ebe5b;color:#0b2a17}
-nav a.nav-wa svg{width:17px;height:17px;flex:none;display:block}
-nav a.nav-wa span{display:none}
-nav a.nav-login{background:transparent;color:var(--white);border:2px solid var(--line);padding:8px 16px;border-radius:7px;font-weight:700;font-size:.9rem;white-space:nowrap;transition:border-color .2s ease,color .2s ease}
-nav a.nav-login:hover{border-color:var(--yellow);color:var(--yellow)}
-nav a.nav-book{background:var(--yellow);color:#0B0B0C;padding:10px 16px;border-radius:7px;font-weight:800;font-size:.9rem;white-space:nowrap;
+.bar nav a.nav-wa{display:flex;align-items:center;gap:6px;background:#25d366;color:#0b2a17;padding:6px 9px;border-radius:999px;font-weight:700;font-size:.85rem;white-space:nowrap}
+.bar nav a.nav-wa:hover{background:#1ebe5b;color:#0b2a17}
+.bar nav a.nav-wa svg{width:17px;height:17px;flex:none;display:block}
+.bar nav a.nav-wa span{display:none}
+.bar nav a.nav-login{background:transparent;color:var(--white);border:2px solid var(--line);padding:8px 16px;border-radius:7px;font-weight:700;font-size:.9rem;white-space:nowrap;transition:border-color .2s ease,color .2s ease}
+.bar nav a.nav-login:hover{border-color:var(--yellow);color:var(--yellow)}
+.bar nav a.nav-book{background:var(--yellow);color:#0B0B0C;padding:10px 16px;border-radius:7px;font-weight:800;font-size:.9rem;white-space:nowrap;
   box-shadow:0 4px 12px rgba(198,244,50,.32);transition:background .2s,transform .2s;min-height:44px;display:inline-flex;align-items:center}
-nav a.nav-book:hover{background:var(--yellow-dark);color:#FFFFFF;transform:translateY(-1px)}
-@media (max-width:520px){nav a.nav-wa{padding:6px 9px}}
+.bar nav a.nav-book:hover{background:var(--yellow-dark);color:#FFFFFF;transform:translateY(-1px)}
+@media (max-width:520px){.bar nav a.nav-wa{padding:6px 9px}}
 /* highlight the current page */
-nav a[aria-current="page"]{background:transparent;color:var(--yellow);border-radius:0;box-shadow:inset 0 -2px 0 var(--yellow);animation:nav-active .35s ease both}
+.bar nav a[aria-current="page"]{background:transparent;color:var(--yellow);border-radius:0;box-shadow:inset 0 -2px 0 var(--yellow);animation:nav-active .35s ease both}
 @keyframes nav-active{from{opacity:.4}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){nav a[aria-current="page"]{animation:none}}
+@media (prefers-reduced-motion:reduce){.bar nav a[aria-current="page"]{animation:none}}
 
 /* ===== NAVBAR TOOLS: dark mode + language ===== */
-nav ul{align-items:center}
+.bar nav ul{align-items:center}
 .tool-btn{display:flex;align-items:center;gap:8px;font:inherit;font-weight:600;cursor:pointer;color:var(--white);
   background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px 16px}
 .tool-btn:hover{background:var(--line)}
@@ -104,17 +110,17 @@ nav ul{align-items:center}
 .lang button[aria-pressed="true"]{background:var(--yellow);color:#0B0B0C}
 
 /* ===== HEADER BAR ===== */
-nav{display:flex;align-items:center;gap:6px}
+.bar nav{display:flex;align-items:center;gap:6px}
 .brand{display:flex;align-items:center;gap:10px}
 @media (max-width:800px){
   .bar{gap:8px 12px;padding:10px 0}
   .brand{min-width:0}
   .logo{font-size:1.05rem}
   .logo-img{height:34px}
-  nav{width:100%;order:3;flex-wrap:wrap;gap:6px}
-  nav ul{flex-wrap:wrap;gap:2px}
-  nav a{white-space:nowrap;padding:8px 10px;font-size:.85rem;min-height:40px}
-  nav a.nav-book{margin-left:auto}
+  .bar nav{width:100%;order:3;flex-wrap:wrap;gap:6px}
+  .bar nav ul{flex-wrap:wrap;gap:2px}
+  .bar nav a{white-space:nowrap;padding:8px 10px;font-size:.85rem;min-height:40px}
+  .bar nav a.nav-book{margin-left:auto}
 }
 
 /* ===== SEARCH (navbar) ===== */
@@ -561,6 +567,39 @@ textarea{min-height:130px;resize:vertical}
 .hint a{color:var(--heading);font-weight:700}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
+/* ===== CUSTOM SELECT (web/js/select.js) ===== */
+/* A native <select> is upgraded to a button + themed listbox. The original
+   select stays in the DOM (clipped) so forms, .value and change events work. */
+.tt-sel{position:relative;width:100%;min-width:0}
+.tt-sel-src{position:absolute!important;width:1px!important;min-width:0!important;max-width:1px!important;height:1px!important;min-height:0!important;margin:-1px!important;padding:0!important;border:0!important;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.tt-sel-btn{position:relative;display:flex;align-items:center;width:100%;min-height:46px;padding:11px 38px 11px 12px;font:inherit;color:var(--ink);background:var(--surface-2);border:1.5px solid var(--line);border-radius:8px;text-align:left;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.tt-sel-btn:hover{border-color:rgb(90,90,94)}
+.tt-sel-btn[aria-expanded="true"]{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(198,244,50,.45)}
+.tt-sel-btn:disabled{opacity:.55;cursor:not-allowed}
+.tt-sel-value{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt-sel.is-empty .tt-sel-value{color:var(--muted)}
+.tt-sel-caret{position:absolute;right:12px;top:50%;width:16px;height:16px;margin-top:-8px;color:var(--muted);pointer-events:none;transition:transform .15s ease,color .15s ease}
+.tt-sel-btn[aria-expanded="true"] .tt-sel-caret{transform:rotate(180deg);color:var(--heading)}
+.tt-sel-menu{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:70;margin:0;padding:6px;list-style:none;max-height:min(300px,52vh);overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 48px rgba(0,0,0,.6)}
+.tt-sel-up .tt-sel-menu{top:auto;bottom:calc(100% + 6px)}
+.tt-sel-menu[hidden]{display:none}
+.tt-sel-opt{position:relative;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--ink);font-weight:600;font-size:.9rem;line-height:1.35;cursor:pointer}
+.tt-sel-opt-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt-sel-opt.is-active{background:var(--surface-2)}
+.tt-sel-opt.is-active::before{content:"";position:absolute;left:2px;top:8px;bottom:8px;width:3px;border-radius:3px;background:var(--yellow)}
+.tt-sel-opt[aria-selected="true"]{color:var(--heading)}
+.tt-sel-opt[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
+.tt-sel-tick{flex:none;width:16px;height:16px;color:var(--yellow)}
+/* Sizes where the select used to carry its own rules. */
+.admin-filter .tt-sel{flex:0 1 280px;max-width:320px;min-width:180px;width:auto}
+.admin-filter .tt-sel-btn{min-height:44px;padding:10px 34px 10px 12px;font-size:.9rem}
+.admin-filter .tt-sel-btn:focus-visible{outline:3px solid var(--yellow);outline-offset:1px}
+.admin-filter .tt-sel-menu{max-height:min(340px,60vh)}
+.dp-time .tt-sel-btn{min-height:36px;padding:7px 28px 7px 9px;font-size:.85rem;border-width:1px}
+.dp-time .tt-sel-caret{right:8px;width:14px;height:14px;margin-top:-7px}
+.dp-time .tt-sel-menu{min-width:88px;max-height:190px}
+.cp-card .tt-sel-btn{border:1px solid rgba(198,244,50,.3);border-radius:14px;background:var(--surface-2);padding:13px 38px 13px 14px}
+
 /* ===== CONTACT PAGE (centered) ===== */
 #contact .lead{text-align:center}
 #contact .lead{margin-left:auto;margin-right:auto}
@@ -772,18 +811,106 @@ body[data-page="admin"] footer,
 body[data-page="admin"] .wa-float,
 body[data-page="admin"] .msg-dialog{display:none}
 body[data-page="admin"] main{padding-top:0}
-.admin-shell{padding-top:28px;padding-bottom:70px}
-.admin-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
-.admin-topbar .auth-back{margin-bottom:0}
-.admin-head{text-align:center;margin-bottom:26px}
-.admin-head .lead{margin-left:auto;margin-right:auto}
-.admin-nav{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line);margin-bottom:30px}
-.admin-nav a{display:block;padding:12px 16px;border-radius:8px 8px 0 0;color:var(--muted);font-weight:700;font-size:.9rem;text-decoration:none;min-height:44px;border-bottom:3px solid transparent}
-.admin-nav a:hover{background:var(--surface);color:var(--heading)}
-.admin-nav a[aria-current="page"]{color:var(--heading);border-bottom-color:var(--yellow)}
-body[data-page="admin"] .admin-view{display:none;scroll-margin-top:24px}
-body[data-page="admin"] .admin-view:target{display:block}
-body[data-page="admin"]:not(:has(.admin-view:target)) #overview{display:block}
+/* Fixed rail: the sidebar is 100vh and never scrolls with the page; only the
+   content column scrolls. The shell reserves the rail's width. */
+.admin-shell{padding-left:240px;min-height:100vh}
+.admin-side{position:fixed;top:0;left:0;bottom:0;width:240px;height:100vh;height:100dvh;display:flex;flex-direction:column;gap:2px;background:var(--surface);border-right:1px solid var(--line);padding:14px 10px;overflow-y:auto;overscroll-behavior:contain}
+.admin-brand{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px 12px;margin-bottom:8px;border-bottom:1px solid var(--line);color:var(--heading);text-decoration:none}
+.admin-mark{flex:none;width:28px;height:28px;border-radius:8px}
+.admin-word{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:.9rem}
+.admin-word b{font-weight:800}
+.admin-brand:hover .admin-word{color:var(--yellow)}
+.admin-brand:hover .admin-mark{box-shadow:0 4px 16px rgba(198,244,50,.5)}
+.admin-tag{flex:none;margin-left:auto;padding:1px 5px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.admin-nav{display:flex;flex-direction:column;gap:2px;flex:0 0 auto;min-height:0}
+/* Seven links read as one long list, so they sit in three labelled groups.
+   The captions are quiet: small, uppercase, muted — structure without noise. */
+.admin-group{display:flex;flex-direction:column;gap:2px}
+.admin-group + .admin-group{margin-top:14px}
+.admin-group-label{margin:0 0 4px;padding:0 15px;color:var(--muted);font-size:.68rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase}
+.admin-nav a{position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 15px;border-radius:8px;color:var(--muted);font-weight:600;font-size:.9rem;text-decoration:none;min-height:44px;transition:background-color .12s ease,color .12s ease}
+.admin-nav a:hover{background:var(--surface-2);color:var(--heading)}
+/* Current section carries the most weight in the rail: fill, white label and a
+   lime icon, plus the lime pill on the edge. */
+.admin-nav a[aria-current="page"]{background:var(--surface-2);color:var(--heading);font-weight:700}
+.admin-nav a[aria-current="page"] .nav-icon{color:var(--yellow)}
+/* Current section: a lime pill inside the row, so the rounded item keeps its
+   shape instead of being cut by a border. */
+.admin-nav a[aria-current="page"]::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--yellow)}
+.nav-icon{flex:none;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.admin-nav a:hover .nav-icon,.admin-nav a[aria-current="page"] .nav-icon{opacity:1}
+/* Counts sit in a reserved slot and hide at zero, so no row ever jumps. */
+.nav-count{flex:none;margin-left:auto;min-width:10px;padding:1px 7px;border-radius:999px;background:var(--yellow);color:rgb(18,44,86);font-size:.72rem;font-weight:800;line-height:1.5;text-align:center}
+.admin-side-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+/* The footer belongs to the person; the way out reads as an action. */
+.admin-me{display:flex;align-items:center;gap:9px;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.admin-me .avatar{width:30px;height:30px;font-size:.68rem;background:var(--surface-2)}
+.admin-me-text{min-width:0;display:flex;flex-direction:column;gap:1px}
+.admin-me-name{color:var(--heading);font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-me-mail{color:var(--muted);font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* The rail is 240px: the switch and the two links cannot share one line, so in
+   the footer they stack — language, then Back to site / Log out side by side. */
+.admin-side-links{display:flex;align-items:center;justify-content:space-between;gap:6px}
+/* Compact language switch: the public header carries one, but the header is
+   hidden on the portal, so the rail repeats it here. i18n.js binds any
+   `.lang button`, so this control needs no extra wiring. */
+.admin-lang{flex:none;align-self:flex-start;border-radius:7px}
+.admin-lang button{color:var(--muted);font-size:.76rem;padding:4px 9px;min-height:30px}
+.admin-lang button:hover{background:var(--surface-2);color:var(--heading)}
+.admin-lang button[aria-pressed="true"]{background:var(--yellow);color:#0B0B0C}
+.admin-link{flex:0 1 auto;display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:6px 8px;border:1px solid transparent;border-radius:8px;color:var(--muted);font-size:.82rem;font-weight:600;white-space:nowrap;text-align:center;text-decoration:none}
+.admin-link:hover{background:var(--surface-2);color:var(--heading)}
+.admin-link-out{border-color:var(--line);color:var(--heading)}
+.admin-link-out:hover{background:transparent;border-color:var(--heading)}
+.admin-main{padding:28px 34px 70px;min-width:0}
+.avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--heading);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;line-height:1}
+/* People cell in the accounts table: initials avatar + name over email. */
+.who{display:flex;align-items:center;gap:10px;min-width:0}
+.who-text{min-width:0}
+.who-name{font-weight:600;color:var(--ink)}
+.who-mail{font-size:.82rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+/* Short windows: tighten the rail's rhythm so its seven rows and footer still
+   fit in a 100vh column instead of needing to scroll. */
+@media (min-width:901px) and (max-height:700px){
+  .admin-side{padding:10px 10px}
+  .admin-brand{min-height:38px;padding-bottom:8px;margin-bottom:4px}
+  .admin-nav a{min-height:38px;padding:7px 12px 7px 15px}
+  .admin-nav a[aria-current="page"]::before{top:7px;bottom:7px}
+  .admin-group + .admin-group{margin-top:8px}
+  .admin-group-label{margin-bottom:2px;font-size:.64rem}
+  .admin-side-foot{padding-top:8px;gap:6px}
+  .admin-me{padding:5px 7px}
+  .admin-link{min-height:32px}
+}
+@media (max-width:900px){
+  /* The rail becomes a two-row grid of tiles: four, then three. Every section
+     stays on screen — no horizontal scrolling, nothing hidden. */
+  .admin-shell{padding-left:0}
+  .admin-side{position:static;width:auto;height:auto;bottom:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px 10px;gap:8px;overflow:visible}
+  .admin-brand{padding:4px 2px 8px;margin-bottom:2px}
+  .admin-word{font-size:.92rem}
+  .admin-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;flex:0 1 auto}
+  /* The tiles flow across group boundaries, so the grid stays 4 + 3. */
+  .admin-group{display:contents}
+  /* Captions would cost a whole grid row; keep them for screen readers only. */
+  .admin-group-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .admin-nav a{flex-direction:column;justify-content:center;gap:6px;min-height:56px;padding:8px 4px;border-radius:10px;font-size:.72rem;text-align:center}
+  .nav-icon{width:20px;height:20px}
+  .admin-nav a[aria-current="page"]::before{display:none}
+  .admin-nav a[aria-current="page"]::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:3px;border-radius:3px;background:var(--yellow)}
+  .nav-count{position:absolute;top:4px;right:6px;margin:0;padding:0 5px;font-size:.68rem}
+  .admin-side-foot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 8px;margin-top:0;padding-top:8px}
+  .admin-me{grid-column:1;grid-row:1;padding:4px 6px;border:0;background:transparent;gap:8px}
+  .admin-me .avatar{width:26px;height:26px;font-size:.64rem}
+  .admin-me-mail{display:none}
+  .admin-lang{grid-column:2;grid-row:1;align-self:center}
+  .admin-side-links{grid-column:1 / -1;grid-row:2}
+  .admin-link{flex:none;min-height:34px;padding:5px 8px;font-size:.8rem}
+  .admin-main{padding:20px 18px 60px}
+}
+body[data-page="admin"] .admin-view{display:none}
+body[data-page="admin"] .admin-view.active{display:block}
 .admin-view h3{margin:26px 0 12px}
 .admin-view h3:first-child{margin-top:0}
 .admin-sub{margin-bottom:14px}
@@ -853,6 +980,22 @@ a.mini{display:inline-flex;align-items:center;text-decoration:none}
 .status{margin-top:14px;font-weight:600;min-height:1.4em;padding-left:10px;border-left:3px solid transparent}
 .status.ok{color:var(--green-text);border-left-color:var(--green)}
 .status.bad{color:var(--red-text);border-left-color:var(--red)}
+
+/* ===== EMPTY STATES =====
+   One block for every list that can have no rows. It replaces the table
+   inside its .table-wrap; loading and error text stays in .status. */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  padding:42px 24px;text-align:center;color:var(--muted)}
+.empty-state svg{width:26px;height:26px;color:var(--muted);opacity:.75;flex:none}
+.empty-state-title{color:var(--heading);font-size:1rem;font-weight:700;line-height:1.4}
+.empty-state-text{max-width:48ch;font-size:.92rem;line-height:1.55}
+.empty-state-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:6px}
+.empty-state-actions .mini{margin:0}
+.empty-state-actions .btn{margin-top:0}
+.empty-state--inline{padding:30px 20px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.empty-state--inline svg{width:22px;height:22px}
+.empty-state--compact{padding:18px 0;font-size:.92rem}
+.tt-bars .empty-state--compact{flex:1;align-self:center}
 .trust-bar{display:flex;align-items:center;gap:18px;max-width:920px;margin:26px auto 0;padding:18px 28px;background:var(--surface);border:1px solid rgba(198,244,50,.4);border-radius:32px}
 .custom-row{display:grid;grid-template-columns:minmax(300px,1fr) minmax(320px,460px);gap:48px;margin-top:44px;align-items:center}
 .custom-pay{max-width:none}

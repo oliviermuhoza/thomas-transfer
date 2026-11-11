@@ -28,6 +28,7 @@
   }
   function makeTable(table, cols) {
     clear(table);
+    window.ttEmptyState.clear(table.parentNode);
     var tr = el('tr'); cols.forEach(function (c) { tr.appendChild(el('th', '', T(c))); });
     var head = el('thead'); head.appendChild(tr); table.appendChild(head);
     var bodyEl = el('tbody'); table.appendChild(bodyEl); return bodyEl;
@@ -55,6 +56,7 @@
   function skelRows(tableId, n) {
     var table = $(tableId);
     if (!table) { return; }
+    window.ttEmptyState.clear(table.parentNode);
     clear(table);
     var tb = el('tbody');
     for (var i = 0; i < n; i++) {
@@ -73,9 +75,19 @@
     var r;
     try { r = await api('/api/cars'); } catch (e) { r = {ok: false}; }
     if (!r.ok) { say(st, 'bad', T(NOSERVER)); return; }
+    var table = $('car-table');
+    if (!r.data.length) {
+      window.ttEmptyState(table.parentNode, {
+        icon: 'car',
+        title: 'No cars in the fleet yet.',
+        text: 'Vehicles will appear here once they are added to the fleet.'
+      });
+      say(st, '', '');
+      return;
+    }
     say(st, '', '');
     var cols = ['Photo', 'Car', 'Type', 'Status']; if (isAdmin()) { cols.push('Action'); }
-    var tb = makeTable($('car-table'), cols);
+    var tb = makeTable(table, cols);
     r.data.forEach(function (c) {
       var tr = el('tr'), td = el('td'), img = el('img', 'thumb');
       img.src = c.image; img.alt = c.name; img.loading = 'lazy'; td.appendChild(img); tr.appendChild(td);
@@ -267,15 +279,16 @@
   }
 
   async function loadAvailable() {
-    var grid = $('available-cars'), empty = $('available-empty');
+    var grid = $('available-cars'), status = $('available-status'), empty = $('available-empty');
     var seq = ++loadSeq;
     clear(grid);
+    window.ttEmptyState.clear(empty);
     skelCards(6).forEach(function (c) { grid.appendChild(c); });
-    say(empty, '', T('Loading...'));
+    say(status, '', T('Loading...'));
     var r;
     try { r = await api('/api/cars?available=1'); } catch (e) { r = {ok: false}; }
     if (seq !== loadSeq) { return; }
-    if (!r.ok) { say(empty, 'bad', T(NOSERVER)); return; }
+    if (!r.ok) { say(status, 'bad', T(NOSERVER)); return; }
 
     var wanted = window.ttSelectedCar;
     window.ttSelectedCar = null;
@@ -299,7 +312,18 @@
       try { sessionStorage.removeItem('tt-selected-car'); } catch (e) {}
     }
 
-    say(empty, '', r.data.length ? '' : T('No cars are available right now.'));
+    say(status, '', '');
+    if (!r.data.length) {
+      window.ttEmptyState(empty, {
+        size: 'inline',
+        icon: 'car',
+        title: 'No cars are available right now.',
+        text: 'Check back soon or message us on WhatsApp.',
+        action: {label: 'Contact us', tone: 'ok', run: function () { location.href = '/contact'; }}
+      });
+    } else {
+      window.ttEmptyState.clear(empty);
+    }
   }
 
   (function setupBookingForm() {
@@ -356,6 +380,20 @@
     try { r = await api('/api/bookings'); } catch (e) { return; }
     if (r.status === 401) { return; }            /* the "please login" note is shown instead */
     if (!r.ok) { say(st, 'bad', T((r.data && r.data.error) || NOSERVER)); return; }
+    if (!r.data.length) {
+      window.ttEmptyState($('booking-table').parentNode, isAdmin() ? {
+        icon: 'tray',
+        title: 'No bookings yet.',
+        text: 'Customer bookings will appear here.'
+      } : {
+        icon: 'tray',
+        title: 'No bookings yet.',
+        text: 'Your trips will appear here after you book a car.',
+        action: {label: 'Book a car', tone: 'ok', run: function () { location.hash = '#available'; }}
+      });
+      say(st, '', '');
+      return;
+    }
     var admin = isAdmin(), cols = ['#'];
     if (admin) { cols.push('Customer'); }
     cols = cols.concat(['Car', 'Trip', 'Date and time', 'Passengers', 'Status', 'Action']);
@@ -377,7 +415,7 @@
       if (b.status === 'pending' || b.status === 'confirmed') { ta.appendChild(small('Cancel', 'warn', function () { change(b.id, 'cancelled'); })); }
       tb.appendChild(tr);
     });
-    say(st, '', r.data.length ? '' : T('No bookings yet.'));
+    say(st, '', '');
   }
 
   /* ---------- Report (admin only) ---------- */
@@ -407,6 +445,14 @@
     ['pending', 'confirmed', 'completed', 'cancelled'].forEach(function (k) {
       var tr = el('tr'); cell(tr, '').appendChild(badge(k)); cell(tr, String(d.bookings[k])); tb.appendChild(tr);
     });
+    if (!d.per_car.length) {
+      window.ttEmptyState($('report-cars').parentNode, {
+        icon: 'car',
+        title: 'No bookings per car yet.',
+        text: 'Bookings will be counted here once customers start travelling.'
+      });
+      return;
+    }
     var tc = makeTable($('report-cars'), ['Car', 'Type', 'Total', 'Completed']);
     d.per_car.forEach(function (c) {
       var tr = el('tr'); cell(tr, c.name); cell(tr, T(c.type)); cell(tr, String(c.total)); cell(tr, String(c.completed)); tc.appendChild(tr);

@@ -6,7 +6,7 @@ sections because ``web/js/dashboard.js`` and ``web/js/auth-forms.js`` expect
 all of their forms and tables to exist on one page.
 """
 
-from flask import Blueprint, redirect, render_template, session
+from flask import Blueprint, abort, redirect, render_template, session
 
 try:
     from .db import get_db
@@ -14,6 +14,13 @@ except ImportError:  # pragma: no cover
     from backend.db import get_db
 
 pages = Blueprint("pages", __name__)
+
+# Real routes under /admin/<view>; keep in sync with the nav in
+# ``pages/admin.html`` and the bookmark map in ``web/js/legacy-hash.js``.
+ADMIN_VIEWS = (
+    "overview", "bookings", "fleet", "accounts", "messages", "comments",
+    "fares",
+)
 
 PAGE_META = {
     "home": (
@@ -159,14 +166,32 @@ def _session_user():
     ).fetchone()
 
 
-@pages.get("/admin")
-def admin():
+def _admin_gate():
+    """Return a redirect response when the visitor may not see the portal."""
     user = _session_user()
     if user is None:
         return redirect("/account#login", code=302)
     if not user["is_admin"]:
         return redirect("/account", code=302)
-    return render_page("admin")
+    return None
+
+
+@pages.get("/admin")
+def admin():
+    blocked = _admin_gate()
+    if blocked is not None:
+        return blocked
+    return render_page("admin", view="overview")
+
+
+@pages.get("/admin/<view>")
+def admin_view(view):
+    blocked = _admin_gate()
+    if blocked is not None:
+        return blocked
+    if view not in ADMIN_VIEWS:
+        abort(404)
+    return render_page("admin", view=view)
 
 
 # ---------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/* Pay by card: fares come from the database (see /admin#fares). Buttons carry
+/* Pay by card: fares come from the database (see /admin/fares). Buttons carry
    their name, price and (optional) Flutterwave link as data attributes. With no
    link set the button opens WhatsApp in a new tab with the current fare text. */
 (function () {

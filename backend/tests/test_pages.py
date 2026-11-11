@@ -92,11 +92,12 @@ def test_static_assets_still_served(client):
     assert client.get("/js/search.js").status_code == 200
 
 
-def test_legacy_hash_does_not_rewrite_admin_sections(client):
-    # /admin#bookings collides with a legacy bookmark; the mapper must skip
-    # /admin entirely or the portal redirects back to /account.
+def test_legacy_hash_routes_old_admin_bookmarks(client):
+    # /admin#fleet bookmarks must reach the real route /admin/fleet, and the
+    # account bookmark map must never rewrite unknown hashes on /admin.
     script = client.get("/js/legacy-hash.js").data.decode("utf-8")
     assert "location.pathname === '/admin'" in script
+    assert "location.replace('/admin/' + name)" in script
 
 
 def test_navbar_search_is_present_on_every_page(client):
@@ -118,7 +119,7 @@ def test_admin_copy_has_translation_keys():
         "At a glance", "Needs attention", "All bookings", "Filter by status",
         "No pending bookings.", "Please log in again to continue.",
         "Make admin", "Remove admin", "Search", "Search...", "Search results",
-        "Loading...", "Account", "Name", "Role", "Joined", "You",
+        "Loading...", "Account", "Name", "People", "Role", "Joined", "You",
     ]
     for key in required:
         assert '"' + key + '":' in head, f"missing i18n key: {key}"
