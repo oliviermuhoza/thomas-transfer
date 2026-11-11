@@ -49,6 +49,37 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 WEB_DIR = PACKAGE_DIR.parent / "web"  # static site root
+PROJECT_DIR = PACKAGE_DIR.parent
+
+
+def load_env_file(path=None):
+    """Fill os.environ from a KEY=VALUE file, if the file exists.
+
+    Deliberately tiny and dependency-free: no python-dotenv, no .env parser
+    features. Existing environment variables always win, so the platform (or a
+    shell export) can override anything in the file. Lines starting with # and
+    blank lines are ignored; surrounding single or double quotes are stripped.
+    """
+    path = Path(path) if path else PROJECT_DIR / ".env"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) > 1 and value[0] == value[-1] and value[0] in "'\"":
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+    return True
+
+
+load_env_file()
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 PHONE_RE = re.compile(r"^\+?[0-9][0-9\s().-]{6,28}[0-9]$")
