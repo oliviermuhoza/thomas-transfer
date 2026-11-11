@@ -527,6 +527,32 @@ h2{font-size:2rem;margin-bottom:8px}
 .tour-itinerary li{display:grid;grid-template-columns:52px 1fr;gap:14px;align-items:start;color:#d8d9cf;font-size:.88rem;line-height:1.5}
 .tour-itinerary time{color:#C6F432;font-weight:700;font-size:.85rem;white-space:nowrap}
 .tour-price-old{color:#8f9284;text-decoration:line-through;font-size:1rem;font-weight:400;margin-right:8px}
+#tours .cars{grid-template-columns:repeat(2,minmax(0,1fr))}
+#tours .car-photo{aspect-ratio:auto;height:200px}
+@media (max-width:760px){#tours .car-photo{height:170px}}
+.tour-filters{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 24px}
+.tour-filters .svc-book{background:transparent;border:1px solid rgba(198,244,50,.45);color:var(--yellow)}
+.tour-filters .svc-book:hover,.tour-filters .svc-book.is-active{background:var(--yellow);border-color:transparent;color:#0B0B0C}
+@media (max-width:760px){#tours .cars{grid-template-columns:1fr}}
+.tour-includes{background:var(--surface);border:1px solid rgba(198,244,50,.16);border-radius:18px;padding:clamp(24px,3vw,34px);display:flex;flex-direction:column}
+.tour-includes .eyebrow{margin-bottom:14px}
+.tour-includes h2{font-family:var(--font-heading);font-weight:400;font-size:clamp(1.7rem,3vw,2.2rem);color:var(--heading);margin:0 0 20px}
+.tour-includes-list{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.tour-includes-list li{position:relative;padding-left:30px;color:#d8d9cf;font-size:.95rem;line-height:1.5}
+.tour-includes-list li::before{content:"\2713";position:absolute;left:0;top:0;color:var(--yellow);font-weight:700}
+.tour-includes-note{margin:24px 0 0;color:var(--muted);font-size:.9rem;line-height:1.65;max-width:70ch}
+.tour-includes-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.13);margin-top:auto;padding-top:22px}
+.tour-includes-tag{display:inline-block;border:1px solid rgba(198,244,50,.45);color:#b9bd90;border-radius:999px;padding:8px 18px;font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.tour-includes-cta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 26px;border:1px solid rgba(255,255,255,.35);border-radius:999px;color:#ffffff;text-decoration:none;font-weight:700;transition:background .2s,color .2s,border-color .2s}
+.tour-includes-cta:hover{background:var(--yellow);border-color:transparent;color:#0B0B0C}
+#tours .tour-offer{margin-top:40px}
+#tour-book-status:empty{display:none}
+.rent-dialog.tour-dialog{width:min(560px,calc(100vw - 24px));padding:22px 22px 22px;max-height:100dvh;margin:0 0 0 auto;border:0;border-radius:12px;filter:drop-shadow(0 18px 45px rgba(0,0,0,.55))}
+.rent-dialog.tour-dialog .msg-close{top:12px;right:14px}
+.tour-book-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.rent-dialog.tour-dialog label{margin:10px 0 4px;font-size:.92rem}
+.rent-dialog.tour-dialog textarea{min-height:90px}
+@media (max-width:520px){.tour-book-form .form-row{grid-template-columns:1fr}}
 .price{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:14px;margin-top:6px;font-weight:700;color:var(--heading)}
 .price .btn{padding:8px 16px;margin:0;width:auto}
 
@@ -726,7 +752,7 @@ body.msg-open main{visibility:hidden}
 .msg-dialog h3{color:var(--heading);margin-bottom:2px;padding-right:36px}
 .msg-dialog .msg-close{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
 .msg-dialog .msg-close:hover{background:var(--line)}
-.rent-dialog{width:min(380px,100vw);height:100vh;height:100dvh;max-height:100dvh;margin:0 0 0 auto;border-radius:0;padding:22px;overflow:auto;background:#0B0B0C;border-color:rgba(255,255,255,.12);color:#FFFFFF}
+.rent-dialog{width:min(480px,100vw);height:100vh;height:100dvh;max-height:100dvh;margin:0 0 0 auto;border-radius:0;padding:22px;overflow:auto;background:#0B0B0C;border-color:rgba(255,255,255,.12);color:#FFFFFF}
 .rent-dialog[open]{animation:rent-in .25s ease both}
 @keyframes rent-in{from{transform:translateX(28px);opacity:.4}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.rent-dialog[open]{animation:none}}
@@ -743,6 +769,47 @@ body.reserve-open{overflow:hidden}
 .rent-days{margin:8px 0 0;font-weight:700;color:var(--heading);min-height:1.2em}
 .msg-dialog textarea{min-height:120px;resize:vertical}
 .msg-dialog .btn{margin-top:20px;width:100%}
+
+/* ===== RESERVE DIALOG: modern car rental form ===== */
+.rent-dialog .rent-header{display:flex;flex-direction:column;gap:12px;margin:0 0 20px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:16px}
+.rent-car{display:flex;gap:14px;align-items:center}
+.rent-car-img{flex:none;width:80px;height:56px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:var(--surface-2)}
+.rent-car-info{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rent-car-type{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#C6F432}
+.rent-car-info h3{margin:0;font-size:1.15rem;color:#fff;line-height:1.2}
+.rent-car-rate{font-size:.85rem;color:rgba(255,255,255,.7)}
+.rent-dialog .rent-intro{margin:0 0 6px;color:rgba(255,255,255,.75)}
+.rent-dialog .status{margin:0 0 16px}
+
+.rent-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px}
+.rent-field{display:flex;flex-direction:column;gap:6px}
+.rent-field.full{grid-column:1/-1}
+.rent-dialog .rent-field label{margin-top:0;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.rent-dialog .rent-field input,.rent-dialog .rent-field select,.rent-dialog .rent-field textarea{width:100%;padding:11px 12px;font:inherit;color:var(--ink);background:var(--surface-2);border:1.5px solid var(--line);border-radius:8px}
+.rent-dialog .rent-field input:focus,.rent-dialog .rent-field select:focus,.rent-dialog .rent-field textarea:focus{border-color:var(--yellow);outline:none;box-shadow:0 0 0 3px rgba(198,244,50,.45)}
+.rent-dialog .rent-field textarea{min-height:90px;resize:vertical}
+
+.rent-toggle-label{display:flex;align-items:center;gap:10px;font-size:.92rem;color:var(--heading);cursor:pointer;margin:0}
+.rent-toggle-label input{width:20px;height:20px;flex:none;accent-color:var(--yellow)}
+
+.rent-dialog .rent-submit{margin-top:4px;width:100%;height:50px;font-size:1rem;font-weight:800;background:linear-gradient(180deg,#D8FF7A 0%,#C6F432 55%,#9ACD1A 100%);color:#0B0B0C;border:0;border-radius:10px;cursor:pointer;box-shadow:0 10px 24px rgba(198,244,50,.28);transition:box-shadow .15s ease,transform .15s ease,filter .15s ease}
+.rent-dialog .rent-submit:hover{filter:brightness(1.05);box-shadow:0 14px 30px rgba(198,244,50,.35);transform:translateY(-1px)}
+.rent-dialog .rent-submit:active{transform:translateY(1px);filter:brightness(.98)}
+.rent-dialog .rent-submit:disabled{opacity:.65;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* tour-dialog specific tweaks for car reserve (toggle + submit) */
+.rent-dialog.tour-dialog .rent-toggle-label{margin:10px 0 4px;display:inline-flex;align-items:center;gap:10px;font-size:.92rem;color:var(--heading);cursor:pointer}
+.rent-dialog.tour-dialog .rent-toggle-label input{width:20px;height:20px;flex:none;accent-color:var(--yellow)}
+.rent-dialog.tour-dialog .rent-submit{margin-top:4px;width:100%;height:50px;font-size:1rem;font-weight:800;background:linear-gradient(180deg,#D8FF7A 0%,#C6F432 55%,#9ACD1A 100%);color:#0B0B0C;border:0;border-radius:10px;cursor:pointer;box-shadow:0 10px 24px rgba(198,244,50,.28);transition:box-shadow .15s ease,transform .15s ease,filter .15s ease}
+.rent-dialog.tour-dialog .rent-submit:hover{filter:brightness(1.05);box-shadow:0 14px 30px rgba(198,244,50,.35);transform:translateY(-1px)}
+.rent-dialog.tour-dialog .rent-submit:active{transform:translateY(1px);filter:brightness(.98)}
+.rent-dialog.tour-dialog .rent-submit:disabled{opacity:.65;cursor:not-allowed;transform:none;box-shadow:none}
+
+@media (max-width:520px){
+  .rent-grid{grid-template-columns:1fr}
+  .rent-car-img{width:64px;height:48px}
+  .rent-car-info h3{font-size:1rem}
+}
 .support-list{margin-bottom:0}
 .support-list a{padding-left:18px}
 [hidden]{display:none !important}

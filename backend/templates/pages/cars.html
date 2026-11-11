@@ -48,7 +48,7 @@
               <span class="rate-per">Per day</span>
             </div>
             {% endif %}
-            <button class="reserve-btn" type="button" data-book="{{ card.id }}" data-reserve="{{ card.id }}" data-car-name="{{ card.name }}">Reserve</button>
+            <button class="reserve-btn" type="button" data-book="{{ card.id }}" data-reserve="{{ card.id }}" data-car-name="{{ card.name }}" data-car-image="{{ card.image }}" data-car-type="{{ card.type }}" data-car-rate="{{ card.price }}">Reserve</button>
           </div>
         </div>
       </div>
@@ -82,43 +82,75 @@
         <p class="eyebrow">On the road in hours</p>
         <h2>Reserve your car today</h2>
         <p>Availability moves fast in high season — secure your dates now and pay on handover.</p>
-        <a class="cta-ready-btn" href="https://wa.me/250788652120" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Check availability</a>
+        <a class="cta-ready-btn" href="https://wa.me/250783689231" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 7.8c-.5 0-1 .6-1 1.3 0 2.9 3.1 6 6 6 .7 0 1.3-.5 1.3-1l-.1-.7-1.9-.9-.9.9c-1-.5-1.9-1.4-2.4-2.4l.9-.9-.9-1.9z" fill="currentColor"/></svg>Check availability</a>
       </div>
     </div>
   </div>
 </section>
 
-<dialog id="reserve-dialog" class="msg-dialog rent-dialog" aria-labelledby="reserve-title">
+<dialog id="reserve-dialog" class="msg-dialog rent-dialog tour-dialog" aria-labelledby="reserve-title">
   <button type="button" class="msg-close" id="reserve-close" aria-label="Close">&times;</button>
-  <h3 id="reserve-title">Reserve this car</h3>
-  <p class="rent-intro">Tell us your dates and we will confirm availability shortly. <strong class="rent-days" id="reserve-car-name"></strong></p>
-  <form id="reserve-form">
+  <div class="rent-header">
+    <div class="rent-car">
+      <img id="reserve-car-thumb" src="" alt="" class="rent-car-img" loading="lazy">
+      <div class="rent-car-info">
+        <p class="rent-car-type" id="reserve-car-type"></p>
+        <h3 id="reserve-car-name"></h3>
+        <p class="rent-car-rate" id="reserve-car-rate"></p>
+      </div>
+    </div>
+    <p class="rent-intro">Tell us your dates — we confirm availability shortly.</p>
+  </div>
+  <form id="reserve-form" class="tour-book-form">
     <input type="hidden" id="reserve-car-id">
-    <label for="reserve-name">Full name</label>
-    <input id="reserve-name" type="text" autocomplete="name" required>
-    <label for="reserve-email">Email</label>
-    <input id="reserve-email" type="email" autocomplete="email" placeholder="you@example.com" required>
-    <label for="reserve-phone">Phone number</label>
-    <input id="reserve-phone" type="tel" autocomplete="tel" placeholder="+250 ..." required>
-    <label for="reserve-pickup">Pick-up location</label>
-    <select id="reserve-pickup" required>
-      <option>Within Kigali</option>
-      <option>Kigali International Airport</option>
-      <option>Outside Kigali</option>
-    </select>
-    <label for="reserve-dropoff">Drop-off location</label>
-    <select id="reserve-dropoff" required>
-      <option>Within Kigali</option>
-      <option>Kigali International Airport</option>
-      <option>Outside Kigali</option>
-    </select>
-    <label for="reserve-date">Pick-up date</label>
-    <input id="reserve-date" type="date" required>
-    <label for="reserve-days">Number of days</label>
-    <input id="reserve-days" type="number" min="1" max="90" value="1" required>
+    <div class="form-row">
+      <div>
+        <label for="reserve-first">First name</label>
+        <input id="reserve-first" type="text" autocomplete="given-name" required>
+      </div>
+      <div>
+        <label for="reserve-last">Last name</label>
+        <input id="reserve-last" type="text" autocomplete="family-name" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="reserve-email">Email</label>
+        <input id="reserve-email" type="email" autocomplete="email" placeholder="you@example.com" required>
+      </div>
+      <div>
+        <label for="reserve-phone">Phone number</label>
+        <input id="reserve-phone" type="tel" autocomplete="tel" placeholder="+250 ..." required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="reserve-date">Pick-up date</label>
+        <input id="reserve-date" type="date" required>
+      </div>
+      <div>
+        <label for="reserve-days">Number of days</label>
+        <input id="reserve-days" type="number" min="1" max="90" value="1" required>
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label for="reserve-pickup">Pick-up location</label>
+        <select id="reserve-pickup" required>
+          <option value="Within Kigali">Within Kigali</option>
+          <option value="Kigali International Airport">Kigali International Airport</option>
+          <option value="Outside Kigali">Outside Kigali</option>
+        </select>
+      </div>
+      <div>
+        <label class="rent-toggle-label">
+          <input id="reserve-driver" type="checkbox"> Add a professional driver
+        </label>
+      </div>
+    </div>
     <label for="reserve-message">Message</label>
-    <textarea id="reserve-message" placeholder="Pick-up place, driver or self-drive, anything else" required></textarea>
-    <button class="btn" type="submit">Send reservation request</button>
+    <textarea id="reserve-message" placeholder="Flight number, self-drive or driver, anything else"></textarea>
+    <button class="btn rent-submit" type="submit">Send reservation request</button>
     <p id="reserve-status" class="status" role="status"></p>
   </form>
 </dialog>
