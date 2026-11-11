@@ -133,6 +133,30 @@ body.nav-open .nav-toggle .ico-menu{display:none}
 .nav-tools{display:flex;align-items:center;gap:8px}
 .brand{display:flex;align-items:center;gap:10px}
 
+/* ===== SIGNED-IN AVATAR ===== */
+.nav-panel .nav-user{order:3}
+.nav-panel .nav-tools{order:4}
+.nav-user{display:none;position:relative;align-items:center;gap:10px}
+body.logged-in .nav-user{display:flex}
+.avatar-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;flex:none;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--white);font:inherit;font-weight:700;
+  font-size:.78rem;letter-spacing:.02em;cursor:pointer;transition:border-color .18s ease,background .18s ease}
+.avatar-btn:hover,.avatar-btn[aria-expanded="true"]{border-color:rgba(255,255,255,.28);background:var(--surface)}
+.avatar-initials{line-height:1}
+.nav-user-text{display:none}
+.avatar-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:30;min-width:220px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 16px 36px rgba(0,0,0,.5)}
+.avatar-menu[hidden]{display:none}
+.avatar-id{padding:8px 12px 12px;border-bottom:1px solid var(--line-soft);margin-bottom:6px}
+.avatar-id strong{display:block;font-size:.9rem;font-weight:700;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar-id span{display:block;font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avatar-menu a{display:flex;align-items:center;min-height:42px;padding:8px 12px;border-radius:8px;color:var(--white);
+  text-decoration:none;font-size:.9rem;font-weight:600}
+.avatar-menu a:hover{background:var(--surface-2)}
+.avatar-menu a[hidden]{display:none}
+.avatar-sep{height:1px;background:var(--line-soft);margin:6px 8px}
+.nav-user-logout{display:none}
+
 /* Desktop: the search field is collapsed behind its icon and expands in place. */
 .bar .search{position:relative;flex:0 0 auto;width:0;min-width:0;opacity:0;visibility:hidden;
   pointer-events:none;transition:width .18s ease,opacity .18s ease}
@@ -187,6 +211,17 @@ body.nav-open .nav-toggle .ico-menu{display:none}
   .nav-login{padding:10px 18px}
   .bar nav a.nav-book{order:3;flex:1 1 100%;justify-content:center;min-height:48px}
   .search-results{left:0;right:0;width:auto}
+
+  /* Signed-in identity row at the top of the drawer; no popover on touch. */
+  .nav-user{order:-1;width:100%;margin:0 0 10px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+  .nav-user .avatar-btn{width:40px;height:40px;font-size:.85rem}
+  .nav-user-text{display:block;min-width:0}
+  .nav-user-name{display:block;font-size:.95rem;font-weight:700;color:var(--white)}
+  .nav-user-email{display:block;font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .avatar-menu{display:none !important}
+  body.logged-in .nav-user-logout{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:12px;
+    border-top:1px solid var(--line-soft);padding-top:10px;color:var(--muted);text-decoration:none;font-weight:600}
+  body.logged-in .nav-user-logout:hover{color:var(--yellow)}
 }
 
 /* ===== SOCIAL ICONS ===== */
@@ -703,9 +738,14 @@ textarea{min-height:130px;resize:vertical}
 body.logged-in .auth-in{display:block}
 body.logged-in .auth-out{display:none}
 .nav-account-item,.nav-admin-item{display:none}
-body.logged-in .nav-account-item{display:block}
+/* Signed in: the avatar replaces the Account link on desktop; the drawer keeps
+   the row because it has no popover. */
+body.logged-in .nav-account-item{display:none}
 body.logged-in .nav-login{display:none}
 body.is-admin .nav-admin-item{display:block}
+@media (max-width:1099px){
+  body.logged-in .nav-account-item{display:block}
+}
 body.auth-mode header,body.auth-mode footer,body.auth-mode .wa-float,body.auth-mode .msg-dialog{display:none}
 body.auth-mode main{padding-top:0}
 .auth-back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:20px}

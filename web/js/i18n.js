@@ -579,6 +579,8 @@
   /* Admin portal, navbar search and shared account labels */
   "Admin": "Ubuyobozi",
   "Account": "Konti yanjye",
+  "My account": "Konti yanjye",
+  "My bookings": "Ibyatumijwe byanjye",
   "Loading...": "Birimo gutegurwa...",
   "Search": "Gushakisha",
   "Search...": "Shakisha...",

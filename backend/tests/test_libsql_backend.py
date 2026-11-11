@@ -123,6 +123,22 @@ def test_booking_flow(client):
     assert report["cars"]["total"] == 8
 
 
+def test_registered_user_can_log_in_from_a_new_session(client):
+    """Registration stores a hash that a later, cookie-less login accepts.
+
+    The seeded admin is hashed at boot in the same process, so it never proves
+    that a hash written through the libSQL driver reads back and verifies.
+    """
+    assert register(client).status_code == 201
+
+    returning = client.application.test_client()
+    assert login(returning, email="jane@example.com", password="secret123").status_code == 200
+
+    me = returning.get("/api/me").get_json()
+    assert me["user"]["email"] == "jane@example.com"
+    assert me["user"]["admin"] is False
+
+
 def test_migrations_and_aggregates(app, client):
     with app.app_context():
         db = get_db()

@@ -76,11 +76,60 @@
     }
   });
 
+  /* ===== Signed-in avatar menu (desktop only; the drawer shows identity) ===== */
+  var userBox = document.getElementById('nav-user');
+  var avatarToggle = document.getElementById('avatar-toggle');
+  var avatarMenu = document.getElementById('avatar-menu');
+  var initialsEl = document.getElementById('avatar-initials');
+  var adminItem = avatarMenu && avatarMenu.querySelector('.avatar-admin');
+
+  function closeAvatar() {
+    if (!avatarMenu || avatarMenu.hidden) { return; }
+    avatarMenu.hidden = true;
+    avatarToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function setText(selector, value) {
+    document.querySelectorAll(selector).forEach(function (node) { node.textContent = value || ''; });
+  }
+
+  if (avatarToggle && avatarMenu && userBox) {
+    avatarToggle.addEventListener('click', function () {
+      if (!wide.matches) { location.assign('/account'); return; }
+      if (avatarMenu.hidden) {
+        avatarMenu.hidden = false;
+        avatarToggle.setAttribute('aria-expanded', 'true');
+      } else {
+        closeAvatar();
+      }
+    });
+
+    avatarMenu.addEventListener('click', function (event) {
+      if (event.target.closest('a')) { closeAvatar(); }
+    });
+
+    /* Login and logout happen over fetch on /account; session.js emits this. */
+    window.addEventListener('tt:user', function (event) {
+      var user = event.detail;
+      closeAvatar();
+      if (!user) { return; }
+      if (initialsEl) { initialsEl.textContent = user.initials || ''; }
+      setText('.js-user-name', user.name);
+      setText('.js-user-email', user.email);
+      setText('.nav-user-name', user.name);
+      setText('.nav-user-email', user.email);
+      if (adminItem) { adminItem.hidden = !user.admin; }
+    });
+  }
+
   document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') { return; }
     if (menuOpen()) {
       setMenu(false);
       toggle.focus();
+    } else if (avatarMenu && !avatarMenu.hidden) {
+      closeAvatar();
+      avatarToggle.focus();
     } else if (bar.classList.contains('search-open')) {
       setSearch(false);
       visibleSearchToggle().focus();
@@ -92,13 +141,20 @@
         !event.target.closest('[data-search-toggle]')) {
       setMenu(false);
     }
+    if (avatarToggle && avatarMenu && !avatarMenu.hidden && userBox &&
+        !userBox.contains(event.target)) {
+      closeAvatar();
+    }
     if (wide.matches && bar.classList.contains('search-open') &&
         !form.contains(event.target) && !event.target.closest('[data-search-toggle]')) {
       setSearch(false);
     }
   });
 
-  function onBreakpoint() { setMenu(false); }
+  function onBreakpoint() {
+    setMenu(false);
+    if (avatarMenu) { closeAvatar(); }
+  }
   if (wide.addEventListener) { wide.addEventListener('change', onBreakpoint); }
   else if (wide.addListener) { wide.addListener(onBreakpoint); }
 })();

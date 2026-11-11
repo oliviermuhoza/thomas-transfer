@@ -550,12 +550,16 @@ def current_user():
 
 
 def user_json(user):
+    name = f"{user['first_name']} {user['last_name']}".strip()
+    parts = [part for part in name.split() if part]
+    initials = (parts[0][0] + (parts[-1][0] if len(parts) > 1 else "")).upper()
     return {
         "id": user["id"],
-        "name": f"{user['first_name']} {user['last_name']}".strip(),
+        "name": name,
         "email": user["email"],
         "phone": user["phone"],
         "admin": bool(user["is_admin"]),
+        "initials": initials or user["email"][:1].upper(),
     }
 
 

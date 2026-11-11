@@ -47,6 +47,31 @@ def test_nav_active_page_is_marked(client):
     assert b'href="/transport" aria-current="page"' in page.data
 
 
+def test_signed_in_header_shows_avatar(client):
+    token = client.get("/api/csrf").get_json()["csrf_token"]
+    registered = client.post(
+        "/api/register",
+        json={
+            "first_name": "Ada",
+            "last_name": "Doe",
+            "email": "ada@example.com",
+            "phone": "+250700000123",
+            "password": "secret123",
+        },
+        headers={"X-CSRF-Token": token},
+    )
+    assert registered.status_code == 201
+
+    page = client.get("/")
+    assert b'class="logged-in' in page.data
+    assert b'id="nav-user"' in page.data
+    assert b'id="avatar-initials">AD<' in page.data
+    assert b"Ada Doe" in page.data
+    assert b"ada@example.com" in page.data
+    assert b'id="avatar-menu"' in page.data
+    assert b'aria-haspopup="menu"' in page.data
+
+
 def test_account_loads_dashboard_scripts(client):
     page = client.get("/account")
     assert b"/js/dashboard.js" in page.data
