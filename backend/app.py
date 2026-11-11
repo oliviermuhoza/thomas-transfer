@@ -5,6 +5,7 @@ Run with `python -m backend.app` (development) or point a WSGI server at
 `web/js/` expect; see README.md for the endpoint table.
 """
 
+import hashlib
 import os
 import re
 import secrets
@@ -14,7 +15,7 @@ from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
 from flask import (
     Flask,
@@ -34,6 +35,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import close_db, get_db, init_db
+    from .mailer import configured as mail_configured, send_email
     from .pages import format_price, pages
 except ImportError:  # running directly, or loaded as a top-level module by Vercel
     import sys
@@ -42,9 +44,11 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         from backend.db import close_db, get_db, init_db
+        from backend.mailer import configured as mail_configured, send_email
         from backend.pages import format_price, pages
     except ImportError:  # deployment root is backend/ itself
         from db import close_db, get_db, init_db
+        from mailer import configured as mail_configured, send_email
         from pages import format_price, pages
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -546,6 +550,10 @@ def current_user():
     if user is not None and not user["active"]:
         # Deactivated accounts are treated as signed out everywhere.
         return None
+    if user is not None and session.get("token_version", 0) != user["token_version"]:
+        # The password was reset elsewhere; this session is no longer valid.
+        session.clear()
+        return None
     return user
 
 
@@ -561,6 +569,44 @@ def user_json(user):
         "admin": bool(user["is_admin"]),
         "initials": initials or user["email"][:1].upper(),
     }
+
+
+RESET_TOKEN_TTL_MINUTES = 30
+
+
+def _reset_token_hash(token):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _send_password_reset_email(user, link):
+    """Send the reset link; never raise into the request handler."""
+    name = f"{user['first_name']} {user['last_name']}".strip() or "there"
+    body = (
+        f"Hello {name},\n\n"
+        "Someone asked to reset the password for your Thomas Transfer account.\n"
+        f"Open this link within {RESET_TOKEN_TTL_MINUTES} minutes to choose a new password:\n\n"
+        f"{link}\n\n"
+        "If you did not ask for this, ignore this message; your password stays the same.\n"
+    )
+    if mail_configured():
+        try:
+            send_email(
+                user["email"], "Reset your Thomas Transfer password", body
+            )
+            return True
+        except Exception as exc:
+            current_app.logger.error("Password reset email failed: %s", exc)
+            return False
+    if current_app.config.get("PRODUCTION"):
+        current_app.logger.error(
+            "Password reset email not sent: set TT_SMTP_HOST (and TT_SMTP_FROM) "
+            "in the environment."
+        )
+    else:
+        current_app.logger.warning(
+            "Password reset link for %s: %s", user["email"], link
+        )
+    return False
 
 
 def login_required(view):
@@ -688,6 +734,7 @@ def register_routes(app):
         session.clear()
         session.permanent = True
         session["user_id"] = user["id"]
+        session["token_version"] = user["token_version"]
         session["csrf_token"] = secrets.token_urlsafe(32)
         return jsonify({"user": user_json(user), "csrf_token": session["csrf_token"]}), 201
 
@@ -710,6 +757,7 @@ def register_routes(app):
         session.clear()
         session.permanent = True
         session["user_id"] = user["id"]
+        session["token_version"] = user["token_version"]
         session["csrf_token"] = secrets.token_urlsafe(32)
         return jsonify({"user": user_json(user), "csrf_token": session["csrf_token"]})
 
@@ -718,6 +766,85 @@ def register_routes(app):
         session.clear()
         session["csrf_token"] = secrets.token_urlsafe(32)
         return jsonify({"ok": True, "csrf_token": session["csrf_token"]})
+
+    # ---------- password reset ----------
+
+    @app.post("/api/password/forgot")
+    def forgot_password():
+        if _rate_limited("password-forgot", limit=10, window_seconds=3600):
+            return error("Too many requests. Please try again later.", 429)
+        data = body()
+        email = text_value(data, "email", 150).lower()
+        if not email or not EMAIL_RE.match(email):
+            return error("Please enter a valid email address.", 400)
+
+        generic = "If that email is registered, a reset link is on its way."
+        if _rate_limited(f"password-forgot:{email}", limit=3, window_seconds=3600):
+            return jsonify({"ok": True, "message": generic})
+
+        db = get_db()
+        user = db.execute(
+            "SELECT * FROM users WHERE email = ? AND active = 1", (email,)
+        ).fetchone()
+        if user is not None:
+            db.execute("DELETE FROM password_resets WHERE user_id = ?", (user["id"],))
+            token = secrets.token_urlsafe(32)
+            db.execute(
+                "INSERT INTO password_resets (user_id, token_hash, expires_at)"
+                " VALUES (?, ?, datetime('now', '+30 minutes'))",
+                (user["id"], _reset_token_hash(token)),
+            )
+            db.commit()
+            link = request.url_root.rstrip("/") + "/reset?token=" + quote(token)
+            _send_password_reset_email(user, link)
+        return jsonify({"ok": True, "message": generic})
+
+    @app.post("/api/password/reset")
+    def reset_password():
+        if _rate_limited("password-reset", limit=15, window_seconds=900):
+            return error("Too many attempts. Please try again later.", 429)
+        data = body()
+        token = str(data.get("token") or "").strip()
+        password = str(data.get("password") or "")
+        if len(password) < 8:
+            return error("Use at least 8 characters for the password.", 400)
+        if not token:
+            return error("This reset link is invalid or has expired.", 400)
+
+        db = get_db()
+        row = db.execute(
+            "SELECT pr.id, pr.user_id FROM password_resets pr"
+            " JOIN users u ON u.id = pr.user_id"
+            " WHERE pr.token_hash = ? AND pr.used_at IS NULL"
+            " AND pr.expires_at > datetime('now') AND u.active = 1",
+            (_reset_token_hash(token),),
+        ).fetchone()
+        if row is None:
+            return error("This reset link is invalid or has expired.", 400)
+
+        db.execute(
+            "UPDATE users SET password_hash = ?, token_version = token_version + 1"
+            " WHERE id = ?",
+            (generate_password_hash(password), row["user_id"]),
+        )
+        db.execute(
+            "UPDATE password_resets SET used_at = datetime('now') WHERE id = ?",
+            (row["id"],),
+        )
+        db.execute(
+            "DELETE FROM password_resets WHERE user_id = ? AND used_at IS NULL",
+            (row["user_id"],),
+        )
+        db.commit()
+        session.clear()
+        session["csrf_token"] = secrets.token_urlsafe(32)
+        return jsonify(
+            {
+                "ok": True,
+                "message": "Your password has been updated. You can sign in now.",
+                "csrf_token": session["csrf_token"],
+            }
+        )
 
     # ---------- fleet ----------
 

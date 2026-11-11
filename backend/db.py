@@ -187,6 +187,10 @@ def _migrate(db):
     user_columns = {row["name"] for row in db.execute("PRAGMA table_info(users)")}
     if "active" not in user_columns:
         db.execute("ALTER TABLE users ADD COLUMN active INTEGER NOT NULL DEFAULT 1")
+    if "token_version" not in user_columns:
+        db.execute(
+            "ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0"
+        )
 
     booking_columns = {row["name"] for row in db.execute("PRAGMA table_info(bookings)")}
     if "paid_amount" not in booking_columns:

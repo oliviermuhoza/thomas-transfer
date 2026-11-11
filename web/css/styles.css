@@ -225,6 +225,16 @@ body.logged-in .nav-user{display:flex}
   body.logged-in .bar nav .nav-user-logout:hover{color:var(--yellow)}
 }
 
+/* ===== STANDALONE AUTH PAGES (forgot / reset) ===== */
+.auth-page{display:flex;justify-content:center;align-items:flex-start;padding:clamp(36px,7vw,84px) 20px}
+.auth-page .auth-card{max-width:460px;padding:clamp(26px,4vw,40px);background:var(--surface);
+  border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.auth-page .auth-card h3{font-size:1.6rem}
+.auth-switch{margin:18px 0 0;font-size:.88rem;color:var(--muted)}
+.auth-switch a{color:var(--yellow);font-weight:600;text-decoration:none}
+.auth-switch a:hover{text-decoration:underline}
+.auth-page .auth-submit{display:flex;align-items:center;justify-content:center;text-decoration:none}
+
 /* ===== SOCIAL ICONS ===== */
 .social{display:flex;gap:8px}
 .social a{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;text-decoration:none;

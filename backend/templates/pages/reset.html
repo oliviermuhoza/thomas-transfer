@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="auth-page">
+  <div class="auth-card">
+    {% if reset_valid %}
+    <p class="eyebrow">Account</p>
+    <h3>Choose a new password</h3>
+    <p class="auth-sub">Pick a new password for your account. After saving, sign in with it.</p>
+    <form id="reset-form" autocomplete="off">
+      <input type="hidden" id="r-token" value="{{ reset_token }}">
+      <div class="auth-field">
+        <label for="r-pass">New password</label>
+        <div class="auth-input">
+          <svg class="auth-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="r-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters" required>
+        </div>
+      </div>
+      <div class="auth-field">
+        <label for="r-pass2">Confirm new password</label>
+        <div class="auth-input">
+          <svg class="auth-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="r-pass2" type="password" autocomplete="new-password" placeholder="Repeat the password" required>
+        </div>
+      </div>
+      <button class="btn auth-submit" type="submit">Save new password</button>
+      <p id="reset-status" class="status" role="status" aria-live="polite"></p>
+    </form>
+    {% else %}
+    <p class="eyebrow">Account</p>
+    <h3>This link has expired</h3>
+    <p class="auth-sub">Password reset links work once and last 30 minutes. Request a fresh one and try again.</p>
+    <a class="btn auth-submit" href="/forgot">Request a new link</a>
+    {% endif %}
+    <p class="auth-switch"><a href="/account#login">Back to login</a></p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/js/password-reset.js"></script>{% endblock %}

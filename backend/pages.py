@@ -6,7 +6,17 @@ sections because ``web/js/dashboard.js`` and ``web/js/auth-forms.js`` expect
 all of their forms and tables to exist on one page.
 """
 
-from flask import Blueprint, abort, redirect, render_template, session
+import hashlib
+
+from flask import (
+    Blueprint,
+    abort,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session,
+)
 
 try:
     from .db import get_db
@@ -62,6 +72,14 @@ PAGE_META = {
         "Your account — Thomas Transfer",
         "Log in to book a car, see your bookings and manage your Thomas "
         "Transfer account.",
+    ),
+    "forgot": (
+        "Forgot password — Thomas Transfer",
+        "Request a password reset link for your Thomas Transfer account.",
+    ),
+    "reset": (
+        "Choose a new password — Thomas Transfer",
+        "Set a new password for your Thomas Transfer account.",
     ),
     "admin": (
         "Admin — Thomas Transfer",
@@ -156,14 +174,54 @@ def account():
     return render_page("account")
 
 
+@pages.get("/forgot")
+def forgot_password():
+    return _auth_page(render_page("forgot"))
+
+
+@pages.get("/reset")
+def reset_password():
+    token = (request.args.get("token") or "").strip()
+    valid = False
+    if token:
+        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        valid = (
+            get_db()
+            .execute(
+                "SELECT 1 FROM password_resets WHERE token_hash = ?"
+                " AND used_at IS NULL AND expires_at > datetime('now')",
+                (digest,),
+            )
+            .fetchone()
+            is not None
+        )
+    return _auth_page(
+        render_page("reset", reset_token=token if valid else "", reset_valid=valid)
+    )
+
+
+def _auth_page(response):
+    """Keep reset pages out of caches and search indexes."""
+    response = make_response(response)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
+
+
 def _session_user():
     """Return the signed-in user's id/admin flag without importing app.py."""
     user_id = session.get("user_id")
     if not user_id:
         return None
-    return get_db().execute(
-        "SELECT id, is_admin FROM users WHERE id = ?", (user_id,)
+    user = get_db().execute(
+        "SELECT id, is_admin, token_version FROM users WHERE id = ?", (user_id,)
     ).fetchone()
+    if user is None:
+        return None
+    if session.get("token_version", 0) != user["token_version"]:
+        # Signed out by a password reset in another session.
+        return None
+    return user
 
 
 def _admin_gate():

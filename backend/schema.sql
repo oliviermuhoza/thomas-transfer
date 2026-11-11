@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT    NOT NULL,
   is_admin      INTEGER NOT NULL DEFAULT 0,
   active        INTEGER NOT NULL DEFAULT 1,
+  token_version INTEGER NOT NULL DEFAULT 0,
   created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -81,3 +82,15 @@ CREATE TABLE IF NOT EXISTS fares (
   active    INTEGER NOT NULL DEFAULT 1,
   created_at TEXT   NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Single-use password reset links. Only the SHA-256 of the token is stored.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT    NOT NULL UNIQUE,
+  expires_at TEXT    NOT NULL,
+  used_at    TEXT,
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);

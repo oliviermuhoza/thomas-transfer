@@ -188,6 +188,11 @@ configuration.
 | `TT_DB_DRIVER` | detected from the path | Force `sqlite` or `libsql`. Used by the tests to run the suite through libSQL. |
 | `TT_ADMIN_EMAIL` | `tomsafaris@gmail.com` | Seeded admin email |
 | `TT_ADMIN_PASSWORD` | generated/printed once in non-production bootstrap | Seeded admin password. **Required before first start in production if no admin exists.** |
+| `TT_SMTP_HOST` | unset | SMTP host for password reset email. Unset means nothing is sent (the link is logged outside production). |
+| `TT_SMTP_PORT` | `587` | SMTP port |
+| `TT_SMTP_USER` / `TT_SMTP_PASSWORD` | unset | SMTP credentials, when the relay requires them |
+| `TT_SMTP_FROM` | unset | From address. Required in practice: `Thomas Transfer <no-reply@…>` |
+| `TT_SMTP_SECURITY` | `starttls` | `starttls`, `ssl` or `none` |
 | `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
 | `TT_PORT` | `5000` | Port used by `python -m backend.app` |
 | `TT_DEBUG` | off | Set to `1` for Flask debug mode |
@@ -240,6 +245,12 @@ admin report, page routes, redirects, nav state and 404 handling.
   Flutterwave payment link; the button opens it when set, otherwise it opens
   WhatsApp with the current fare text. `js/pay-custom.js` behaves the same with
   one globally configured link for custom amounts.
+- **Password reset** uses `/forgot` and `/reset`. Tokens are 32-byte URL-safe
+  values stored only as SHA-256 in `password_resets`, valid for 30 minutes and
+  single use. A successful reset increments `users.token_version`, which signs
+  out every other session. Mail goes through `backend/mailer.py` (stdlib SMTP).
+  Without `TT_SMTP_HOST` the API still answers generically, but the link is only
+  written to the log outside production; in production it logs an error.
 
 ## API endpoints
 
@@ -250,6 +261,8 @@ admin report, page routes, redirects, nav state and 404 handling.
 | POST | `/api/login` | Sign in (returns `user`, `csrf_token`) |
 | POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
 | POST | `/api/register` | Create account (returns `user`, `csrf_token`) |
+| POST | `/api/password/forgot` | Email a 30-minute, single-use reset link. Always answers with a generic message |
+| POST | `/api/password/reset` | Set a new password from a reset token; signs out every existing session |
 | GET | `/api/cars` | Fleet list from the `cars` table; `?available=1` filters free cars. Rows include `capacity` and display fields `specs` (list), `price`, `week` |
 | POST | `/api/cars/:id/status` | Set car status (admin) |
 | POST | `/api/admin/cars` | Create a car (admin) |
