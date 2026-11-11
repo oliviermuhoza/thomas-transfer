@@ -59,7 +59,12 @@ def load_env_file(path=None):
     features. Existing environment variables always win, so the platform (or a
     shell export) can override anything in the file. Lines starting with # and
     blank lines are ignored; surrounding single or double quotes are stripped.
+
+    Set TT_NO_ENV_FILE=1 to ignore the file completely. The test suite does
+    this so a developer's local .env can never change test behaviour.
     """
+    if os.environ.get("TT_NO_ENV_FILE"):
+        return False
     path = Path(path) if path else PROJECT_DIR / ".env"
     try:
         text = path.read_text(encoding="utf-8")
@@ -105,7 +110,13 @@ CAR_TEXT_FIELDS = {
 }
 
 
-def create_app(database=None, secret_key=None, admin_password=None, production=None):
+def create_app(
+    database=None,
+    secret_key=None,
+    admin_password=None,
+    production=None,
+    admin_email=None,
+):
     production = (
         os.environ.get("TT_ENV", "").strip().lower() == "production"
         if production is None
@@ -168,7 +179,12 @@ def create_app(database=None, secret_key=None, admin_password=None, production=N
     app.teardown_appcontext(close_db)
 
     with app.app_context():
-        init_db(admin_password, production=production, ephemeral=ephemeral)
+        init_db(
+            admin_password,
+            production=production,
+            ephemeral=ephemeral,
+            admin_email=admin_email,
+        )
 
     register_routes(app)
     app.register_blueprint(pages)

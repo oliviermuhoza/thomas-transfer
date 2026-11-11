@@ -20,6 +20,7 @@ def client(tmp_path):
         database=str(tmp_path / "admin.db"),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     return app.test_client()
 
@@ -403,6 +404,7 @@ def test_startup_migrates_old_messages_table(tmp_path):
         database=str(db_path),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     admin = app.test_client()
     assert login_admin(admin).status_code == 200
@@ -434,6 +436,7 @@ def test_startup_migrates_old_comments_table(tmp_path):
         database=str(db_path),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     admin = app.test_client()
     assert login_admin(admin).status_code == 200
@@ -466,6 +469,7 @@ def test_startup_backfills_car_display_columns(tmp_path):
         database=str(db_path),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     admin = app.test_client()
     assert login_admin(admin).status_code == 200
@@ -796,6 +800,7 @@ def test_startup_migrates_booking_payments(tmp_path):
         database=str(db_path),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     client = app.test_client()
     assert login_admin(client).status_code == 200
@@ -1016,6 +1021,7 @@ def test_startup_migrates_users_table(tmp_path):
         database=str(db_path),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
     admin = app.test_client()
     assert login_admin(admin).status_code == 200

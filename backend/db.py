@@ -127,14 +127,20 @@ def close_db(exc=None):
         connection.close()
 
 
-def init_db(admin_password=None, production=False, ephemeral=False):
+def init_db(admin_password=None, production=False, ephemeral=False, admin_email=None):
     """Create missing tables, apply additive migrations and seed data."""
     db = get_db()
     db.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
     _migrate(db)
     _seed_cars(db)
     _seed_fares(db)
-    _seed_admin(db, admin_password, production=production, ephemeral=ephemeral)
+    _seed_admin(
+        db,
+        admin_password,
+        production=production,
+        ephemeral=ephemeral,
+        admin_email=admin_email,
+    )
     db.commit()
 
 
@@ -196,11 +202,13 @@ def _seed_cars(db):
     )
 
 
-def _seed_admin(db, password=None, production=False, ephemeral=False):
+def _seed_admin(db, password=None, production=False, ephemeral=False, admin_email=None):
     if db.execute("SELECT 1 FROM users WHERE is_admin = 1 LIMIT 1").fetchone():
         return
 
-    email = os.environ.get("TT_ADMIN_EMAIL", "tomsafaris@gmail.com").strip().lower()
+    email = (
+        admin_email or os.environ.get("TT_ADMIN_EMAIL", "tomsafaris@gmail.com")
+    ).strip().lower()
     provided = password or os.environ.get("TT_ADMIN_PASSWORD")
     if production and not provided:
         if ephemeral:
