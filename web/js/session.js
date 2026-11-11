@@ -102,19 +102,17 @@
     .then(function (json) { setCsrf(json.csrf_token); setUser(json.user, false); return window.ttCsrf || null; })
     .catch(function () { return null; });
 
-  if (location.hash === '#logout') { logout(); }
-  window.addEventListener('hashchange', function () {
-    if (location.hash === '#logout') { logout(); }
-  });
+  /* /logout clears the session on the server; the fetch below signs this tab
+     out too and refreshes the CSRF token without needing a reload. */
+  if (location.pathname === '/logout') { logout(); }
 
   function updateAuthMode() {
-    var h = location.hash;
+    var section = body.getAttribute('data-section');
     body.classList.toggle(
       'auth-mode',
-      body.dataset.page === 'account' && (h === '#login' || h === '#create-account' || h === '#logout')
+      section === 'login' || section === 'logout'
     );
   }
-  window.addEventListener('hashchange', updateAuthMode);
   updateAuthMode();
 
   /* Remember a car chosen on a marketing page so /account#available can

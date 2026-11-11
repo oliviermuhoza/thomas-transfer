@@ -46,18 +46,28 @@ def login(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD):
     return api_post(client, "/api/login", {"email": email, "password": password})
 
 
-def register(client, email="jane@example.com"):
-    return api_post(
-        client,
-        "/api/register",
+def register_customer(client, email="jane@example.com"):
+    """Staff create the customer; the test then signs in as them directly."""
+    admin = client.application.test_client()
+    assert login(admin).status_code == 200
+    created = api_post(
+        admin,
+        "/api/admin/users",
         {
             "first_name": "Jane",
             "last_name": "Doe",
             "email": email,
             "phone": "+250700000000",
             "password": "secret123",
+            "admin": False,
         },
     )
+    assert created.status_code == 201
+    user = created.get_json()["user"]
+    with client.session_transaction() as sess:
+        sess["user_id"] = user["id"]
+        sess["token_version"] = 0
+    return created
 
 
 def future(minutes=60):
@@ -99,7 +109,7 @@ def test_schema_rows_and_seed(app, client):
 
 
 def test_booking_flow(client):
-    assert register(client).status_code == 201
+    assert register_customer(client).status_code == 201
 
     created = api_post(client, "/api/bookings", booking_payload())
     assert created.status_code == 201
@@ -123,20 +133,24 @@ def test_booking_flow(client):
     assert report["cars"]["total"] == 8
 
 
-def test_registered_user_can_log_in_from_a_new_session(client):
-    """Registration stores a hash that a later, cookie-less login accepts.
+def test_public_registration_and_customer_login_are_disabled(client):
+    """Public signup is closed and login is staff-only, on libSQL too."""
+    assert api_post(
+        client,
+        "/api/register",
+        {
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "jane@example.com",
+            "phone": "+250700000000",
+            "password": "secret123",
+        },
+    ).status_code == 403
 
-    The seeded admin is hashed at boot in the same process, so it never proves
-    that a hash written through the libSQL driver reads back and verifies.
-    """
-    assert register(client).status_code == 201
+    assert register_customer(client).status_code == 201
 
     returning = client.application.test_client()
-    assert login(returning, email="jane@example.com", password="secret123").status_code == 200
-
-    me = returning.get("/api/me").get_json()
-    assert me["user"]["email"] == "jane@example.com"
-    assert me["user"]["admin"] is False
+    assert login(returning, email="jane@example.com", password="secret123").status_code == 403
 
 
 def test_migrations_and_aggregates(app, client):

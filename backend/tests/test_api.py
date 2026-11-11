@@ -43,18 +43,32 @@ def api_post(client, url, json=None):
     return client.post(url, json=json or {}, headers=csrf_headers(client))
 
 
-def register(client, email="jane@example.com", password="secret123"):
-    return api_post(
-        client,
-        "/api/register",
+def register_customer(client, email="jane@example.com", password="secret123"):
+    """Staff create the customer; the test then signs in as them directly.
+
+    Public registration is disabled and only staff can log in, so tests that
+    need a customer actor set the session straight from the staff-created row.
+    """
+    admin = client.application.test_client()
+    assert login(admin).status_code == 200
+    created = api_post(
+        admin,
+        "/api/admin/users",
         json={
             "first_name": "Jane",
             "last_name": "Doe",
             "email": email,
             "phone": "+250700000000",
             "password": password,
+            "admin": False,
         },
     )
+    assert created.status_code == 201
+    user = created.get_json()["user"]
+    with client.session_transaction() as sess:
+        sess["user_id"] = user["id"]
+        sess["token_version"] = 0
+    return created
 
 
 def login(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD):
@@ -94,26 +108,59 @@ def test_me_is_null_without_session(client):
     assert data["csrf_token"]
 
 
-def test_register_login_logout(client):
-    response = register(client)
-    assert response.status_code == 201
-    user = response.get_json()["user"]
-    assert user["name"] == "Jane Doe"
-    assert user["admin"] is False
-    assert "password" not in user
+def test_public_registration_is_disabled(client):
+    response = api_post(
+        client,
+        "/api/register",
+        json={
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "jane@example.com",
+            "phone": "+250700000000",
+            "password": "secret123",
+        },
+    )
+    assert response.status_code == 403
+    assert client.get("/api/me").get_json()["user"] is None
 
-    assert client.get("/api/me").get_json()["user"]["email"] == "jane@example.com"
 
-    assert register(client).status_code == 409
-    assert register(client, email="short@example.com", password="123").status_code == 400
-    assert register(client, email="not-an-email").status_code == 400
+def test_login_is_staff_only(client):
+    admin = client.application.test_client()
+    assert login(admin).status_code == 200
+    created = api_post(
+        admin,
+        "/api/admin/users",
+        json={
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "email": "jane@example.com",
+            "phone": "+250700000000",
+            "password": "secret123",
+            "admin": False,
+        },
+    )
+    assert created.status_code == 201
+
+    # Wrong password stays a generic 401; the right password for a customer
+    # is rejected as staff-only.
+    assert login(client, "jane@example.com", "wrong-password").status_code == 401
+    rejected = api_post(
+        client, "/api/login", json={"email": "jane@example.com", "password": "secret123"}
+    )
+    assert rejected.status_code == 403
+    assert client.get("/api/me").get_json()["user"] is None
+
+
+def test_staff_login_logout(client):
+    assert login(client).status_code == 200
+    user = client.get("/api/me").get_json()["user"]
+    assert user["email"] == ADMIN_EMAIL
+    assert user["admin"] is True
 
     assert api_post(client, "/api/logout", json={}).status_code == 200
     assert client.get("/api/me").get_json()["user"] is None
 
-    assert login(client, "jane@example.com", "wrong-password").status_code == 401
-    assert login(client, "jane@example.com", "secret123").status_code == 200
-    assert client.get("/api/me").get_json()["user"]["email"] == "jane@example.com"
+    assert login(client, ADMIN_EMAIL, "wrong-password").status_code == 401
 
 
 def test_fleet_is_seeded(client):
@@ -135,13 +182,13 @@ def test_permissions(client):
     assert client.get("/api/report").status_code == 401
     assert api_post(client, "/api/bookings", json=booking_payload()).status_code == 401
 
-    register(client)
+    register_customer(client)
     assert client.get("/api/report").status_code == 403
     assert api_post(client, "/api/cars/1/status", json={"status": "maintenance"}).status_code == 403
 
 
 def test_booking_flow(client):
-    register(client)
+    register_customer(client)
     response = api_post(client, "/api/bookings", json=booking_payload())
     assert response.status_code == 201
     booking_id = response.get_json()["id"]
@@ -202,7 +249,7 @@ def test_confirming_booking_sends_confirmation_email(client, monkeypatch):
     monkeypatch.setattr(backend_app, "mail_configured", lambda: True)
     monkeypatch.setattr(backend_app, "send_email", fake_send)
 
-    register(client)
+    register_customer(client)
     booking_id = api_post(client, "/api/bookings", json=booking_payload()).get_json()["id"]
     assert sent == []
 
@@ -232,7 +279,7 @@ def test_confirming_booking_sends_confirmation_email(client, monkeypatch):
 
 
 def test_customer_can_cancel_and_car_is_released(client):
-    register(client)
+    register_customer(client)
     booking_id = api_post(client, "/api/bookings", json=booking_payload()).get_json()["id"]
     assert (
         api_post(
@@ -245,7 +292,7 @@ def test_customer_can_cancel_and_car_is_released(client):
 
 
 def test_booking_validation(client):
-    register(client)
+    register_customer(client)
 
     assert api_post(client, "/api/bookings", json={}).status_code == 400
     assert (
@@ -280,7 +327,7 @@ def test_maintenance_blocks_booking_and_car_status_management(client):
     assert admin.get("/api/cars?available=1").get_json()[0]["id"] != 2
 
     customer = client.application.test_client()
-    register(customer)
+    register_customer(customer)
     assert api_post(customer, "/api/bookings", json=booking_payload(car_id=2)).status_code == 409
 
     # A booked car cannot be switched to maintenance/available by hand.

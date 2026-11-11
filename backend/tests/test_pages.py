@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from backend.app import create_app  # noqa: E402
 
 ADMIN_PASSWORD = "admin-test-pass"
+ADMIN_EMAIL = "tomsafaris@gmail.com"
 
 
 @pytest.fixture()
@@ -29,7 +30,8 @@ PAGE_HEADINGS = {
     "/pay": b"Pay by <em>card</em>",
     "/comment": b"Tell us about your trip.",
     "/account": b"Available cars",
-    "/account#login": b"Sign in to your Thomas Transfer account.",
+    "/login": b"Sign in with your staff account.",
+    "/logout": b"You are logged out",
 }
 
 
@@ -49,25 +51,19 @@ def test_nav_active_page_is_marked(client):
 
 def test_signed_in_header_shows_avatar(client):
     token = client.get("/api/csrf").get_json()["csrf_token"]
-    registered = client.post(
-        "/api/register",
-        json={
-            "first_name": "Ada",
-            "last_name": "Doe",
-            "email": "ada@example.com",
-            "phone": "+250700000123",
-            "password": "secret123",
-        },
+    logged_in = client.post(
+        "/api/login",
+        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
         headers={"X-CSRF-Token": token},
     )
-    assert registered.status_code == 201
+    assert logged_in.status_code == 200
 
     page = client.get("/")
     assert b'class="logged-in' in page.data
     assert b'id="nav-user"' in page.data
-    assert b'id="avatar-initials">AD<' in page.data
-    assert b"Ada Doe" in page.data
-    assert b"ada@example.com" in page.data
+    assert b'id="avatar-initials">TT<' in page.data
+    assert b"Thomas Transfer" in page.data
+    assert b"tomsafaris@gmail.com" in page.data
     assert b'id="avatar-menu"' in page.data
     assert b'aria-haspopup="menu"' in page.data
 
@@ -89,13 +85,10 @@ def test_marketing_page_does_not_load_account_scripts(client):
 @pytest.mark.parametrize(
     "path,target",
     [
-        ("/login", "/account#login"),
-        ("/register", "/account#create-account"),
         ("/car-list", "/account#car-list"),
         ("/available", "/account#available"),
         ("/bookings", "/account#bookings"),
         ("/report", "/account#report"),
-        ("/logout", "/account#logout"),
         ("/index.html", "/"),
     ],
 )
@@ -103,6 +96,42 @@ def test_old_links_redirect(client, path, target):
     response = client.get(path, follow_redirects=False)
     assert response.status_code == 302
     assert response.headers["Location"] == target
+
+
+def test_auth_routes_render_sections_without_hashes(client):
+    login = client.get("/login")
+    assert login.status_code == 200
+    assert b'data-section="login"' in login.data
+    assert b"auth-mode" in login.data
+
+    # Public registration is disabled: /register forwards to staff login.
+    register = client.get("/register", follow_redirects=False)
+    assert register.status_code == 302
+    assert register.headers["Location"] == "/login"
+
+    # No hash-based auth links remain in the shell or header.
+    for url in ("/", "/account", "/login"):
+        page = client.get(url)
+        assert b"/account#login" not in page.data
+        assert b"/account#logout" not in page.data
+        assert b'href="#login"' not in page.data
+        assert b'href="#create-account"' not in page.data
+
+
+def test_logout_route_signs_out(client):
+    token = client.get("/api/csrf").get_json()["csrf_token"]
+    logged_in = client.post(
+        "/api/login",
+        json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD},
+        headers={"X-CSRF-Token": token},
+    )
+    assert logged_in.status_code == 200
+    assert client.get("/api/me").get_json()["user"] is not None
+
+    page = client.get("/logout")
+    assert page.status_code == 200
+    assert b'data-section="logout"' in page.data
+    assert client.get("/api/me").get_json()["user"] is None
 
 
 def test_unknown_page_is_404(client):

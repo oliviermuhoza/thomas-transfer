@@ -4,7 +4,7 @@
   if (!form || !input || !list) { return; }
   var PAGES = [['Home', '/'], ['Cars', '/cars'], ['Transport', '/transport'], ['Tour packages', '/tours'],
                ['Car rental', '/account#available'], ['Pay online', '/pay'], ['List of cars', '/account#car-list'], ['Available cars', '/account#available'],
-                ['Car bookings', '/account#bookings'], ['Contact', '/contact'], ['Comment', '/comment'], ['Login', '/account#login'], ['Logout', '/account#logout']];
+                ['Car bookings', '/account#bookings'], ['Contact', '/contact'], ['Comment', '/comment'], ['Login', '/login'], ['Logout', '/logout']];
   var LABEL = {available: 'Available', booked: 'Booked', maintenance: 'Maintenance'};
   var cars = [], items = [], active = -1;
 
@@ -54,8 +54,8 @@
 
     var carHits = cars.filter(function (c) { return low(c.name + ' ' + c.type + ' ' + c.description + ' ' + T(c.type) + ' ' + T(c.description)).indexOf(q) > -1; }).slice(0, 6);
     var pages = PAGES.concat(admin ? [['Report', '/account#report']] : []).filter(function (p) {
-      if (p[1] === '/account#login' && logged) { return false; }
-      if (p[1] === '/account#logout' && !logged) { return false; }
+      if (p[1] === '/login' && logged) { return false; }
+      if (p[1] === '/logout' && !logged) { return false; }
       return low(p[0] + ' ' + T(p[0])).indexOf(q) > -1;
     });
 

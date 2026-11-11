@@ -351,7 +351,7 @@
           window.ttSelectedCar = $('bk-car').value || selectedId;
           try { sessionStorage.setItem('tt-selected-car', $('bk-car').value || selectedId); } catch (e) {}
           say(st, 'bad', T('Please login to send your booking.'));
-          setTimeout(function () { location.hash = '#login'; }, 1200);
+          setTimeout(function () { location.assign('/login'); }, 1200);
         } else { say(st, 'bad', T(r.data && r.data.error) || T('Please fill in all the fields.')); }
       } catch (err) { say(st, 'bad', T(NOSERVER)); }
       btn.disabled = false;
@@ -462,6 +462,10 @@
 
   /* ---------- which page is open ---------- */
   function refresh() {
+    // Auth routes render the same shell with a server-selected section and
+    // need no booking data.
+    var section = document.body.getAttribute('data-section');
+    if (section === 'login' || section === 'logout') { return; }
     var h = location.hash;
     if (h === '#car-list') { loadCars(); } else if (h === '#available' || h === '') { loadAvailable(); }
     else if (h === '#bookings') { loadBookings(); } else if (h === '#report') { loadReport(); }

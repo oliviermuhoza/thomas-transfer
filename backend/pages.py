@@ -73,6 +73,10 @@ PAGE_META = {
         "Log in to book a car, see your bookings and manage your Thomas "
         "Transfer account.",
     ),
+    "login": (
+        "Staff login — Thomas Transfer",
+        "Staff sign-in for managing bookings, fleet and customer accounts.",
+    ),
     "forgot": (
         "Forgot password — Thomas Transfer",
         "Request a password reset link for your Thomas Transfer account.",
@@ -174,6 +178,48 @@ def account():
     return render_page("account")
 
 
+def _account_section(section, meta_key):
+    """Render the account shell with a server-selected section.
+
+    Auth lives at real routes (/login, /register, /logout) instead of hash
+    fragments. ``page`` stays ``"account"`` so the shell CSS/JS scoping and
+    the ``:target`` booking sections keep working; ``section`` selects the
+    visible auth section through ``data-section``.
+    """
+    title, description = PAGE_META[meta_key]
+    return render_template(
+        "pages/account.html",
+        page="account",
+        section=section,
+        page_title=title,
+        page_description=description,
+    )
+
+
+@pages.get("/login")
+def login_page():
+    return _account_section("login", "login")
+
+
+@pages.get("/register")
+def register_page():
+    # Public registration is disabled; keep the old route as a shortcut.
+    return redirect("/login", code=302)
+
+
+@pages.get("/logout")
+def logout_page():
+    session.clear()
+    title, description = PAGE_META["account"]
+    return render_template(
+        "pages/account.html",
+        page="account",
+        section="logout",
+        page_title=title,
+        page_description=description,
+    )
+
+
 @pages.get("/forgot")
 def forgot_password():
     return _auth_page(render_page("forgot"))
@@ -228,7 +274,7 @@ def _admin_gate():
     """Return a redirect response when the visitor may not see the portal."""
     user = _session_user()
     if user is None:
-        return redirect("/account#login", code=302)
+        return redirect("/login", code=302)
     if not user["is_admin"]:
         return redirect("/account", code=302)
     return None
@@ -254,18 +300,9 @@ def admin_view(view):
 
 # ---------------------------------------------------------------------------
 # Old hash links, now real bookmarks. Fragments never reach the server, so
-# these aliases redirect and let the browser apply the hash.
+# these aliases redirect and let the browser apply the hash. Auth already
+# lives at real routes (/login, /register, /logout) above.
 # ---------------------------------------------------------------------------
-
-
-@pages.get("/login")
-def login():
-    return redirect("/account#login", code=302)
-
-
-@pages.get("/register")
-def register():
-    return redirect("/account#create-account", code=302)
 
 
 @pages.get("/car-list")
@@ -286,8 +323,3 @@ def bookings():
 @pages.get("/report")
 def report():
     return redirect("/account#report", code=302)
-
-
-@pages.get("/logout")
-def logout():
-    return redirect("/account#logout", code=302)

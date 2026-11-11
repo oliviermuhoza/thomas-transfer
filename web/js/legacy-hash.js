@@ -25,9 +25,9 @@
     '#available': '/account#available',
     '#bookings': '/account#bookings',
     '#report': '/account#report',
-    '#login': '/account#login',
-    '#create-account': '/account#create-account',
-    '#logout': '/account#logout'
+    '#login': '/login',
+    '#create-account': '/login',
+    '#logout': '/logout'
   };
   if (MAP[hash]) { location.replace(MAP[hash]); }
 })();

@@ -52,17 +52,31 @@ def login_admin(client):
 
 
 def register_customer(client, email="jane@example.com"):
-    return api_post(
-        client,
-        "/api/register",
+    """Staff create the customer; the test then signs in as them directly.
+
+    Public registration is disabled and only staff can log in, so tests that
+    need a customer actor set the session straight from the staff-created row.
+    """
+    admin = client.application.test_client()
+    assert login_admin(admin).status_code == 200
+    created = api_post(
+        admin,
+        "/api/admin/users",
         {
             "first_name": "Jane",
             "last_name": "Doe",
             "email": email,
             "phone": "+250700000000",
             "password": "secret123",
+            "admin": False,
         },
     )
+    assert created.status_code == 201
+    user = created.get_json()["user"]
+    with client.session_transaction() as sess:
+        sess["user_id"] = user["id"]
+        sess["token_version"] = 0
+    return created
 
 
 READ_ENDPOINTS = [
@@ -129,12 +143,12 @@ def test_admin_creates_account(client):
         for row in client.get("/api/admin/users").get_json()
     )
 
-    # The new account can sign in with the password the admin chose.
+    # The new account cannot sign in: login is staff-only.
     fresh = client.application.test_client()
     login = api_post(
         fresh, "/api/login", {"email": "grace@example.com", "password": "welcome123"}
     )
-    assert login.status_code == 200
+    assert login.status_code == 403
 
 
 def test_admin_create_account_validation(client):
@@ -957,9 +971,10 @@ def test_admin_deactivate_and_activate(client):
     assert api_post(
         admin, f"/api/admin/users/{user_id}/active", {"active": True}
     ).status_code == 200
+    # Reactivated, but still not staff: login stays rejected.
     assert api_post(
         fresh, "/api/login", {"email": "jane@example.com", "password": "secret123"}
-    ).status_code == 200
+    ).status_code == 403
 
 
 def test_admin_account_guards(client):
@@ -997,9 +1012,10 @@ def test_admin_password_reset(client):
     assert api_post(
         customer, "/api/login", {"email": "jane@example.com", "password": "secret123"}
     ).status_code == 401
+    # The new password verifies (old one does not), but login stays staff-only.
     assert api_post(
         customer, "/api/login", {"email": "jane@example.com", "password": "brand-new-pass"}
-    ).status_code == 200
+    ).status_code == 403
 
 
 def test_startup_migrates_users_table(tmp_path):
@@ -1107,7 +1123,7 @@ def test_admin_fare_validation(client):
 
 def test_admin_page_guards(client):
     assert client.get("/admin").status_code == 302
-    assert client.get("/admin").headers["Location"] == "/account#login"
+    assert client.get("/admin").headers["Location"] == "/login"
 
     assert register_customer(client).status_code == 201
     response = client.get("/admin")
@@ -1123,7 +1139,7 @@ def test_admin_page_guards(client):
     assert b"Admin sections" in page.data
     assert b'class="admin-side"' in page.data
     assert b'id="admin-me"' in page.data
-    assert b'href="/account#logout"' in page.data
+    assert b'href="/logout"' in page.data
     assert b'class="nav-admin-item"' in page.data
     assert b'href="/admin" aria-current="page"' in page.data
     assert b'href="/admin/overview" aria-current="page"' in page.data

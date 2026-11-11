@@ -13,6 +13,7 @@
           <ul class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></ul>
         </form>
         <ul class="nav-links">
+          <li><a href="/"{% if page == 'home' %} aria-current="page"{% endif %}>Home</a></li>
           <li><a href="/transport"{% if page == 'transport' %} aria-current="page"{% endif %}>Transport</a></li>
           <li><a href="/tours"{% if page == 'tours' %} aria-current="page"{% endif %}>Tour packages</a></li>
           <li><a href="/cars"{% if page == 'cars' %} aria-current="page"{% endif %}>Car rental</a></li>
@@ -21,6 +22,15 @@
           <li class="nav-account-item"><a href="/account"{% if page == 'account' %} aria-current="page"{% endif %}>Account</a></li>
           <li class="nav-admin-item"><a href="/admin"{% if page == 'admin' %} aria-current="page"{% endif %}>Admin</a></li>
         </ul>
+        <div class="nav-tools">
+          <button class="nav-icon nav-search" id="search-toggle" type="button" aria-expanded="false" aria-controls="site-search" aria-label="Search" data-search-toggle>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
+          <a class="nav-login" href="/login">Login</a>
+          <a class="nav-book" href="/account#available">Book now</a>
+          <a class="nav-user-logout" href="/logout">Log out</a>
+        </div>
         <div class="nav-user" id="nav-user">
           <button class="avatar-btn" id="avatar-toggle" type="button" aria-expanded="false" aria-controls="avatar-menu" aria-haspopup="menu" aria-label="Account">
             <span class="avatar-initials" id="avatar-initials">{{ current_user.initials if current_user else '' }}</span>
@@ -38,17 +48,8 @@
             <a role="menuitem" href="/account#bookings">My bookings</a>
             <a role="menuitem" href="/admin" class="avatar-admin"{% if not (current_user and current_user.admin) %} hidden{% endif %}>Admin</a>
             <div class="avatar-sep" role="separator"></div>
-            <a role="menuitem" href="/account#logout">Log out</a>
+            <a role="menuitem" href="/logout">Log out</a>
           </div>
-        </div>
-        <div class="nav-tools">
-          <button class="nav-icon nav-search" id="search-toggle" type="button" aria-expanded="false" aria-controls="site-search" aria-label="Search" data-search-toggle>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
-          <a class="nav-login" href="/account#login">Login</a>
-          <a class="nav-book" href="https://wa.me/250783689231?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
-          <a class="nav-user-logout" href="/account#logout">Log out</a>
         </div>
       </div>
       <div class="nav-actions">

@@ -22,12 +22,12 @@
 
     <div class="auth-out guest-notice">
       <div class="guest-notice-copy">
-        <strong>Sign in to send your booking</strong>
-        <span>Browse the fleet now. You only need an account when you are ready to book.</span>
+        <strong>Book with our team</strong>
+        <span>Tell us your trip on WhatsApp or by phone and we will confirm your car.</span>
       </div>
       <div class="guest-notice-actions">
-        <a class="btn" href="#login">Login</a>
-        <a class="btn outline" href="#create-account">Create account</a>
+        <a class="btn" href="https://wa.me/250783689231" target="_blank" rel="noopener">Chat on WhatsApp</a>
+        <a class="btn outline" href="/login">Staff login</a>
       </div>
     </div>
 
@@ -65,8 +65,8 @@
                 <h3>Book a car</h3>
                 <input id="bk-car" type="hidden">
                 <div class="row">
-                  <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" required></div>
-                  <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" required></div>
+                  <div><label for="bk-from">Pick-up place</label><input id="bk-from" type="text" maxlength="150" placeholder="e.g. Kigali International Airport" required></div>
+                  <div><label for="bk-to">Drop-off place</label><input id="bk-to" type="text" maxlength="150" placeholder="e.g. Kigali Marriott Hotel" required></div>
                 </div>
                 <div class="row">
                   <div class="dp-field">
@@ -103,7 +103,7 @@
                   <div><label for="bk-pax">Passengers</label><input id="bk-pax" type="number" min="1" max="60" value="1" required></div>
                 </div>
                 <label for="bk-notes">Notes (optional)</label>
-                <textarea id="bk-notes" maxlength="500" style="min-height:80px"></textarea>
+                <textarea id="bk-notes" maxlength="500" style="min-height:80px" placeholder="Anything else (optional)"></textarea>
                 <button class="btn" type="submit">Book now</button>
                 <p id="booking-status" class="status" role="status" aria-live="polite"></p>
               </form>
@@ -131,8 +131,7 @@
         <span>Your trips and their status appear here after you sign in.</span>
       </div>
       <div class="guest-notice-actions">
-        <a class="btn" href="#login">Login</a>
-        <a class="btn outline" href="#create-account">Create account</a>
+        <a class="btn" href="/login">Staff login</a>
       </div>
     </div>
   </div>
@@ -164,7 +163,7 @@
       <aside class="auth-brand" aria-label="Why Thomas Transfer">
         <span class="auth-badge">Thomas Transfer</span>
         <h2>Your ride,<br><em>ready when you are.</em></h2>
-        <p class="auth-brand-sub">Sign in to book a car, follow your trips and manage every booking in one place.</p>
+        <p class="auth-brand-sub">Manage bookings, fleet and customer accounts in one place.</p>
         <ul class="auth-benefits">
           <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>On-time pickups, every day</li>
           <li><span class="auth-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Fixed prices, no hidden fees</li>
@@ -177,7 +176,7 @@
         <form id="login-form" class="auth-card" autocomplete="off">
           <p class="eyebrow">Welcome back</p>
           <h3>Login</h3>
-          <p class="auth-sub">Sign in to your Thomas Transfer account.</p>
+          <p class="auth-sub">Sign in with your staff account.</p>
 
           <div class="auth-field">
             <label for="l-email">Email</label>
@@ -204,39 +203,9 @@
 
           <button class="btn auth-submit" type="submit">Login</button>
           <p id="login-status" class="status" role="status" aria-live="polite"></p>
-
-          <div class="auth-divider"><span>New to Thomas Transfer?</span></div>
-          <a class="btn outline auth-alt" href="#create-account">Create account</a>
         </form>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ================= CREATE ACCOUNT ================= -->
-<section id="create-account" class="page">
-  <div class="container">
-    <a class="auth-back" href="/">← Back to site</a>
-    <h2>Create account</h2>
-    <p class="lead">It takes one minute. Then you can log in any time.</p>
-    <form id="register-form" class="form-box wide">
-      <div class="row">
-        <div><label for="c-first">First name</label><input id="c-first" type="text" maxlength="50" autocomplete="given-name" required></div>
-        <div><label for="c-last">Last name</label><input id="c-last" type="text" maxlength="50" autocomplete="family-name" required></div>
-      </div>
-      <label for="c-email">Email</label>
-      <input id="c-email" type="email" maxlength="150" autocomplete="email" placeholder="you@example.com" required>
-      <label for="c-phone">Phone number</label>
-      <input id="c-phone" type="tel" maxlength="30" autocomplete="tel" placeholder="+250 ...">
-      <div class="row">
-        <div><label for="c-pass">Password</label><input id="c-pass" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
-        <div><label for="c-pass2">Confirm password</label><input id="c-pass2" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></div>
-      </div>
-      <p class="hint">Use at least 8 characters.</p>
-      <button class="btn" type="submit">Create account</button>
-      <p id="register-status" class="status" role="status"></p>
-      <p class="hint">Already have an account? <a href="#login">Login</a></p>
-    </form>
   </div>
 </section>
 
@@ -248,7 +217,7 @@
       <div class="tick">&#10003;</div>
       <h2>You are logged out</h2>
       <p class="lead" style="margin:0 auto 22px">Thanks for travelling with Thomas Transfer. Your account is safe.</p>
-      <a class="btn" href="#login">Login again</a>
+      <a class="btn" href="/login">Login again</a>
     </div>
   </div>
 </section>

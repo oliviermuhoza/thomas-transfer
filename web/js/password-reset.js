@@ -53,7 +53,7 @@
         if (r.ok) {
           show(st, 'ok', T(r.data.message));
           reset.reset();
-          setTimeout(function () { location.assign('/account#login'); }, 1400);
+          setTimeout(function () { location.assign('/login'); }, 1400);
         } else {
           show(st, 'bad', T(r.data.error) || T('Something went wrong. Please try again.'));
         }

@@ -51,7 +51,7 @@ comments and messages in SQLite.
 │   │   ├── comment.js          # Comment form -> POST /api/comment
 │   │   ├── pay-fares.js        # Fixed-fare payment buttons (fares come from the DB)
 │   │   ├── pay-custom.js       # Custom-amount payment form
-│   │   ├── auth-forms.js       # Login + register forms (account only)
+│   │   ├── auth-forms.js       # Staff login form (account shell only)
 │   │   └── support.js          # Support message dialog -> POST /api/contact
 │   └── assets/
 │       ├── images/             # Page, fleet and brand images
@@ -82,15 +82,16 @@ Marketing pages are Jinja templates with real URLs:
 | `/contact` | `pages/contact.html` |
 | `/pay` | `pages/pay.html` |
 | `/comment` | `pages/comment.html` |
-| `/account` | `pages/account.html` (hash sections: `#car-list`, `#available`, `#bookings`, `#report`, `#login`, `#create-account`, `#logout`) |
+| `/account` | `pages/account.html` (hash sections: `#car-list`, `#available`, `#bookings`, `#report`; staff auth renders the same shell server-side at `/login` and `/logout`) |
 | `/admin` | `pages/admin.html` (real section routes: `/admin/overview`, `/admin/bookings`, `/admin/fleet`, `/admin/accounts`, `/admin/messages`, `/admin/comments`, `/admin/fares`; unknown views 404, non-admins are redirected) |
 
-`/` and `/index.html` redirect to the template home page. Old bookmarks
-(`/login`, `/register`, `/car-list`, `/available`, `/bookings`, `/report`,
-`/logout`) are 302 redirects to the matching `/account#...` section, and
-`legacy-hash.js` maps old `/#hash` links to the new routes on the client
-(servers never see fragments). Old admin bookmarks like `/admin#fleet`
-are rewritten to `/admin/fleet` the same way.
+`/` and `/index.html` redirect to the template home page. Staff sign in at
+`/login` (`/logout` signs out); public registration is disabled, so
+`/register` forwards to `/login`. Old booking bookmarks (`/car-list`,
+`/available`, `/bookings`, `/report`) are 302 redirects to the matching
+`/account#...` section, and `legacy-hash.js` maps old `/#hash` links to the
+new routes on the client (servers never see fragments). Old admin bookmarks
+like `/admin#fleet` are rewritten to `/admin/fleet` the same way.
 
 The nav marks the current page with `aria-current="page"` (set server-side),
 not CSS `:target`.
@@ -232,7 +233,7 @@ pip install -r backend/requirements-dev.txt
 python -m pytest -q
 ```
 
-The tests use a temporary database and cover registration/login, permissions,
+The tests use a temporary database and cover staff-only auth, permissions,
 the booking lifecycle, car status rules, comments, contact messages, the
 admin report, page routes, redirects, nav state and 404 handling.
 
@@ -240,8 +241,11 @@ admin report, page routes, redirects, nav state and 404 handling.
 
 - **Page routing** is real URLs rendered by Jinja. `/admin` sections are real
   routes (`/admin/fleet` etc.) and the active one is server-rendered; only
-  `/account` still uses URL hash sections (`.page` hiding rules are scoped to
-  `body[data-page="account"]`, admin `.admin-view` hiding is class-based).
+  `/account` booking sections still use URL hash (`.page` hiding rules are scoped to
+  `body[data-page="account"]`, admin `.admin-view` hiding is class-based), while
+  staff auth (`/login`, `/logout`) renders the same shell with a server-selected
+  section. Public registration is disabled: `POST /api/register` answers 403 and
+  `POST /api/login` rejects non-staff accounts.
   `legacy-hash.js` redirects old `/#hash` bookmarks and rewrites old
   `/admin#section` hashes to `/admin/section`.
 - **Script order matters.** `legacy-hash.js` must run first in the head,
@@ -280,9 +284,9 @@ admin report, page routes, redirects, nav state and 404 handling.
 | --- | --- | --- |
 | GET | `/api/csrf` | CSRF token for mutating API requests (`{csrf_token}`) |
 | GET | `/api/me` | Current session user and CSRF token (`{user: null, csrf_token}` when signed out) |
-| POST | `/api/login` | Sign in (returns `user`, `csrf_token`) |
+| POST | `/api/login` | Staff sign-in (returns `user`, `csrf_token`); non-staff are rejected |
 | POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
-| POST | `/api/register` | Create account (returns `user`, `csrf_token`) |
+| POST | `/api/register` | Disabled (403) — staff create every account via `POST /api/admin/users` |
 | POST | `/api/password/forgot` | Email a 30-minute, single-use reset link. Always answers with a generic message |
 | POST | `/api/password/reset` | Set a new password from a reset token; signs out every existing session |
 | GET | `/api/cars` | Fleet list from the `cars` table; `?available=1` filters free cars. Rows include `capacity` and display fields `specs` (list), `price`, `week` |

@@ -781,43 +781,13 @@ def register_routes(app):
 
     @app.post("/api/register")
     def register():
-        if _rate_limited("register", limit=10, window_seconds=3600):
-            return error("Too many attempts. Please try again later.", 429)
-        data = body()
-        first_name = text_value(data, "first_name", 50)
-        last_name = text_value(data, "last_name", 50)
-        email = text_value(data, "email", 150).lower()
-        phone = text_value(data, "phone", 30)
-        password = str(data.get("password") or "")
-
-        if not first_name or not last_name or not email or not password:
-            return error("Please fill in all the fields.", 400)
-        if not EMAIL_RE.match(email):
-            return error("Please enter a valid email address.", 400)
-        if not valid_phone(phone):
-            return error("Please enter a valid phone number.", 400)
-        if len(password) < 8:
-            return error("Use at least 8 characters for the password.", 400)
-
-        db = get_db()
-        exists = db.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
-        if exists:
-            return error("Could not create the account with that email.", 409)
-
-        cursor = db.execute(
-            "INSERT INTO users (first_name, last_name, email, phone, password_hash)"
-            " VALUES (?, ?, ?, ?, ?)",
-            (first_name, last_name, email, phone, generate_password_hash(password)),
+        # Public self-registration is disabled: staff create every account
+        # through POST /api/admin/users.
+        return error(
+            "Public registration is disabled."
+            " Please contact our team to create an account.",
+            403,
         )
-        db.commit()
-
-        user = db.execute("SELECT * FROM users WHERE id = ?", (cursor.lastrowid,)).fetchone()
-        session.clear()
-        session.permanent = True
-        session["user_id"] = user["id"]
-        session["token_version"] = user["token_version"]
-        session["csrf_token"] = secrets.token_urlsafe(32)
-        return jsonify({"user": user_json(user), "csrf_token": session["csrf_token"]}), 201
 
     @app.post("/api/login")
     def login():
@@ -834,6 +804,8 @@ def register_routes(app):
             return error("Wrong email or password.", 401)
         if not user["active"]:
             return error("This account has been deactivated. Please contact support.", 401)
+        if not user["is_admin"]:
+            return error("This login is for staff only.", 403)
 
         session.clear()
         session.permanent = True

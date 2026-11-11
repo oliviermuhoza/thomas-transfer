@@ -1,4 +1,4 @@
-/* Login and create-account forms. Loaded only on /account. */
+/* Login form. Loaded only on the account shell. */
 (function () {
   function post(url, data) {
     return window.ttFetch(url, {
@@ -28,43 +28,9 @@
           window.ttSetUser(r.data.user, r.data.csrf_token);
           form.reset();
           show(st, 'ok', T('Welcome back, ') + r.data.user.name + '.');
-          setTimeout(function () { location.hash = '#available'; st.textContent = ''; }, 900);
+          setTimeout(function () { location.assign('/account#available'); st.textContent = ''; }, 900);
         } else {
           show(st, 'bad', T(r.data.error) || T('Login failed. Please try again.'));
-        }
-      } catch (err) {
-        show(st, 'bad', T('Could not reach the server. Open the site through the server link.'));
-      }
-      btn.disabled = false;
-    });
-  }
-
-  var registerForm = document.getElementById('register-form');
-  if (registerForm) {
-    registerForm.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var form = e.target, st = document.getElementById('register-status'), btn = form.querySelector('button[type="submit"]');
-      var pass = document.getElementById('c-pass').value;
-      if (pass !== document.getElementById('c-pass2').value) {
-        show(st, 'bad', T('The two passwords are not the same.'));
-        return;
-      }
-      show(st, '', T('Creating your account...')); btn.disabled = true;
-      try {
-        var r = await post('/api/register', {
-          first_name: document.getElementById('c-first').value,
-          last_name: document.getElementById('c-last').value,
-          email: document.getElementById('c-email').value,
-          phone: document.getElementById('c-phone').value,
-          password: pass
-        });
-        if (r.ok) {
-          window.ttSetUser(r.data.user, r.data.csrf_token);
-          form.reset();
-          show(st, 'ok', T('Account created. Welcome, ') + r.data.user.name + '.');
-          setTimeout(function () { location.hash = '#available'; st.textContent = ''; }, 1100);
-        } else {
-          show(st, 'bad', T(r.data.error) || T('Could not create the account.'));
         }
       } catch (err) {
         show(st, 'bad', T('Could not reach the server. Open the site through the server link.'));

@@ -84,7 +84,7 @@ header.scrolled{background:var(--navy);border-bottom:1px solid var(--line)}
 .bar nav a.nav-wa:hover{background:#1ebe5b;color:#0b2a17}
 .bar nav a.nav-wa svg{width:17px;height:17px;flex:none;display:block}
 .bar nav a.nav-wa span{display:none}
-.bar nav a.nav-login{background:transparent;color:var(--white);border:2px solid var(--line);padding:8px 16px;border-radius:7px;font-weight:700;font-size:.9rem;white-space:nowrap;transition:border-color .2s ease,color .2s ease}
+.bar nav a.nav-login{background:transparent;color:var(--white);border:1px solid var(--line);padding:9px 17px;border-radius:7px;font-weight:700;font-size:.9rem;white-space:nowrap;transition:border-color .2s ease,color .2s ease}
 .bar nav a.nav-login:hover{border-color:var(--yellow);color:var(--yellow)}
 .bar nav a.nav-book{background:var(--yellow);color:#0B0B0C;padding:10px 16px;border-radius:7px;font-weight:800;font-size:.9rem;white-space:nowrap;
   box-shadow:0 4px 12px rgba(198,244,50,.32);transition:background .2s,transform .2s;min-height:44px;display:inline-flex;align-items:center}
@@ -134,8 +134,8 @@ body.nav-open .nav-toggle .ico-menu{display:none}
 .brand{display:flex;align-items:center;gap:10px}
 
 /* ===== SIGNED-IN AVATAR ===== */
-.nav-panel .nav-user{order:3}
-.nav-panel .nav-tools{order:4}
+.nav-panel .nav-tools{order:3}
+.nav-panel .nav-user{order:4}
 .nav-user{display:none;position:relative;align-items:center;gap:10px}
 body.logged-in .nav-user{display:flex}
 .avatar-btn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;flex:none;
@@ -212,8 +212,9 @@ body.logged-in .nav-user{display:flex}
   .bar nav a.nav-book{order:3;flex:1 1 100%;justify-content:center;min-height:48px}
   .search-results{left:0;right:0;width:auto}
 
-  /* Signed-in identity row at the top of the drawer; no popover on touch. */
-  .nav-panel .nav-user{order:-1;width:100%;margin:0 0 10px;padding-bottom:12px;border-bottom:1px solid var(--line-soft)}
+  /* Signed-in identity row at the bottom of the drawer, after Book now; no popover on touch. */
+  .nav-panel .nav-tools{order:2;width:100%}
+  .nav-panel .nav-user{order:3;width:100%;margin:12px 0 0;padding:12px 0 0;border-top:1px solid var(--line-soft)}
   .nav-user .avatar-btn{width:40px;height:40px;font-size:.85rem}
   .nav-user-text{display:block;min-width:0}
   .nav-user-name{display:block;font-size:.95rem;font-weight:700;color:var(--white)}
@@ -253,7 +254,10 @@ body[data-page="contact"] .page,
 body[data-page="pay"] .page{padding-top:0}
 body[data-page="account"] .page{display:none;scroll-margin-top:92px}
 body[data-page="account"] .page:target{display:block}
-body[data-page="account"]:not(:has(.page:target)) #available{display:block}
+body[data-page="account"]:not([data-section]):not(:has(.page:target)) #available{display:block}
+/* Auth sections selected server-side by data-section (real routes, no hash). */
+body[data-page="account"][data-section="login"] #login,
+body[data-page="account"][data-section="logout"] #logout{display:block}
 
 h1,h2,h3{font-family:var(--font-heading);color:var(--heading);line-height:1.2}
 h2{font-size:2rem;margin-bottom:8px}
@@ -723,9 +727,9 @@ textarea{min-height:130px;resize:vertical}
 #contact .form-box{margin:0 auto}
 
 /* ===== LOGIN, COMMENT, LOGOUT PAGES (centered) ===== */
-#login h2,#login .lead,#create-account h2,#create-account .lead,#comment h2,#comment .lead{text-align:center}
-#login .lead,#create-account .lead,#comment .lead{margin-left:auto;margin-right:auto}
-#login .form-box,#create-account .form-box,#comment .form-box,#comment .comments,#logout .notice{margin-left:auto;margin-right:auto}
+#login h2,#login .lead,#comment h2,#comment .lead{text-align:center}
+#login .lead,#comment .lead{margin-left:auto;margin-right:auto}
+#login .form-box,#comment .form-box,#comment .comments,#logout .notice{margin-left:auto;margin-right:auto}
 
 /* ===== SKELETON LOADERS (whole project) ===== */
 .skel{position:relative;overflow:hidden;background:var(--surface-2);border-radius:8px}

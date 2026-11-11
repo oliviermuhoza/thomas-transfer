@@ -27,6 +27,9 @@ def client(app):
     return app.test_client()
 
 
+ADMIN_EMAIL = "admin@example.com"
+
+
 def csrf_headers(client):
     return {"X-CSRF-Token": client.get("/api/csrf").get_json()["csrf_token"]}
 
@@ -35,21 +38,7 @@ def api_post(client, url, json=None):
     return client.post(url, json=json or {}, headers=csrf_headers(client))
 
 
-def register(client, email="jane@example.com", password="secret123"):
-    return api_post(
-        client,
-        "/api/register",
-        {
-            "first_name": "Jane",
-            "last_name": "Doe",
-            "email": email,
-            "phone": "+250700000000",
-            "password": password,
-        },
-    )
-
-
-def login(client, email="jane@example.com", password="secret123"):
+def login(client, email=ADMIN_EMAIL, password=ADMIN_PASSWORD):
     return api_post(client, "/api/login", {"email": email, "password": password})
 
 
@@ -70,19 +59,18 @@ def reset_token(sent):
     return unquote(link.split("token=", 1)[1])
 
 
-def request_reset(client, email="jane@example.com"):
+def request_reset(client, email=ADMIN_EMAIL):
     return api_post(client, "/api/password/forgot", {"email": email})
 
 
 def test_forgot_sends_link_and_reset_changes_password(client, outbox):
-    assert register(client).status_code == 201
     response = request_reset(client)
     assert response.status_code == 200
     message = response.get_json()["message"]
     assert "reset link" in message
 
     assert len(outbox) == 1
-    assert outbox[0]["to"] == "jane@example.com"
+    assert outbox[0]["to"] == ADMIN_EMAIL
     assert "Reset your Thomas Transfer password" == outbox[0]["subject"]
     token = reset_token(outbox)
 
@@ -90,7 +78,7 @@ def test_forgot_sends_link_and_reset_changes_password(client, outbox):
     assert reset.status_code == 200
     assert reset.get_json()["ok"] is True
 
-    assert login(client, password="secret123").status_code == 401
+    assert login(client, password=ADMIN_PASSWORD).status_code == 401
     assert login(client, password="newsecret1").status_code == 200
 
 
@@ -102,7 +90,6 @@ def test_unknown_email_gets_the_same_answer(client, outbox):
 
 
 def test_token_is_single_use(client, outbox):
-    assert register(client).status_code == 201
     request_reset(client)
     token = reset_token(outbox)
 
@@ -115,7 +102,6 @@ def test_token_is_single_use(client, outbox):
 
 
 def test_expired_token_is_rejected(app, client, outbox):
-    assert register(client).status_code == 201
     request_reset(client)
     token = reset_token(outbox)
 
@@ -132,10 +118,9 @@ def test_expired_token_is_rejected(app, client, outbox):
 
 
 def test_reset_signs_out_other_sessions(client, outbox):
-    assert register(client).status_code == 201
     other = client.application.test_client()
     assert login(other).status_code == 200
-    assert other.get("/api/me").get_json()["user"]["email"] == "jane@example.com"
+    assert other.get("/api/me").get_json()["user"]["email"] == ADMIN_EMAIL
 
     request_reset(client)
     token = reset_token(outbox)
@@ -169,4 +154,4 @@ def test_reset_signs_out_the_admin_portal(client, outbox):
 
     response = admin.get("/admin")
     assert response.status_code == 302
-    assert response.headers["Location"] == "/account#login"
+    assert response.headers["Location"] == "/login"
