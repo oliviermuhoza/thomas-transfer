@@ -165,6 +165,15 @@ Booking rules enforced by the API:
 
 Environment variables:
 
+`.env` (gitignored) is read at startup by `load_env_file()` in
+`backend/app.py`. Copy `.env.example` to `.env` and edit it; real environment
+variables always win over the file, and a missing `.env` is not an error. The
+format is plain `KEY=VALUE` — `#` comments, blank lines and surrounding quotes
+are handled, nothing else. Set `TT_NO_ENV_FILE=1` to ignore the file entirely
+(the test suite sets it, so a local `.env` cannot change test behaviour). On
+Vercel the dashboard variables are used; the file is not part of the deployment
+configuration.
+
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `TT_ENV` | unset | Set to `production` to enable production checks (HTTPS cookie required, `SECRET_KEY` required, no generated admin password printed). |

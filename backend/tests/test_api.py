@@ -19,6 +19,7 @@ def app(tmp_path):
         database=str(tmp_path / "test.db"),
         secret_key="test-secret",
         admin_password=ADMIN_PASSWORD,
+        admin_email=ADMIN_EMAIL,
     )
 
 
