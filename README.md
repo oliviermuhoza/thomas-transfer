@@ -325,6 +325,10 @@ unset the backend still picks a writable path (`TT_DATABASE`, then
 crashes — it just loses data on the next cold start. In production the app logs
 a warning when it detects that ephemeral path.
 
+Vercel installs the **root** `requirements.txt`, not `backend/requirements.txt`.
+Keep the two in sync — a missing `libsql` there makes every request fail with
+`500 FUNCTION_INVOCATION_FAILED` as soon as `TURSO_DATABASE_URL` is set.
+
 Recommended Vercel environment variables: `SECRET_KEY` (stable sessions),
 `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `TT_ADMIN_PASSWORD` (enables admin
 login), and optionally `TT_ADMIN_EMAIL`. `TT_ENV=production` works on Vercel
