@@ -20,56 +20,25 @@
       <h2 class="fare-title" id="fare-title">Common services</h2>
       <p class="fare-sub">Tap a service to pay its standard fare. Tour prices already include the 10% discount.</p>
       <div class="fare-grid">
+        {% for f in fares %}
         <article class="fare-card">
-          <p class="fare-tag">Airport transfer</p>
-          <h3 class="fare-name">Kigali Airport ⇄ City</h3>
-          <p class="fare-price">25,000 RWF</p>
-          <p class="fare-note">Fixed fare</p>
-          <button type="button" class="fare-btn" data-svc="airport">Pay 25,000 RWF</button>
+          {% if f.tag %}<p class="fare-tag">{{ f.tag }}</p>{% endif %}
+          <h3 class="fare-name">{{ f.name }}</h3>
+          <p class="fare-price">{{ f.price }}</p>
+          {% if f.note %}<p class="fare-note">{{ f.note }}</p>{% endif %}
+          <button type="button" class="fare-btn" data-svc="{{ f.key }}"
+                  data-name="{{ f.name }}" data-price="{{ f.price }}"
+                  data-note="{{ f.note }}" data-flw="{{ f.flw_link }}">Pay {{ f.price }}</button>
         </article>
-        <article class="fare-card">
-          <p class="fare-tag">City transport</p>
-          <h3 class="fare-name">Kigali All-Day Service</h3>
-          <p class="fare-price">150,000 RWF</p>
-          <p class="fare-note">Until 21:00</p>
-          <button type="button" class="fare-btn" data-svc="allday">Pay 150,000 RWF</button>
-        </article>
-        <article class="fare-card">
-          <p class="fare-tag">Safari · 10% off</p>
-          <h3 class="fare-name">Akagera National Park</h3>
-          <p class="fare-price">$315</p>
-          <p class="fare-note">Per person</p>
-          <button type="button" class="fare-btn" data-svc="akagera">Pay $315</button>
-        </article>
-        <article class="fare-card">
-          <p class="fare-tag">Tour · 10% off</p>
-          <h3 class="fare-name">Volcanoes National Park</h3>
-          <p class="fare-price">$270</p>
-          <p class="fare-note">Per person</p>
-          <button type="button" class="fare-btn" data-svc="volcanoes">Pay $270</button>
-        </article>
-        <article class="fare-card">
-          <p class="fare-tag">Tour · 10% off</p>
-          <h3 class="fare-name">Nyungwe National Park</h3>
-          <p class="fare-price">$270</p>
-          <p class="fare-note">Per person</p>
-          <button type="button" class="fare-btn" data-svc="nyungwe">Pay $270</button>
-        </article>
-        <article class="fare-card">
-          <p class="fare-tag">Lake Kivu · 10% off</p>
-          <h3 class="fare-name">Gisenyi — Lake Kivu</h3>
-          <p class="fare-price">$225</p>
-          <p class="fare-note">Per person</p>
-          <button type="button" class="fare-btn" data-svc="gisenyi">Pay $225</button>
-        </article>
-        <article class="fare-card">
-          <p class="fare-tag">Heritage · 10% off</p>
-          <h3 class="fare-name">King's Palace Museum</h3>
-          <p class="fare-price">$90</p>
-          <p class="fare-note">Per person</p>
-          <button type="button" class="fare-btn" data-svc="palace">Pay $90</button>
-        </article>
+        {% endfor %}
       </div>
+      {% if not fares %}
+      <div class="empty-state empty-state--inline">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4 12.1V5.6A1.6 1.6 0 0 1 5.6 4h6.5l7.9 7.9-8.1 8.1z"/><circle fill="none" stroke="currentColor" stroke-width="1.7" cx="8.2" cy="7.8" r="1.3"/></svg>
+        <p class="empty-state-title">No fares are listed right now.</p>
+        <p class="empty-state-text">Use the custom amount below, or message us to agree a price.</p>
+      </div>
+      {% endif %}
       <p class="fare-status" id="fare-status" role="status"></p>
     </section>
     <div class="custom-row">

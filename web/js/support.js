@@ -18,10 +18,8 @@
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
     try {
-      var headers = {'Content-Type': 'application/json'};
-      if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var res = await fetch('/api/contact', {
-        method: 'POST', headers: headers,
+      var res = await window.ttFetch('/api/contact', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           name: document.getElementById('s-name').value,
           email: document.getElementById('s-email').value,

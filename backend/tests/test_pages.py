@@ -90,3 +90,36 @@ def test_static_assets_still_served(client):
     assert client.get("/css/styles.css").status_code == 200
     assert client.get("/js/session.js").status_code == 200
     assert client.get("/js/search.js").status_code == 200
+
+
+def test_legacy_hash_routes_old_admin_bookmarks(client):
+    # /admin#fleet bookmarks must reach the real route /admin/fleet, and the
+    # account bookmark map must never rewrite unknown hashes on /admin.
+    script = client.get("/js/legacy-hash.js").data.decode("utf-8")
+    assert "location.pathname === '/admin'" in script
+    assert "location.replace('/admin/' + name)" in script
+
+
+def test_navbar_search_is_present_on_every_page(client):
+    for url in ("/", "/account", "/cars"):
+        page = client.get(url)
+        assert page.status_code == 200
+        assert b'id="site-search"' in page.data
+        assert b'id="search-input"' in page.data
+        assert b'id="search-results"' in page.data
+
+
+def test_admin_copy_has_translation_keys():
+    script = (
+        Path(__file__).resolve().parents[2] / "web" / "js" / "i18n.js"
+    ).read_text(encoding="utf-8")
+    head = script[script.index("var RW = {") : script.index("};", script.index("var RW = {"))]
+    required = [
+        "Admin", "Overview", "Bookings", "Fleet", "Messages", "Operations",
+        "At a glance", "Needs attention", "All bookings", "Filter by status",
+        "No pending bookings.", "Please log in again to continue.",
+        "Make admin", "Remove admin", "Search", "Search...", "Search results",
+        "Loading...", "Account", "Name", "People", "Role", "Joined", "You",
+    ]
+    for key in required:
+        assert '"' + key + '":' in head, f"missing i18n key: {key}"

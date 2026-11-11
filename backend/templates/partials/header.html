@@ -14,7 +14,13 @@
         <li><a href="/contact"{% if page == 'contact' %} aria-current="page"{% endif %}>Contact</a></li>
         <li><a href="/pay"{% if page == 'pay' %} aria-current="page"{% endif %}>Pay online</a></li>
         <li class="nav-account-item"><a href="/account"{% if page == 'account' %} aria-current="page"{% endif %}>Account</a></li>
+        <li class="nav-admin-item"><a href="/admin"{% if page == 'admin' %} aria-current="page"{% endif %}>Admin</a></li>
       </ul>
+      <form class="search" id="site-search" role="search" autocomplete="off">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15.5 15.5L21 21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search-input" type="search" placeholder="Search..." aria-label="Search" aria-expanded="false" aria-controls="search-results" autocomplete="off">
+        <ul class="search-results" id="search-results" role="listbox" aria-label="Search results" hidden></ul>
+      </form>
       <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true" title="English">EN</button><button type="button" data-lang="rw" aria-pressed="false" title="Kinyarwanda">RW</button></div>
        <a class="nav-login" href="/account#login">Login</a>
        <a class="nav-book" href="https://wa.me/250783689231?text=Hello%20Thomas%20Transfer!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener">Book now</a>
