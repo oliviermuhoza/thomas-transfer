@@ -1,4 +1,4 @@
--- Thomas Transfer database schema (SQLite).
+-- TOM Safaris database schema (SQLite).
 -- Run automatically by db.init_db(); safe to execute more than once.
 
 CREATE TABLE IF NOT EXISTS users (
@@ -30,20 +30,26 @@ CREATE TABLE IF NOT EXISTS cars (
 );
 
 CREATE TABLE IF NOT EXISTS bookings (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  car_id     INTEGER NOT NULL REFERENCES cars(id),
-  pickup     TEXT    NOT NULL,
-  dropoff    TEXT    NOT NULL,
-  trip_at    TEXT    NOT NULL,
-  passengers INTEGER NOT NULL,
-  notes      TEXT    NOT NULL DEFAULT '',
-  status     TEXT    NOT NULL DEFAULT 'pending'
-                     CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
-  paid_amount REAL   NOT NULL DEFAULT 0,
-  paid_method TEXT   NOT NULL DEFAULT '',
-  paid_at     TEXT   NOT NULL DEFAULT '',
-  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  car_id         INTEGER REFERENCES cars(id) ON DELETE SET NULL,
+  kind           TEXT    NOT NULL DEFAULT 'car'
+                         CHECK (kind IN ('car', 'tour')),
+  customer_name  TEXT    NOT NULL DEFAULT '',
+  customer_email TEXT    NOT NULL DEFAULT '',
+  customer_phone TEXT    NOT NULL DEFAULT '',
+  tour_name      TEXT    NOT NULL DEFAULT '',
+  pickup         TEXT    NOT NULL,
+  dropoff        TEXT    NOT NULL DEFAULT '',
+  trip_at        TEXT    NOT NULL,
+  passengers     INTEGER NOT NULL,
+  notes          TEXT    NOT NULL DEFAULT '',
+  status         TEXT    NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+  paid_amount    REAL    NOT NULL DEFAULT 0,
+  paid_method    TEXT    NOT NULL DEFAULT '',
+  paid_at        TEXT    NOT NULL DEFAULT '',
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id);

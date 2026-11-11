@@ -442,7 +442,7 @@
   }
 
   /* ---------- overview ---------- */
-  /* The chart is one lime line over a 12% fill, drawn from /api/report data.
+  /* The chart is one blue line over a 12% fill, drawn from /api/report data.
      Geometry is measured from the box so dots stay round at any width. */
   var trend = {months: [], peak: 0};
   function svgNode(tag, attrs) {
@@ -657,14 +657,17 @@
       var acts = bookingActions({id: b.id, status: b.status, row: tr}, $('admin-bookings-status'), loadBookings);
       /* Secondary actions live in the row menu so the status action stays the
          one thing the eye lands on, and the row keeps a single action line. */
-      var more = [{label: 'Edit', run: function () { openBookingForm(b); }}];
+      var more = [];
+      if (b.user_id && b.kind === 'car') {
+        more.push({label: 'Edit', run: function () { openBookingForm(b); }});
+      }
       if (b.status !== 'cancelled') {
         more.push({
           label: b.paid_amount > 0 ? 'Edit payment' : 'Record payment',
           run: function () { recordPayment(b, $('admin-bookings-status')); }
         });
       }
-      acts.appendChild(rowMenu(more));
+      if (more.length) { acts.appendChild(rowMenu(more)); }
       tb.appendChild(tr);
     });
     say($('admin-bookings-status'), '', '');

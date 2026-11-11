@@ -1,6 +1,6 @@
-# Thomas Transfer
+# TOM Safaris
 
-Marketing and booking website for Thomas Transfer, a transport and car-rental
+Marketing and booking website for TOM Safaris, a transport and car-rental
 business in Kigali, Rwanda.
 
 The front end is plain HTML, CSS and JavaScript with no build step. It lives in
@@ -175,6 +175,8 @@ to run it.
 Booking rules enforced by the API:
 
 - A booking starts as `pending` and puts the car in `booked`.
+- Public car reservations and tour requests create `pending` rows with `user_id = NULL` and `kind = 'car'` or `'tour'`; their contact details live in `customer_name/email/phone`, and tours have `car_id = NULL`. `/api/contact` is only for contact and support messages.
+- Only car bookings change car status; cancelling or completing a tour leaves the fleet alone.
 - Only an admin can move it to `confirmed` or `completed`; a customer can only
   cancel their own pending or confirmed booking.
 - Cancelling or completing a booking returns the car to `available`.
@@ -209,7 +211,7 @@ configuration.
 | `TT_SMTP_HOST` | unset | SMTP host for transactional email (password reset, booking confirmation). Unset means nothing is sent (reset links are logged outside production). |
 | `TT_SMTP_PORT` | `587` | SMTP port |
 | `TT_SMTP_USER` / `TT_SMTP_PASSWORD` | unset | SMTP credentials, when the relay requires them |
-| `TT_SMTP_FROM` | unset | From address. Required in practice: `Thomas Transfer <no-reply@…>` |
+| `TT_SMTP_FROM` | unset | From address. Required in practice: `TOM Safaris <no-reply@…>` |
 | `TT_SMTP_SECURITY` | `starttls` | `starttls`, `ssl` or `none` |
 | `TT_HOST` | `127.0.0.1` | Bind address used by `python -m backend.app` |
 | `TT_PORT` | `5000` | Port used by `python -m backend.app` |
@@ -299,7 +301,8 @@ admin report, page routes, redirects, nav state and 404 handling.
 | PATCH | `/api/admin/fares/:id` | Update or hide a fare (admin) |
 | DELETE | `/api/admin/fares/:id` | Delete a fare (admin) |
 | GET | `/api/bookings` | Bookings (own, or all for admin) |
-| POST | `/api/bookings` | Create a booking; admins may pass `user_id` to book for a customer |
+| POST | `/api/bookings` | Create a booking for the signed-in account; admins may pass `user_id` to book for a customer |
+| POST | `/api/bookings/guest` | Public car reservation or tour request (`kind: car|tour`), stored with guest contact fields and no account |
 | POST | `/api/bookings/:id/status` | Change booking status; confirming (`pending` → `confirmed`) emails the customer |
 | PATCH | `/api/bookings/:id` | Edit a booking (admin) |
 | POST | `/api/admin/bookings/:id/payment` | Record or clear a payment (admin) |

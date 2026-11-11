@@ -1,4 +1,4 @@
-/* Book a tour package: opens the booking form, then sends it to /api/contact. */
+/* Book a tour package: opens the form, then stores a guest tour booking. */
 (function () {
   var dlg = document.getElementById('tour-dialog'), form = document.getElementById('tour-book-form');
   var status = document.getElementById('tour-book-status'), nameEl = document.getElementById('tour-book-name');
@@ -33,32 +33,29 @@
     e.preventDefault();
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
-    var lines = [
-      'Tour: ' + (current || 'Tour package'),
-      'Preferred date: ' + document.getElementById('tour-date').value,
-      'Travellers: ' + document.getElementById('tour-travellers').value,
-      'Pick-up: ' + document.getElementById('tour-pickup').value,
-      '',
-      document.getElementById('tour-message').value
-    ];
     try {
       var headers = {'Content-Type': 'application/json'};
       if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var res = await fetch('/api/contact', {
+      var date = document.getElementById('tour-date').value;
+      var res = await fetch('/api/bookings/guest', {
         method: 'POST', headers: headers,
         body: JSON.stringify({
+          kind: 'tour',
+          tour_name: current || 'Tour package',
           name: (document.getElementById('tour-first').value + ' ' + document.getElementById('tour-last').value).trim(),
           email: document.getElementById('tour-email').value,
           phone: document.getElementById('tour-phone').value,
-          service: 'Tour booking',
-          message: lines.join('\n')
+          pickup: document.getElementById('tour-pickup').value,
+          trip_at: date ? date + 'T00:00' : '',
+          passengers: Number(document.getElementById('tour-travellers').value),
+          notes: document.getElementById('tour-message').value
         })
       });
       if (!res.ok) throw new Error('failed');
       form.reset();
-      status.className = 'status ok'; status.textContent = T('Thank you. Your booking request was sent. We will reply soon.');
+      status.className = 'status ok'; status.textContent = T('Thank you. Your booking request was received. We will confirm it shortly.');
     } catch (err) {
-      status.className = 'status bad'; status.textContent = T('Your booking request could not be sent. Please try again.');
+      status.className = 'status bad'; status.textContent = T('Your request could not be sent. Please try again.');
     }
     btn.disabled = false;
   });

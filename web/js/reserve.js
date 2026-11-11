@@ -1,4 +1,4 @@
-/* Reserve on the car rental page: opens a form, then sends it to /api/contact. */
+/* Reserve on the car rental page: opens a form, then stores a guest booking. */
 (function () {
   var dlg = document.getElementById('reserve-dialog'), form = document.getElementById('reserve-form');
   var status = document.getElementById('reserve-status');
@@ -53,21 +53,26 @@
     try {
       var headers = {'Content-Type': 'application/json'};
       if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var res = await fetch('/api/contact', {
+      var date = document.getElementById('reserve-date').value;
+      var res = await fetch('/api/bookings/guest', {
         method: 'POST', headers: headers,
         body: JSON.stringify({
-          name: document.getElementById('reserve-first').value + ' ' + document.getElementById('reserve-last').value,
+          kind: 'car',
+          car_id: Number(idEl.value),
+          name: (document.getElementById('reserve-first').value + ' ' + document.getElementById('reserve-last').value).trim(),
           email: document.getElementById('reserve-email').value,
           phone: document.getElementById('reserve-phone').value,
-          service: 'Car reservation',
-          message: lines.join('\n')
+          pickup: document.getElementById('reserve-pickup').value,
+          trip_at: date ? date + 'T00:00' : '',
+          passengers: Number(document.getElementById('reserve-pax').value),
+          notes: lines.join('\n')
         })
       });
       if (!res.ok) throw new Error('failed');
       form.reset();
-      status.className = 'status ok'; status.textContent = T('Thank you. Your message was sent. We will reply soon.');
+      status.className = 'status ok'; status.textContent = T('Thank you. Your reservation request was received. We will confirm it shortly.');
     } catch (err) {
-      status.className = 'status bad'; status.textContent = T('Your message could not be sent. Please try again.');
+      status.className = 'status bad'; status.textContent = T('Your request could not be sent. Please try again.');
     }
     btn.disabled = false;
   });

@@ -91,11 +91,11 @@ def booking_payload(**overrides):
 def test_site_is_served(client):
     page = client.get("/")
     assert page.status_code == 200
-    assert b"Thomas Transfer" in page.data
+    assert b"TOM Safaris" in page.data
 
     assert client.get("/css/styles.css").status_code == 200
     assert client.get("/js/dashboard.js").status_code == 200
-    assert client.get("/assets/images/logo.png").status_code == 200
+    assert client.get("/assets/images/logo.jpg").status_code == 200
     assert client.get("/app.py").status_code == 404
     assert client.get("/data/thomas.db").status_code == 404
 

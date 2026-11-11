@@ -197,6 +197,53 @@ def _migrate(db):
         db.execute("ALTER TABLE bookings ADD COLUMN paid_amount REAL NOT NULL DEFAULT 0")
         db.execute("ALTER TABLE bookings ADD COLUMN paid_method TEXT NOT NULL DEFAULT ''")
         db.execute("ALTER TABLE bookings ADD COLUMN paid_at TEXT NOT NULL DEFAULT ''")
+    if "kind" not in booking_columns:
+        _rebuild_bookings(db)
+
+
+# Keep in sync with the bookings table in schema.sql. SQLite cannot drop a NOT
+# NULL constraint, so guest/tour bookings require rebuilding the table.
+_BOOKINGS_REBUILD = """
+CREATE TABLE bookings_new (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  car_id         INTEGER REFERENCES cars(id) ON DELETE SET NULL,
+  kind           TEXT    NOT NULL DEFAULT 'car'
+                         CHECK (kind IN ('car', 'tour')),
+  customer_name  TEXT    NOT NULL DEFAULT '',
+  customer_email TEXT    NOT NULL DEFAULT '',
+  customer_phone TEXT    NOT NULL DEFAULT '',
+  tour_name      TEXT    NOT NULL DEFAULT '',
+  pickup         TEXT    NOT NULL,
+  dropoff        TEXT    NOT NULL DEFAULT '',
+  trip_at        TEXT    NOT NULL,
+  passengers     INTEGER NOT NULL,
+  notes          TEXT    NOT NULL DEFAULT '',
+  status         TEXT    NOT NULL DEFAULT 'pending'
+                         CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled')),
+  paid_amount    REAL    NOT NULL DEFAULT 0,
+  paid_method    TEXT    NOT NULL DEFAULT '',
+  paid_at        TEXT    NOT NULL DEFAULT '',
+  created_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+)
+"""
+
+
+def _rebuild_bookings(db):
+    """Relax user_id/car_id and add guest and tour columns on an old table."""
+    db.execute("DROP TABLE IF EXISTS bookings_new")
+    db.execute(_BOOKINGS_REBUILD)
+    db.execute(
+        "INSERT INTO bookings_new (id, user_id, car_id, kind, pickup, dropoff,"
+        " trip_at, passengers, notes, status, paid_amount, paid_method, paid_at,"
+        " created_at)"
+        " SELECT id, user_id, car_id, 'car', pickup, dropoff, trip_at, passengers,"
+        " notes, status, paid_amount, paid_method, paid_at, created_at FROM bookings"
+    )
+    db.execute("DROP TABLE bookings")
+    db.execute("ALTER TABLE bookings_new RENAME TO bookings")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings(user_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_bookings_car ON bookings(car_id)")
 
 
 def _backfill_cars(db):
@@ -259,8 +306,8 @@ def _seed_admin(db, password=None, production=False, ephemeral=False, admin_emai
         "INSERT INTO users (first_name, last_name, email, phone, password_hash, is_admin)"
         " VALUES (?, ?, ?, ?, ?, 1)",
         (
-            "Thomas",
-            "Transfer",
+            "TOM",
+            "Safaris",
             email,
             "0788652120",
             generate_password_hash(password),

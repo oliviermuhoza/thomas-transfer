@@ -61,8 +61,8 @@ def test_signed_in_header_shows_avatar(client):
     page = client.get("/")
     assert b'class="logged-in' in page.data
     assert b'id="nav-user"' in page.data
-    assert b'id="avatar-initials">TT<' in page.data
-    assert b"Thomas Transfer" in page.data
+    assert b'id="avatar-initials">TS<' in page.data
+    assert b"TOM Safaris" in page.data
     assert b"tomsafaris@gmail.com" in page.data
     assert b'id="avatar-menu"' in page.data
     assert b'aria-haspopup="menu"' in page.data

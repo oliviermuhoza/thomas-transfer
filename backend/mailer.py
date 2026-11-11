@@ -6,7 +6,7 @@ Configuration comes from the environment so nothing secret lives in the repo:
   TT_SMTP_PORT   587
   TT_SMTP_USER   mailbox user               (optional if the relay is open)
   TT_SMTP_PASSWORD
-  TT_SMTP_FROM   Thomas Transfer <no-reply@example.com>
+  TT_SMTP_FROM   TOM Safaris <no-reply@example.com>
   TT_SMTP_SECURITY  starttls | ssl | none   (default: starttls)
 
 When no host is configured nothing is sent and the caller decides what to log.

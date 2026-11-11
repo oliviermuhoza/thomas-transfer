@@ -5,7 +5,7 @@
   var status = document.getElementById('fare-status');
 
   function waText(name, price, note) {
-    var msg = "Hello Thomas Transfer! I'd like to book and pay for " + name + ' (' + price;
+    var msg = "Hello TOM Safaris! I'd like to book and pay for " + name + ' (' + price;
     if (note) { msg += ', ' + note.charAt(0).toLowerCase() + note.slice(1); }
     return msg + ').';
   }

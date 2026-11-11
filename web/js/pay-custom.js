@@ -11,7 +11,7 @@
     var amount = Number(document.getElementById('cf-amount').value);
     var currency = document.getElementById('cf-currency').value;
     if (!(amount > 0)) { status.textContent = T('Please enter a valid amount.'); return; }
-    var msg = 'Hello Thomas Transfer! My name is ' + name + ' (' + (phone || email) + '). I would like to pay ' + amount + ' ' + currency + ' as a custom amount.';
+    var msg = 'Hello TOM Safaris! My name is ' + name + ' (' + (phone || email) + '). I would like to pay ' + amount + ' ' + currency + ' as a custom amount.';
     var url = FLW_CUSTOM || ('https://wa.me/250783689231?text=' + encodeURIComponent(msg));
     window.open(url, '_blank', 'noopener');
     status.textContent = FLW_CUSTOM ? '' : T('Opening WhatsApp — we will confirm your payment there.');

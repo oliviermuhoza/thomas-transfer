@@ -34,59 +34,59 @@ ADMIN_VIEWS = (
 
 PAGE_META = {
     "home": (
-        "Thomas Transfer — Kigali transfers and car rental",
+        "TOM Safaris — Kigali transfers and car rental",
         "Airport transfers, city rides, intercity travel and car rental in "
         "Kigali, Rwanda. Fixed prices and professional drivers, 24/7.",
     ),
     "transport": (
-        "Transport services — Thomas Transfer",
+        "Transport services — TOM Safaris",
         "Airport pickups, full-day Kigali service and private intercity "
         "travel across Rwanda with fixed prices and professional drivers.",
     ),
     "tours": (
-        "Tour packages — Thomas Transfer",
+        "Tour packages — TOM Safaris",
         "Private tours to Akagera, Volcanoes, Nyungwe and Lake Kivu with a "
         "car and a driver-guide who knows the roads.",
     ),
     "cars": (
-        "Car rental — Thomas Transfer",
+        "Car rental — TOM Safaris",
         "Rent a well-maintained SUV, sedan or van in Kigali by the day, with "
         "30% off rentals of a week or longer.",
     ),
     "contact": (
-        "Contact — Thomas Transfer",
-        "Talk to Thomas Transfer in Kigali by WhatsApp, phone or email. "
+        "Contact — TOM Safaris",
+        "Talk to TOM Safaris in Kigali by WhatsApp, phone or email. "
         "Airport transfers are available 24 hours a day.",
     ),
     "pay": (
-        "Pay online — Thomas Transfer",
+        "Pay online — TOM Safaris",
         "Pay a set fare or a custom amount securely by Visa or Mastercard. "
         "Card details are handled by Flutterwave.",
     ),
     "comment": (
-        "Comment — Thomas Transfer",
+        "Comment — TOM Safaris",
         "Tell us about your trip. Comments are private and read only by the "
-        "Thomas Transfer team.",
+        "TOM Safaris team.",
     ),
     "account": (
-        "Your account — Thomas Transfer",
+        "Your account — TOM Safaris",
         "Log in to book a car, see your bookings and manage your Thomas "
         "Transfer account.",
     ),
     "login": (
-        "Staff login — Thomas Transfer",
+        "Staff login — TOM Safaris",
         "Staff sign-in for managing bookings, fleet and customer accounts.",
     ),
     "forgot": (
-        "Forgot password — Thomas Transfer",
-        "Request a password reset link for your Thomas Transfer account.",
+        "Forgot password — TOM Safaris",
+        "Request a password reset link for your TOM Safaris account.",
     ),
     "reset": (
-        "Choose a new password — Thomas Transfer",
-        "Set a new password for your Thomas Transfer account.",
+        "Choose a new password — TOM Safaris",
+        "Set a new password for your TOM Safaris account.",
     ),
     "admin": (
-        "Admin — Thomas Transfer",
+        "Admin — TOM Safaris",
         "Manage bookings, fleet status, accounts, messages and feedback.",
     ),
 }

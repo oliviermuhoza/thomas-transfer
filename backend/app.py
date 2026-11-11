@@ -1,4 +1,4 @@
-"""Thomas Transfer API and static file server.
+"""TOM Safaris API and static file server.
 
 Run with `python -m backend.app` (development) or point a WSGI server at
 `backend.app:app`. The API paths and response shapes match what the scripts in
@@ -295,7 +295,7 @@ def create_app(
             render_template(
                 "errors/404.html",
                 page="404",
-                page_title="Page not found — Thomas Transfer",
+                page_title="Page not found — TOM Safaris",
                 page_description="The page you asked for does not exist.",
             ),
             404,
@@ -314,7 +314,7 @@ def create_app(
             return error("Something went wrong. Please try again.", 500)
         return (
             "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
-            "<title>Something went wrong — Thomas Transfer</title></head>"
+            "<title>Something went wrong — TOM Safaris</title></head>"
             "<body><h1>Something went wrong</h1><p>Please try again.</p></body></html>",
             500,
             {"Content-Type": "text/html; charset=utf-8"},
@@ -623,7 +623,7 @@ def _send_password_reset_email(user, link):
     name = f"{user['first_name']} {user['last_name']}".strip() or "there"
     body = (
         f"Hello {name},\n\n"
-        "Someone asked to reset the password for your Thomas Transfer account.\n"
+        "Someone asked to reset the password for your TOM Safaris account.\n"
         f"Open this link within {RESET_TOKEN_TTL_MINUTES} minutes to choose a new password:\n\n"
         f"{link}\n\n"
         "If you did not ask for this, ignore this message; your password stays the same.\n"
@@ -631,7 +631,7 @@ def _send_password_reset_email(user, link):
     if mail_configured():
         try:
             send_email(
-                user["email"], "Reset your Thomas Transfer password", body
+                user["email"], "Reset your TOM Safaris password", body
             )
             return True
         except Exception as exc:
@@ -653,11 +653,12 @@ def _send_booking_confirmation_email(customer, booking, car_name):
     """Tell the customer their booking was confirmed; never raise."""
     name = f"{customer['first_name']} {customer['last_name']}".strip() or "there"
     when = str(booking["trip_at"]).replace("T", " ")
+    label = "Tour" if booking["kind"] == "tour" else "Car"
     body = (
         f"Hello {name},\n\n"
-        "Good news — your Thomas Transfer booking is confirmed.\n\n"
+        "Good news - your TOM Safaris booking is confirmed.\n\n"
         f"Booking #{booking['id']}\n"
-        f"Car: {car_name}\n"
+        f"{label}: {car_name}\n"
         f"From: {booking['pickup']}\n"
         f"To: {booking['dropoff']}\n"
         f"Date and time: {when}\n"
@@ -669,7 +670,7 @@ def _send_booking_confirmation_email(customer, booking, car_name):
         try:
             send_email(
                 customer["email"],
-                f"Booking #{booking['id']} confirmed — Thomas Transfer",
+                f"Booking #{booking['id']} confirmed — TOM Safaris",
                 body,
             )
             return True
@@ -945,15 +946,17 @@ def register_routes(app):
     def list_bookings():
         db = get_db()
         query = """
-            SELECT b.id, b.user_id, b.car_id, b.pickup, b.dropoff, b.trip_at,
-                   b.passengers, b.notes, b.status,
+            SELECT b.id, b.user_id, b.car_id, b.kind, b.pickup, b.dropoff,
+                   b.trip_at, b.passengers, b.notes, b.status,
                    b.paid_amount, b.paid_method, b.paid_at, b.created_at,
-                   c.name AS car_name,
-                   u.first_name || ' ' || u.last_name AS customer,
-                   u.phone, u.email
+                   COALESCE(c.name, NULLIF(b.tour_name, ''), '') AS car_name,
+                   TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) AS account_customer,
+                   u.phone AS account_phone,
+                   u.email AS account_email,
+                   b.customer_name, b.customer_email, b.customer_phone, b.tour_name
               FROM bookings b
-              JOIN cars c  ON c.id = b.car_id
-              JOIN users u ON u.id = b.user_id
+              LEFT JOIN cars c  ON c.id = b.car_id
+              LEFT JOIN users u ON u.id = b.user_id
         """
         if g.user["is_admin"]:
             rows = db.execute(query + " ORDER BY b.id DESC").fetchall()
@@ -961,7 +964,19 @@ def register_routes(app):
             rows = db.execute(
                 query + " WHERE b.user_id = ? ORDER BY b.id DESC", (g.user["id"],)
             ).fetchall()
-        return jsonify([dict(row) for row in rows])
+
+        bookings = []
+        for row in rows:
+            booking = dict(row)
+            booking["customer"] = (
+                booking["customer_name"] or booking["account_customer"] or "Guest"
+            )
+            booking["phone"] = booking["customer_phone"] or booking["account_phone"] or ""
+            booking["email"] = booking["customer_email"] or booking["account_email"] or ""
+            for key in ("account_customer", "account_phone", "account_email"):
+                booking.pop(key, None)
+            bookings.append(booking)
+        return jsonify(bookings)
 
     @app.post("/api/bookings")
     @login_required
@@ -1024,9 +1039,95 @@ def register_routes(app):
 
         cursor = db.execute(
             "INSERT INTO bookings"
-            " (user_id, car_id, pickup, dropoff, trip_at, passengers, notes)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            " (user_id, car_id, kind, pickup, dropoff, trip_at, passengers, notes)"
+            " VALUES (?, ?, 'car', ?, ?, ?, ?, ?)",
             (user_id, car_id, pickup, dropoff, trip_at, passengers, notes),
+        )
+        db.commit()
+        return jsonify({"ok": True, "id": cursor.lastrowid}), 201
+
+    @app.post("/api/bookings/guest")
+    def create_guest_booking():
+        """Public car reservation or tour request; stored in bookings, not messages."""
+        if _rate_limited("public_write", limit=20, window_seconds=600):
+            return error("Too many attempts. Please try again later.", 429)
+
+        data = body()
+        kind = str(data.get("kind") or "car").strip().lower()
+        if kind not in ("car", "tour"):
+            return error("Please choose a booking type.", 400)
+
+        name = text_value(data, "name", 100)
+        email = text_value(data, "email", 150).lower()
+        phone = text_value(data, "phone", 30)
+        pickup = text_value(data, "pickup", 150)
+        dropoff = text_value(data, "dropoff", 150)
+        notes = text_value(data, "notes", 500)
+        tour_name = text_value(data, "tour_name", 120)
+
+        if not name or not email or not phone or not pickup:
+            return error("Please fill in your name, email, phone and pick-up.", 400)
+        if not EMAIL_RE.match(email):
+            return error("Please enter a valid email address.", 400)
+        if not valid_phone(phone):
+            return error("Please enter a valid phone number.", 400)
+        if kind == "tour" and not tour_name:
+            return error("Please choose a tour package.", 400)
+        if dropoff and pickup.casefold() == dropoff.casefold():
+            return error("Pick-up and drop-off places must be different.", 400)
+
+        try:
+            passengers = int(data.get("passengers", 1))
+        except (TypeError, ValueError):
+            return error("Passengers must be a number.", 400)
+        if not 1 <= passengers <= 60:
+            return error("Passengers must be between 1 and 60.", 400)
+
+        trip_at, problem = parse_trip_at(data.get("trip_at"))
+        if problem:
+            return error(problem, 400)
+
+        db = get_db()
+        car_id = None
+        if kind == "car":
+            try:
+                car_id = int(data.get("car_id"))
+            except (TypeError, ValueError):
+                return error("Please choose a car.", 400)
+            car = db.execute("SELECT * FROM cars WHERE id = ?", (car_id,)).fetchone()
+            if car is None:
+                return error("This car does not exist.", 404)
+            if car["status"] != "available":
+                return error("This car is not available. Please choose another car.", 409)
+            capacity = car_capacity(car)
+            if passengers > capacity:
+                return error(f"This car can take up to {capacity} passengers.", 400)
+            taken = db.execute(
+                "UPDATE cars SET status = 'booked' WHERE id = ? AND status = 'available'",
+                (car_id,),
+            )
+            if taken.rowcount == 0:
+                db.rollback()
+                return error("This car is not available. Please choose another car.", 409)
+
+        cursor = db.execute(
+            "INSERT INTO bookings"
+            " (user_id, car_id, kind, customer_name, customer_email, customer_phone,"
+            "  tour_name, pickup, dropoff, trip_at, passengers, notes)"
+            " VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                car_id,
+                kind,
+                name,
+                email,
+                phone,
+                tour_name,
+                pickup,
+                dropoff,
+                trip_at,
+                passengers,
+                notes,
+            ),
         )
         db.commit()
         return jsonify({"ok": True, "id": cursor.lastrowid}), 201
@@ -1053,24 +1154,33 @@ def register_routes(app):
                 return error("You can only cancel your booking.", 400)
 
         db.execute("UPDATE bookings SET status = ? WHERE id = ?", (new_status, booking_id))
-        if new_status in ("cancelled", "completed"):
+        if new_status in ("cancelled", "completed") and booking["car_id"] is not None:
             db.execute(
                 "UPDATE cars SET status = 'available' WHERE id = ? AND status = 'booked'",
                 (booking["car_id"],),
             )
         db.commit()
         if new_status == "confirmed":
-            customer = db.execute(
-                "SELECT first_name, last_name, email FROM users WHERE id = ?",
-                (booking["user_id"],),
-            ).fetchone()
-            car = db.execute(
-                "SELECT name FROM cars WHERE id = ?", (booking["car_id"],)
-            ).fetchone()
+            customer = None
+            if booking["user_id"] is not None:
+                customer = db.execute(
+                    "SELECT first_name, last_name, email FROM users WHERE id = ?",
+                    (booking["user_id"],),
+                ).fetchone()
+            elif booking["customer_email"]:
+                customer = {
+                    "first_name": booking["customer_name"],
+                    "last_name": "",
+                    "email": booking["customer_email"],
+                }
+            car = None
+            if booking["car_id"] is not None:
+                car = db.execute(
+                    "SELECT name FROM cars WHERE id = ?", (booking["car_id"],)
+                ).fetchone()
+            label = car["name"] if car else (booking["tour_name"] or "your trip")
             if customer is not None and customer["email"]:
-                _send_booking_confirmation_email(
-                    customer, booking, car["name"] if car else "your car"
-                )
+                _send_booking_confirmation_email(customer, booking, label)
         return jsonify({"ok": True, "status": new_status})
 
     @app.patch("/api/bookings/<int:booking_id>")
@@ -1083,6 +1193,8 @@ def register_routes(app):
         ).fetchone()
         if booking is None:
             return error("This booking does not exist.", 404)
+        if booking["user_id"] is None or booking["kind"] != "car":
+            return error("Guest and tour bookings can only be updated by status.", 400)
 
         updates = {}
         for field, maximum in (("pickup", 150), ("dropoff", 150), ("notes", 500)):
@@ -1698,17 +1810,23 @@ def register_routes(app):
     @admin_required
     def admin_export_bookings():
         rows = get_db().execute(
-            "SELECT b.id, u.first_name || ' ' || u.last_name AS customer, u.email, u.phone,"
-            " c.name AS car, b.pickup, b.dropoff, b.trip_at, b.passengers, b.status,"
+            "SELECT b.id,"
+            " COALESCE(NULLIF(b.customer_name, ''),"
+            "   TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, ''))) AS customer,"
+            " COALESCE(NULLIF(b.customer_email, ''), u.email) AS email,"
+            " COALESCE(NULLIF(b.customer_phone, ''), u.phone) AS phone,"
+            " COALESCE(c.name, NULLIF(b.tour_name, ''), '') AS car, b.kind,"
+            " b.pickup, b.dropoff, b.trip_at, b.passengers, b.status,"
             " b.paid_amount, b.paid_method, b.paid_at, b.created_at"
             " FROM bookings b"
-            " JOIN cars c ON c.id = b.car_id"
-            " JOIN users u ON u.id = b.user_id"
+            " LEFT JOIN cars c ON c.id = b.car_id"
+            " LEFT JOIN users u ON u.id = b.user_id"
             " ORDER BY b.id"
         ).fetchall()
         header = [
-            "id", "customer", "email", "phone", "car", "pickup", "dropoff", "trip_at",
-            "passengers", "status", "paid_amount", "paid_method", "paid_at", "created_at",
+            "id", "customer", "email", "phone", "car", "kind", "pickup", "dropoff",
+            "trip_at", "passengers", "status", "paid_amount", "paid_method", "paid_at",
+            "created_at",
         ]
         return _csv_response("bookings.csv", header, [tuple(r[k] for k in header) for r in rows])
 

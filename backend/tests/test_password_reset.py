@@ -71,7 +71,7 @@ def test_forgot_sends_link_and_reset_changes_password(client, outbox):
 
     assert len(outbox) == 1
     assert outbox[0]["to"] == ADMIN_EMAIL
-    assert "Reset your Thomas Transfer password" == outbox[0]["subject"]
+    assert "Reset your TOM Safaris password" == outbox[0]["subject"]
     token = reset_token(outbox)
 
     reset = api_post(client, "/api/password/reset", {"token": token, "password": "newsecret1"})

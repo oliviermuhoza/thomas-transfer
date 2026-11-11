@@ -110,7 +110,7 @@ def test_admin_users_lists_accounts_without_hashes(client):
     assert len(rows) == 2
     admin = next(row for row in rows if row["email"] == ADMIN_EMAIL)
     assert admin["admin"] is True
-    assert admin["name"] == "Thomas Transfer"
+    assert admin["name"] == "TOM Safaris"
     assert "password_hash" not in admin
     assert "created_at" in admin
     customer = next(row for row in rows if row["email"] == "jane@example.com")
@@ -839,7 +839,7 @@ def test_admin_export_bookings_csv(client):
     lines = text.lstrip("\ufeff").splitlines()
     assert lines[0].startswith("id,customer,email")
     assert lines[1].split(",")[0] == str(booking_id)
-    assert "Thomas Transfer" in lines[1]
+    assert "TOM Safaris" in lines[1]
     assert len(lines) == 2  # only the one booking
 
 
