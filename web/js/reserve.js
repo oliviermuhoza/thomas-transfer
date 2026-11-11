@@ -3,22 +3,32 @@
   var dlg = document.getElementById('reserve-dialog'), form = document.getElementById('reserve-form');
   var status = document.getElementById('reserve-status');
   var nameEl = document.getElementById('reserve-car-name'), idEl = document.getElementById('reserve-car-id');
+  var thumbEl = document.getElementById('reserve-car-thumb'), typeEl = document.getElementById('reserve-car-type'), rateEl = document.getElementById('reserve-car-rate');
   var triggers = document.querySelectorAll('[data-reserve]');
   if (!dlg || !form || !status || !nameEl || !idEl || !triggers.length) { return; }
 
-  function open(id, name) {
+  function open(id, name, image, type, rate) {
     idEl.value = id;
     nameEl.textContent = name;
+    if (thumbEl) { thumbEl.src = image || ''; thumbEl.alt = name || ''; }
+    if (typeEl) { typeEl.textContent = type || ''; }
+    if (rateEl) { rateEl.textContent = rate ? rate + ' / day' : ''; }
     status.className = 'status'; status.textContent = '';
     document.body.classList.add('reserve-open');
     if (dlg.showModal) { dlg.showModal(); } else { dlg.setAttribute('open', ''); }
-    document.getElementById('reserve-name').focus();
+    document.getElementById('reserve-first').focus();
   }
 
   triggers.forEach(function (t) {
     t.addEventListener('click', function (e) {
       e.preventDefault();
-      open(t.getAttribute('data-reserve'), t.getAttribute('data-car-name') || '');
+      open(
+        t.getAttribute('data-reserve'),
+        t.getAttribute('data-car-name') || '',
+        t.getAttribute('data-car-image') || '',
+        t.getAttribute('data-car-type') || '',
+        t.getAttribute('data-car-rate') || ''
+      );
     });
   });
 
@@ -32,10 +42,11 @@
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
     var lines = [
       'Car: ' + nameEl.textContent + ' (#' + idEl.value + ')',
+      'Type: ' + (typeEl ? typeEl.textContent : ''),
       'Pick-up location: ' + document.getElementById('reserve-pickup').value,
-      'Drop-off location: ' + document.getElementById('reserve-dropoff').value,
       'Pick-up date: ' + document.getElementById('reserve-date').value,
       'Number of days: ' + document.getElementById('reserve-days').value,
+      'Driver: ' + (document.getElementById('reserve-driver').checked ? 'Yes' : 'No'),
       '',
       document.getElementById('reserve-message').value
     ];
@@ -45,7 +56,7 @@
       var res = await fetch('/api/contact', {
         method: 'POST', headers: headers,
         body: JSON.stringify({
-          name: document.getElementById('reserve-name').value,
+          name: document.getElementById('reserve-first').value + ' ' + document.getElementById('reserve-last').value,
           email: document.getElementById('reserve-email').value,
           phone: document.getElementById('reserve-phone').value,
           service: 'Car reservation',
