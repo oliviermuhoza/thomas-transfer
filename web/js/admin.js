@@ -157,6 +157,7 @@
      scroll container cannot clip it. */
   var openRow = null;
   var CARET = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var DOTS = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
 
   function closeRowMenu(refocus) {
     if (!openRow) { return; }
@@ -224,19 +225,31 @@
     panel.style.top = top + 'px';
   }
 
-  function rowMenu(actions) {
-    var btn = el('button', 'rowmenu-btn');
+  function rowMenu(actions, opts) {
+    opts = opts || {};
+    var btn = el('button', 'rowmenu-btn' + (opts.dots ? ' rowmenu-btn--dots' : ''));
     btn.type = 'button';
     btn.setAttribute('aria-haspopup', 'menu');
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-label', T('Manage'));
-    btn.appendChild(el('span', '', T('Manage')));
-    btn.insertAdjacentHTML('beforeend', CARET);
+    btn.setAttribute('aria-label', T(opts.label || 'Manage'));
+    if (opts.dots) {
+      btn.insertAdjacentHTML('beforeend', DOTS);
+    } else {
+      btn.appendChild(el('span', '', T('Manage')));
+      btn.insertAdjacentHTML('beforeend', CARET);
+    }
 
     var panel = el('div', 'rowmenu-panel');
     panel.setAttribute('role', 'menu');
+    panel.setAttribute('aria-label', T(opts.label || 'Manage'));
     panel.hidden = true;
     actions.forEach(function (a) {
+      if (a.sep) {
+        var line = el('div', 'rowmenu-sep');
+        line.setAttribute('role', 'separator');
+        panel.appendChild(line);
+        return;
+      }
       var item = el('button', 'rowmenu-item' + (a.tone ? ' ' + a.tone : ''), T(a.label));
       item.type = 'button';
       item.setAttribute('role', 'menuitem');
@@ -387,22 +400,43 @@
     if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); }
     else { say(node, 'ok', T('Password updated.')); }
   }
-  async function recordPayment(b, node) {
-    var amount = window.prompt(T('Paid amount (0 clears the payment):'), String(b.paid_amount || 0));
-    if (amount === null) { return; }
-    amount = String(amount).trim().replace(/,/g, '');
-    if (!/^\d+(\.\d{1,2})?$/.test(amount)) { say(node, 'bad', T('Amount must be a number.')); return; }
-    var method = '';
-    if (Number(amount) > 0) {
-      method = window.prompt(T('Payment method (for example MTN MoMo or Flutterwave):'), b.paid_method || '');
-      if (method === null) { return; }
-      method = String(method).trim();
-      if (!method) { say(node, 'bad', T('Please enter how the payment was made.')); return; }
+  /* ---------- payment modal ---------- */
+  var payingBooking = null;
+  function openPayment(b) {
+    payingBooking = b;
+    var dlg = $('payment-dialog');
+    $('payment-title').textContent = T(b.paid_amount > 0 ? 'Edit payment' : 'Record payment');
+    $('payment-sub').textContent = '#' + b.id + ' \u00b7 ' + b.customer + ' \u00b7 ' + T(LABEL[b.status] || b.status);
+    $('pay-amount').value = String(b.paid_amount || 0);
+    $('pay-method').value = b.paid_method || '';
+    say($('pay-status'), '', '');
+    if (dlg && typeof dlg.showModal === 'function') {
+      if (!dlg.open) { dlg.showModal(); }
     }
-    var res = await post('/api/admin/bookings/' + b.id + '/payment',
+    $('pay-amount').focus();
+    $('pay-amount').select();
+  }
+  function closePayment() {
+    var dlg = $('payment-dialog');
+    if (dlg && dlg.open) { dlg.close(); }
+    payingBooking = null;
+  }
+  async function savePayment(event) {
+    event.preventDefault();
+    if (!payingBooking) { return; }
+    var st = $('pay-status');
+    var amount = String($('pay-amount').value || '').trim().replace(/,/g, '');
+    if (!/^\d+(\.\d{1,2})?$/.test(amount)) { say(st, 'bad', T('Amount must be a number.')); return; }
+    var method = Number(amount) > 0 ? String($('pay-method').value || '').trim() : '';
+    if (Number(amount) > 0 && !method) {
+      say(st, 'bad', T('Please enter how the payment was made.'));
+      return;
+    }
+    var res = await post('/api/admin/bookings/' + payingBooking.id + '/payment',
       {amount: Number(amount), method: method});
-    if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); return; }
-    say(node, 'ok', T('Payment saved.'));
+    if (!res.ok) { say(st, 'bad', T((res.data && res.data.error) || NOSERVER)); return; }
+    say($('admin-bookings-status'), 'ok', T('Payment saved.'));
+    closePayment();
     loadBookings();
   }
   async function removeRecord(url, question, node, done, detail) {
@@ -416,7 +450,7 @@
   /* Destructive actions ask in a centred modal instead of the browser's
      blocking confirm. The native <dialog> keeps the focus trap, Escape and
      the backdrop; it resolves true only when the confirm button was used. */
-  function confirmDialog(title, detail, confirmLabel) {
+  function confirmDialog(title, detail, confirmLabel, tone) {
     var dlg = $('confirm-dialog');
     if (!dlg || typeof dlg.showModal !== 'function') {
       return Promise.resolve(window.confirm(T(title) + ' ' + T(detail)));
@@ -425,7 +459,9 @@
     var text = $('confirm-text');
     text.textContent = detail ? T(detail) : '';
     text.hidden = !detail;
-    $('confirm-ok').textContent = T(confirmLabel || 'Delete');
+    var okBtn = $('confirm-ok');
+    okBtn.textContent = T(confirmLabel || 'Delete');
+    okBtn.className = 'mini ' + (tone || 'warn');
     dlg.returnValue = '';
     return new Promise(function (resolve) {
       function settled() {
@@ -744,7 +780,11 @@
     $('ab-car').value = b ? String(b.car_id) : $('ab-car').options[0].value;
     $('ab-from').value = b ? b.pickup : '';
     $('ab-to').value = b ? b.dropoff : '';
-    $('ab-when').value = b ? b.trip_at : '';
+    /* Completed and cancelled bookings may sit in the past; the calendar keeps
+       past days open for them and blocks them for new or live bookings. */
+    window.ttDatePicker.set('ab-when', b ? b.trip_at : '', {
+      allowPast: !!(b && (b.status === 'completed' || b.status === 'cancelled'))
+    });
     $('ab-pax').value = b ? String(b.passengers) : '1';
     $('ab-notes').value = b ? (b.notes || '') : '';
     $('ab-form').hidden = false;
@@ -758,6 +798,7 @@
   async function saveBooking(event) {
     event.preventDefault();
     var st = $('admin-bookings-status');
+    if (!$('ab-when').value) { say(st, 'bad', T('Please choose a date and time.')); return; }
     var data = {
       user_id: Number($('ab-user').value),
       car_id: Number($('ab-car').value),

@@ -1,5 +1,6 @@
 ﻿{% extends "layout.html" %}
 {% block content %}
+{% from "partials/date-field.html" import date_field %}
 {# Sidebar icons: 24px inline strokes, same technique as the row-menu caret in
    admin.js (no icon library, no build step). Labels stay visible at all sizes. #}
 {% set NAV_ICONS = {
@@ -96,25 +97,6 @@
       <button id="booking-new" class="mini primary" type="button">New booking</button>
       <a class="mini ghost" href="/api/admin/export/bookings.csv" download>Download CSV</a>
     </div>
-    <form id="ab-form" class="form-box" hidden>
-      <h3 id="ab-form-title">New booking</h3>
-      <div class="row">
-        <div><label for="ab-user">Customer</label><select id="ab-user"></select></div>
-        <div><label for="ab-car">Car</label><select id="ab-car"></select></div>
-      </div>
-      <div class="row">
-        <div><label for="ab-from">Pick-up place</label><input id="ab-from" type="text" maxlength="150" required></div>
-        <div><label for="ab-to">Drop-off place</label><input id="ab-to" type="text" maxlength="150" required></div>
-      </div>
-      <div class="row">
-        <div><label for="ab-when">Date and time</label><input id="ab-when" type="datetime-local" required></div>
-        <div><label for="ab-pax">Passengers</label><input id="ab-pax" type="number" min="1" max="60" value="1" required></div>
-      </div>
-      <label for="ab-notes">Notes (optional)</label>
-      <textarea id="ab-notes" maxlength="500"></textarea>
-      <button type="submit" class="btn">Save</button>
-      <button type="button" id="ab-cancel" class="mini ghost">Cancel</button>
-    </form>
     <div class="table-wrap"><table class="data" id="admin-bookings"></table></div>
     </section>
     <p id="admin-bookings-status" class="status" role="status"></p>
@@ -274,7 +256,63 @@
     </div>
   </form>
 </dialog>
+
+{# New and edit booking share one centred modal. Every field id is unchanged,
+   so admin.js and the shared date picker keep their existing contracts. #}
+<dialog id="booking-dialog" class="admin-modal" aria-labelledby="ab-form-title">
+  <form id="ab-form" class="admin-modal-form">
+    <div class="admin-modal-head">
+      <h3 id="ab-form-title">New booking</h3>
+      <button type="button" class="admin-modal-x" data-close aria-label="Close">&times;</button>
+    </div>
+    <div class="admin-modal-body">
+      <div class="row">
+        <div><label for="ab-user">Customer</label><select id="ab-user"></select></div>
+        <div><label for="ab-car">Car</label><select id="ab-car"></select></div>
+      </div>
+      <div class="row">
+        <div><label for="ab-from">Pick-up place</label><input id="ab-from" type="text" maxlength="150" required></div>
+        <div><label for="ab-to">Drop-off place</label><input id="ab-to" type="text" maxlength="150" required></div>
+      </div>
+      <div class="row">
+        {{ date_field('ab-when', 'Date and time', 'datetime') }}
+        <div><label for="ab-pax">Passengers</label><input id="ab-pax" type="number" min="1" max="60" value="1" required></div>
+      </div>
+      <label for="ab-notes">Notes (optional)</label>
+      <textarea id="ab-notes" maxlength="500"></textarea>
+    </div>
+    <p id="ab-status" class="status" role="status"></p>
+    <div class="admin-modal-foot">
+      <button type="button" id="ab-cancel" class="mini ghost">Cancel</button>
+      <button type="submit" class="mini primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+{# Payment is recorded in its own small modal instead of two browser prompts. #}
+<dialog id="payment-dialog" class="admin-modal admin-modal--sm" aria-labelledby="payment-title">
+  <form id="payment-form" class="admin-modal-form">
+    <div class="admin-modal-head">
+      <h3 id="payment-title">Record payment</h3>
+      <button type="button" class="admin-modal-x" data-close aria-label="Close">&times;</button>
+    </div>
+    <p class="admin-modal-sub" id="payment-sub"></p>
+    <div class="admin-modal-body">
+      <label for="pay-amount">Paid amount</label>
+      <input id="pay-amount" type="number" min="0" step="0.01" inputmode="decimal" required>
+      <p class="admin-modal-hint">0 clears the payment.</p>
+      <label for="pay-method">Payment method</label>
+      <input id="pay-method" type="text" maxlength="40" placeholder="MTN MoMo, Flutterwave, cash...">
+    </div>
+    <p id="pay-status" class="status" role="status"></p>
+    <div class="admin-modal-foot">
+      <button type="button" id="pay-cancel" class="mini ghost">Cancel</button>
+      <button type="submit" class="mini primary">Save payment</button>
+    </div>
+  </form>
+</dialog>
 {% endblock %}
 {% block scripts %}
+<script src="/js/date-picker.js"></script>
 <script src="/js/admin.js"></script>
 {% endblock %}

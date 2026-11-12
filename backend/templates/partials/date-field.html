@@ -1,0 +1,44 @@
+{# Custom date field (web/js/date-picker.js). Every date entry in the site uses
+   this instead of a native <input type="date"> so the calendar, time controls
+   and dark styling stay identical everywhere.
+
+   mode="date"     -> calendar only; hidden value is YYYY-MM-DD
+   mode="datetime" -> calendar + hour/minute; value is YYYY-MM-DDTHH:MM
+   min="today"     -> past days are disabled (default)
+   min="none"      -> past days stay selectable (editing old bookings)
+
+   The hidden input keeps the id the page scripts already read. #}
+{% macro date_field(id, label, mode='datetime', min='today') %}
+{% set is_date = mode == 'date' %}
+<div class="dp-field" data-datepicker data-mode="{{ 'date' if is_date else 'datetime' }}" data-min="{{ min }}">
+  <label for="{{ id }}-btn">{{ label }}</label>
+  <button class="dp-trigger" id="{{ id }}-btn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="{{ id }}-pop">
+    <span class="dp-trigger-text" data-dp-text>{{ 'Select date' if is_date else 'Select date & time' }}</span>
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  </button>
+  <input id="{{ id }}" type="hidden">
+  <div class="dp-pop" id="{{ id }}-pop" role="dialog" aria-label="{{ 'Pick a date' if is_date else 'Pick date and time' }}" hidden>
+    <div class="dp-head">
+      <button type="button" class="dp-nav" data-dp-prev aria-label="Previous month">‹</button>
+      <strong data-dp-title></strong>
+      <button type="button" class="dp-nav" data-dp-next aria-label="Next month">›</button>
+    </div>
+    <div class="dp-week"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+    <div class="dp-days" data-dp-days></div>
+    <div class="dp-time" data-dp-time>
+      <label for="{{ id }}-hour">Hour</label>
+      <select id="{{ id }}-hour" data-dp-hour></select>
+      <label for="{{ id }}-min">Min</label>
+      <select id="{{ id }}-min" data-dp-min><option>00</option><option>15</option><option>30</option><option>45</option></select>
+    </div>
+    <p class="status" data-dp-msg role="alert"></p>
+    <div class="dp-foot">
+      <button type="button" class="btn outline dp-today" data-dp-today>Today</button>
+      <div class="dp-foot-right">
+        <button type="button" class="btn outline dp-clear" data-dp-clear>Clear</button>
+        <button type="button" class="btn dp-apply" data-dp-apply>Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}

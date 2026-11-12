@@ -38,13 +38,18 @@
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
+    var date = document.getElementById('reserve-date').value;
+    if (!date) {
+      status.className = 'status bad'; status.textContent = T('Please choose a pick-up date.');
+      return;
+    }
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
     var lines = [
       'Car: ' + nameEl.textContent + ' (#' + idEl.value + ')',
       'Type: ' + (typeEl ? typeEl.textContent : ''),
       'Pick-up location: ' + document.getElementById('reserve-pickup').value,
-      'Pick-up date: ' + document.getElementById('reserve-date').value,
+      'Pick-up date: ' + date,
       'Number of days: ' + document.getElementById('reserve-days').value,
       'Driver: ' + (document.getElementById('reserve-driver').checked ? 'Yes' : 'No'),
       '',
@@ -53,7 +58,6 @@
     try {
       var headers = {'Content-Type': 'application/json'};
       if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var date = document.getElementById('reserve-date').value;
       var res = await fetch('/api/bookings/guest', {
         method: 'POST', headers: headers,
         body: JSON.stringify({

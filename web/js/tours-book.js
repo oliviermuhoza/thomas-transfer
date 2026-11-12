@@ -31,12 +31,16 @@
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
+    var date = document.getElementById('tour-date').value;
+    if (!date) {
+      status.className = 'status bad'; status.textContent = T('Please choose a date.');
+      return;
+    }
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
     try {
       var headers = {'Content-Type': 'application/json'};
       if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var date = document.getElementById('tour-date').value;
       var res = await fetch('/api/bookings/guest', {
         method: 'POST', headers: headers,
         body: JSON.stringify({

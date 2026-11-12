@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
+{% from "partials/date-field.html" import date_field %}
 <section id="tours" class="page">
   <div class="container">
     <div class="page-banner page-banner--hero">
@@ -184,10 +185,7 @@
       </div>
     </div>
     <div class="form-row">
-      <div>
-        <label for="tour-date">Preferred date</label>
-        <input id="tour-date" type="date" required>
-      </div>
+      {{ date_field('tour-date', 'Preferred date', 'date') }}
       <div>
         <label for="tour-travellers">Travellers</label>
         <input id="tour-travellers" type="number" min="1" max="40" value="1" required>
@@ -203,6 +201,7 @@
 </dialog>
 {% endblock %}
 {% block scripts %}
+<script src="/js/date-picker.js"></script>
 <script src="/js/tours-filter.js"></script>
 <script src="/js/tours-book.js"></script>
 {% endblock %}

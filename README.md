@@ -43,7 +43,7 @@ comments and messages in SQLite.
 │   │   ├── i18n.js             # EN/RW dictionary, language + theme toggle
 │   │   ├── session.js          # /api/me, body classes, logout, selected car
 │   │   ├── dashboard.js        # Cars, available cars, bookings, report (account only)
-│   │   ├── date-picker.js      # Shared date/time picker used by the booking form
+│   │   ├── date-picker.js      # Shared date/time picker for every date field (no native inputs)
 │   │   ├── admin.js            # /admin portal: all operations views (admin only)
 │   │   ├── search.js           # Navbar search (cars + pages, real URLs)
 │   │   ├── select.js           # Wraps every <select> in a themed custom listbox
