@@ -1025,19 +1025,22 @@ body[data-page="admin"] main{padding-top:0}
 /* Counts sit in a reserved slot and hide at zero, so no row ever jumps. */
 .nav-count{flex:none;margin-left:auto;min-width:10px;padding:1px 7px;border-radius:999px;background:var(--accent);color:rgb(18,44,86);font-size:.72rem;font-weight:800;line-height:1.5;text-align:center}
 .admin-side-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-/* The footer belongs to the person; the way out reads as an action. */
-.admin-me{display:flex;align-items:center;gap:9px;min-width:0;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+/* The footer belongs to the person; the way out reads as an action. The zone is
+   the person row: identity card (avatar + name + email) and the compact language
+   switch share it, actions sit under. */
+.admin-me-zone{display:flex;align-items:center;gap:10px}
+.admin-me{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .admin-me .avatar{width:30px;height:30px;font-size:.68rem;background:var(--surface-2)}
 .admin-me-text{min-width:0;display:flex;flex-direction:column;gap:1px}
 .admin-me-name{color:var(--heading);font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .admin-me-mail{color:var(--muted);font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* The rail is 240px: the switch and the two links cannot share one line, so in
-   the footer they stack — language, then Back to site / Log out side by side. */
+   the footer they stack — language ends the person row, actions go below. */
 .admin-side-links{display:flex;align-items:center;justify-content:space-between;gap:6px}
 /* Compact language switch: the public header carries one, but the header is
    hidden on the portal, so the rail repeats it here. i18n.js binds any
-   `.lang button`, so this control needs no extra wiring. */
-.admin-lang{flex:none;align-self:flex-start;border-radius:7px}
+   `.lang button`, so this control needs no extra wiring. Ends the person row. */
+.admin-me-zone .admin-lang{flex:none;margin-left:auto;border-radius:7px}
 .admin-lang button{color:var(--muted);font-size:.76rem;padding:4px 9px;min-height:30px}
 .admin-lang button:hover{background:var(--surface-2);color:var(--heading)}
 .admin-lang button[aria-pressed="true"]{background:var(--accent);color:#0B0B0C}
@@ -1062,6 +1065,7 @@ body[data-page="admin"] main{padding-top:0}
   .admin-group + .admin-group{margin-top:8px}
   .admin-group-label{margin-bottom:2px;font-size:.64rem}
   .admin-side-foot{padding-top:8px;gap:6px}
+  .admin-me-zone{gap:8px}
   .admin-me{padding:5px 7px}
   .admin-link{min-height:32px}
 }
@@ -1083,10 +1087,11 @@ body[data-page="admin"] main{padding-top:0}
   .admin-nav a[aria-current="page"]::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:3px;border-radius:3px;background:var(--accent)}
   .nav-count{position:absolute;top:4px;right:6px;margin:0;padding:0 5px;font-size:.68rem}
   .admin-side-foot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 8px;margin-top:0;padding-top:8px}
-  .admin-me{grid-column:1;grid-row:1;padding:4px 6px;border:0;background:transparent;gap:8px}
+  .admin-me-zone{grid-column:1 / -1;grid-row:1;display:flex;align-items:center;gap:8px;min-width:0}
+  .admin-me{padding:4px 6px;border:0;background:transparent;gap:8px}
   .admin-me .avatar{width:26px;height:26px;font-size:.64rem}
   .admin-me-mail{display:none}
-  .admin-lang{grid-column:2;grid-row:1;align-self:center}
+  .admin-lang{margin-left:auto;flex:none}
   .admin-side-links{grid-column:1 / -1;grid-row:2}
   .admin-link{flex:none;min-height:34px;padding:5px 8px;font-size:.8rem}
   .admin-main{padding:20px 18px 60px}
