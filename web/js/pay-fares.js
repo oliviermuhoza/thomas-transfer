@@ -13,7 +13,7 @@
   document.querySelectorAll('.fare-btn[data-svc]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var link = (btn.getAttribute('data-flw') || '').trim();
-      var url = link || ('https://wa.me/250784659514?text=' + encodeURIComponent(
+      var url = link || ('https://wa.me/250783689231?text=' + encodeURIComponent(
         waText(btn.getAttribute('data-name') || 'a service',
                btn.getAttribute('data-price') || '',
                btn.getAttribute('data-note') || '')));
