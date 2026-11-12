@@ -132,6 +132,7 @@
             syncTimeControls();
             setMsg('');
             render();
+            positionPopup();
           });
           days.appendChild(b);
         })(new Date(view.getFullYear(), view.getMonth(), day));
@@ -139,6 +140,62 @@
       prev.disabled = !allowPast && startOfMonth(view) <= startOfMonth(t);
       applyBtn.disabled = !picked;
       syncTimeControls();
+    }
+
+    function clearFixed() {
+      pop.style.position = '';
+      pop.style.left = '';
+      pop.style.top = '';
+      pop.style.bottom = '';
+      pop.style.right = '';
+      pop.style.width = '';
+      pop.style.transform = '';
+    }
+
+    function positionPopup() {
+      if (pop.hidden) { return; }
+      root.classList.remove('dp-up', 'dp-sheet');
+      // On narrow screens the CSS fixed bottom sheet owns the layout.
+      if (window.innerWidth <= 560) {
+        clearFixed();
+        return;
+      }
+      // JS-positioned fixed popup so it cannot be clipped by scroll containers
+      // (for example the admin booking modal). Re-run after render and on
+      // scroll/resize to stay attached to the trigger.
+      pop.style.position = 'fixed';
+      pop.style.bottom = 'auto';
+      pop.style.right = 'auto';
+      pop.style.transform = 'none';
+      var r = btn.getBoundingClientRect();
+      var w = Math.min(320, window.innerWidth - 24);
+      var h = pop.offsetHeight || 360;
+      var left = Math.max(12, Math.min(r.left, window.innerWidth - w - 12));
+      var top = r.bottom + 8;
+      if (top + h > window.innerHeight - 12 && r.top - 8 - h >= 12) {
+        top = r.top - 8 - h;
+      }
+      if (top < 12 || top + h > window.innerHeight - 12) {
+        // Short window or field mid-page: use the same centred bottom sheet as
+        // phones so the month header and Apply stay reachable.
+        clearFixed();
+        root.classList.add('dp-sheet');
+        return;
+      }
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+      pop.style.width = w + 'px';
+    }
+
+    function onViewportChange() {
+      if (openInst !== inst) { return; }
+      var r = btn.getBoundingClientRect();
+      // If the trigger has scrolled out of view, close instead of floating.
+      if (r.bottom < 0 || r.top > window.innerHeight || r.right < 0 || r.left > window.innerWidth) {
+        close();
+        return;
+      }
+      positionPopup();
     }
 
     function open() {
@@ -149,20 +206,15 @@
       view = startOfMonth(picked || new Date());
       setMsg('');
       root.classList.remove('dp-up', 'dp-sheet');
+      clearFixed();
       pop.hidden = false;
       btn.setAttribute('aria-expanded', 'true');
       openInst = inst;
       document.body.classList.add('dp-open');
       render();
-      if (pop.getBoundingClientRect().bottom > window.innerHeight - 12) {
-        root.classList.add('dp-up');
-      }
-      // A flip above the trigger can still overrun the top of the window when
-      // the field sits mid-page and the window is short. Fall back to the same
-      // bottom sheet the phones use so the month header and Apply stay reachable.
-      if (pop.getBoundingClientRect().top < 12) {
-        root.classList.add('dp-sheet');
-      }
+      positionPopup();
+      window.addEventListener('resize', onViewportChange);
+      window.addEventListener('scroll', onViewportChange, true);
       var focusTarget = days.querySelector('.dp-day.on:not(:disabled)') || days.querySelector('.dp-day.is-today') ||
         days.querySelector('.dp-day:not(:disabled)');
       if (focusTarget) { focusTarget.focus(); }
@@ -172,6 +224,9 @@
       pop.hidden = true;
       btn.setAttribute('aria-expanded', 'false');
       root.classList.remove('dp-up', 'dp-sheet');
+      clearFixed();
+      window.removeEventListener('resize', onViewportChange);
+      window.removeEventListener('scroll', onViewportChange, true);
       if (openInst === inst) {
         openInst = null;
         document.body.classList.remove('dp-open');
@@ -223,6 +278,7 @@
         view = startOfMonth(picked || new Date());
         setMsg('');
         render();
+        positionPopup();
       }
     }
 

@@ -488,16 +488,66 @@
     td.appendChild(box);
     return box;
   }
+  /* Every row action lives in one kebab menu. Status changes ask in the
+     confirmation modal first, so a mis-click cannot move a booking. */
+  var BOOKING_ASK = {
+    confirmed: {
+      title: 'Confirm this booking?',
+      detail: 'The booking moves to confirmed and the car stays booked for this trip.',
+      label: 'Confirm booking', tone: 'ok'
+    },
+    completed: {
+      title: 'Mark this trip as completed?',
+      detail: 'The booking moves to completed and the car is freed up again.',
+      label: 'Complete booking', tone: 'ok'
+    },
+    cancelled: {
+      title: 'Cancel this booking?',
+      detail: 'The booking moves to cancelled and the car is freed up again.',
+      label: 'Cancel booking', tone: 'warn'
+    }
+  };
+  async function askBooking(b, status, node, done) {
+    var ask = BOOKING_ASK[status];
+    if (!ask) { return; }
+    var ok = await confirmDialog(ask.title, ask.detail, ask.label, ask.tone);
+    if (!ok) { return; }
+    await changeBooking(b.id, status, node, done);
+  }
   function bookingActions(b, node, done) {
     var box = actionsCell(b.row);
+    var items = [];
+    function group(list) {
+      if (!list.length) { return; }
+      if (items.length) { items.push({sep: true}); }
+      items = items.concat(list);
+    }
+    var statusActions = [];
     if (b.status === 'pending') {
-      box.appendChild(small('Confirm', 'ok', function () { changeBooking(b.id, 'confirmed', node, done); }));
+      statusActions.push({label: 'Confirm', tone: 'ok', run: function () { askBooking(b, 'confirmed', node, done); }});
     }
     if (b.status === 'confirmed') {
-      box.appendChild(small('Complete', 'ok', function () { changeBooking(b.id, 'completed', node, done); }));
+      statusActions.push({label: 'Complete', tone: 'ok', run: function () { askBooking(b, 'completed', node, done); }});
     }
     if (b.status === 'pending' || b.status === 'confirmed') {
-      box.appendChild(small('Cancel', 'warn', function () { changeBooking(b.id, 'cancelled', node, done); }));
+      statusActions.push({label: 'Cancel', tone: 'warn', run: function () { askBooking(b, 'cancelled', node, done); }});
+    }
+    group(statusActions);
+
+    /* The edit form assumes an account and a car, so guest and tour rows skip it. */
+    if (b.user_id && b.kind === 'car') {
+      group([{label: 'Edit', run: function () { openBookingForm(b); }}]);
+    }
+    if (b.status !== 'cancelled') {
+      group([{
+        label: b.paid_amount > 0 ? 'Edit payment' : 'Record payment',
+        run: function () { openPayment(b); }
+      }]);
+    }
+    if (items.length) {
+      box.appendChild(rowMenu(items, {dots: true, label: 'Booking actions'}));
+    } else {
+      box.appendChild(el('span', 'sub', '\u2014'));
     }
     return box;
   }
@@ -663,7 +713,8 @@
       cell(tr, b.car_name);
       tripCell(tr, b);
       cell(tr, b.trip_at.replace('T', ' '));
-      bookingActions({id: b.id, status: b.status, row: tr}, st, loadOverview);
+      b.row = tr;
+      bookingActions(b, st, loadOverview);
       tb.appendChild(tr);
     });
     say(st, '', '');
@@ -715,20 +766,8 @@
       cell(tr, String(b.passengers));
       cell(tr, '').appendChild(badge(b.status));
       cell(tr, b.paid_amount > 0 ? String(b.paid_amount) + ' · ' + b.paid_method : '-');
-      var acts = bookingActions({id: b.id, status: b.status, row: tr}, $('admin-bookings-status'), loadBookings);
-      /* Secondary actions live in the row menu so the status action stays the
-         one thing the eye lands on, and the row keeps a single action line. */
-      var more = [];
-      if (b.user_id && b.kind === 'car') {
-        more.push({label: 'Edit', run: function () { openBookingForm(b); }});
-      }
-      if (b.status !== 'cancelled') {
-        more.push({
-          label: b.paid_amount > 0 ? 'Edit payment' : 'Record payment',
-          run: function () { recordPayment(b, $('admin-bookings-status')); }
-        });
-      }
-      if (more.length) { acts.appendChild(rowMenu(more)); }
+      b.row = tr;
+      bookingActions(b, $('admin-bookings-status'), loadBookings);
       tb.appendChild(tr);
     });
     say($('admin-bookings-status'), '', '');
@@ -787,17 +826,23 @@
     });
     $('ab-pax').value = b ? String(b.passengers) : '1';
     $('ab-notes').value = b ? (b.notes || '') : '';
-    $('ab-form').hidden = false;
+    say($('ab-status'), '', '');
+    var dlg = $('booking-dialog');
+    if (dlg && typeof dlg.showModal === 'function') {
+      if (!dlg.open) { dlg.showModal(); }
+    } else {
+      $('ab-form').hidden = false;
+    }
     $('ab-from').focus();
   }
   function closeBookingForm() {
-    var form = $('ab-form');
-    if (form) { form.hidden = true; }
+    var dlg = $('booking-dialog');
+    if (dlg && dlg.open) { dlg.close(); }
     editingBookingId = null;
   }
   async function saveBooking(event) {
     event.preventDefault();
-    var st = $('admin-bookings-status');
+    var st = $('ab-status');
     if (!$('ab-when').value) { say(st, 'bad', T('Please choose a date and time.')); return; }
     var data = {
       user_id: Number($('ab-user').value),
@@ -812,7 +857,7 @@
       ? await post('/api/bookings', data)
       : await patch('/api/bookings/' + editingBookingId, data);
     if (!res.ok) { say(st, 'bad', T((res.data && res.data.error) || NOSERVER)); return; }
-    say(st, '', '');
+    say($('admin-bookings-status'), 'ok', T('Booking saved.'));
     closeBookingForm();
     loadBookings();
   }
@@ -1273,6 +1318,22 @@
   on('booking-new', 'click', function () { openBookingForm(null); });
   on('ab-cancel', 'click', closeBookingForm);
   on('ab-form', 'submit', saveBooking);
+  on('payment-form', 'submit', savePayment);
+  on('pay-cancel', 'click', closePayment);
+
+  /* Close admin modals with the X button or by clicking the backdrop. */
+  function bindDialogClose(id) {
+    var dlg = $(id);
+    if (!dlg) { return; }
+    dlg.addEventListener('click', function (e) {
+      if (e.target === dlg) { dlg.close(); }
+    });
+    Array.prototype.forEach.call(dlg.querySelectorAll('[data-close]'), function (btn) {
+      btn.addEventListener('click', function () { dlg.close(); });
+    });
+  }
+  bindDialogClose('booking-dialog');
+  bindDialogClose('payment-dialog');
   on('fares-filter', 'input', renderFares);
   on('fare-new', 'click', function () { openFareForm(null); });
   on('fare-cancel', 'click', closeFareForm);

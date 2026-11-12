@@ -1258,6 +1258,34 @@ a.mini{display:inline-flex;align-items:center;text-decoration:none}
 .rowmenu-item:hover,.rowmenu-item:focus-visible{background:var(--surface-2);color:var(--heading);outline:none}
 .rowmenu-item.warn{color:var(--red-text)}
 .rowmenu-item.ok{color:var(--green-text)}
+.rowmenu-btn--dots{min-width:36px;min-height:36px;padding:6px;justify-content:center;gap:0}
+.rowmenu-btn--dots svg{width:18px;height:18px}
+.rowmenu-sep{height:1px;margin:4px 6px;background:var(--line-soft)}
+/* Admin modals: shared shell for booking edit and payment dialogs. */
+.admin-modal{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);
+  width:min(640px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:0;
+  box-shadow:0 24px 60px rgba(11,29,58,.35);overflow:hidden}
+.admin-modal--sm{width:min(420px,calc(100vw - 32px))}
+.admin-modal::backdrop{background:rgba(11,29,58,.55)}
+.admin-modal-form{display:flex;flex-direction:column;max-height:calc(100dvh - 32px);margin:0}
+.admin-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--line-soft)}
+.admin-modal-head h3{margin:0;font-size:1.05rem;color:var(--heading)}
+.admin-modal-x{width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:1.3rem;line-height:1;cursor:pointer}
+.admin-modal-x:hover{border-color:var(--accent);color:var(--accent)}
+.admin-modal-sub{margin:0;padding:10px 20px 0;color:var(--muted);font-size:.9rem}
+.admin-modal-body{padding:16px 20px;overflow:auto}
+.admin-modal-body .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.admin-modal-body label{margin-top:12px}
+.admin-modal-body .row label{margin-top:0}
+.admin-modal-body .row > div{margin-bottom:0}
+.admin-modal-body textarea{min-height:72px}
+.admin-modal-hint{margin:4px 0 0;color:var(--muted);font-size:.82rem}
+.admin-modal-form .status{margin:0 20px}
+.admin-modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px 18px;border-top:1px solid var(--line-soft);margin-top:4px}
+.admin-modal-foot .mini{margin:0;min-height:40px;padding:9px 16px}
+@media (max-width:640px){
+  .admin-modal-body .row{grid-template-columns:1fr}
+}
 .login-note{max-width:520px;margin:0 auto 24px;text-align:center}
 .login-note p{margin-bottom:6px;color:var(--ink)}
 /* These ids also exist as admin section ids (e.g. #bookings), so the account
