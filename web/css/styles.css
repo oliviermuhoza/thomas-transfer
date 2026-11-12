@@ -1100,6 +1100,15 @@ body[data-page="admin"] .admin-view.active{display:block}
 .admin-view .sub{color:var(--muted);font-size:.85rem}
 .admin-view .tiles{margin:16px 0 30px}
 .admin-view .tiles .tile{box-shadow:none}
+/* Centred confirmation for destructive admin actions. Native <dialog> centres
+   itself with margin:auto; the backdrop dims the portal behind it. */
+.admin-confirm{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);
+  width:min(420px,calc(100vw - 32px));margin:auto;padding:24px;box-shadow:0 24px 60px rgba(11,29,58,.35)}
+.admin-confirm::backdrop{background:rgba(11,29,58,.55)}
+.admin-confirm h3{margin:0 0 8px;color:var(--heading);font-size:1.05rem}
+.admin-confirm p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.5}
+.admin-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+.admin-confirm-actions .mini{margin:0}
 
 /* ===== PORTAL: PAGE HEAD, PULSE STRIP, PANELS, CHART ===== */
 /* Hierarchy rule for the portal: the number carries the meaning, the icon does

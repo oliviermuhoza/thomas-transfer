@@ -665,6 +665,8 @@
   "Admin access": "Uburenganzira bw’ubuyobozi",
   "Delete this account?": "Ushaka gusiba iyi konti?",
   "Delete account": "Siba konti",
+  "The account is removed permanently. Accounts with a booking history can only be deactivated.": "Iyi konti isibwa burundu. Konti zifite amateka y’ubusabe zishobora gusa guhagarikwa.",
+  "This cannot be undone.": "Ibi ntibishobora gusubizwa inyuma.",
   "No messages match these filters.": "Nta butumwa buhuye n’ibi bishungurwa.",
   "Contact and support requests will appear here.": "Ubusabe bwo kuvugana no gufashwa buzagaragara aha.",
   "No comments match these filters.": "Nta bitekerezo bihuye n’ibi bishungurwa.",

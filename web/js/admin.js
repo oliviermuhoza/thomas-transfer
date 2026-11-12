@@ -405,12 +405,37 @@
     say(node, 'ok', T('Payment saved.'));
     loadBookings();
   }
-  async function removeRecord(url, question, node, done) {
-    if (!window.confirm(T(question))) { return; }
+  async function removeRecord(url, question, node, done, detail) {
+    var ok = await confirmDialog(question, detail || 'This cannot be undone.');
+    if (!ok) { return; }
     var res = await del(url);
     if (!res.ok) { say(node, 'bad', T((res.data && res.data.error) || NOSERVER)); }
     else { say(node, '', ''); }
     done();
+  }
+  /* Destructive actions ask in a centred modal instead of the browser's
+     blocking confirm. The native <dialog> keeps the focus trap, Escape and
+     the backdrop; it resolves true only when the confirm button was used. */
+  function confirmDialog(title, detail, confirmLabel) {
+    var dlg = $('confirm-dialog');
+    if (!dlg || typeof dlg.showModal !== 'function') {
+      return Promise.resolve(window.confirm(T(title) + ' ' + T(detail)));
+    }
+    $('confirm-title').textContent = T(title);
+    var text = $('confirm-text');
+    text.textContent = detail ? T(detail) : '';
+    text.hidden = !detail;
+    $('confirm-ok').textContent = T(confirmLabel || 'Delete');
+    dlg.returnValue = '';
+    return new Promise(function (resolve) {
+      function settled() {
+        dlg.removeEventListener('close', settled);
+        resolve(dlg.returnValue === 'confirm');
+      }
+      dlg.addEventListener('close', settled);
+      dlg.showModal();
+      $('confirm-cancel').focus();
+    });
   }
   /* Trip cell: pick-up on the first line, drop-off as a muted second line, so
      the route never breaks in the middle of a place name. */
@@ -909,7 +934,8 @@
           tone: 'warn',
           run: function () {
             removeRecord('/api/admin/users/' + u.id, 'Delete this account?',
-              $('admin-accounts-status'), loadAccounts);
+              $('admin-accounts-status'), loadAccounts,
+              'The account is removed permanently. Accounts with a booking history can only be deactivated.');
           }
         });
       }
