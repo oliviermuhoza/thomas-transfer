@@ -759,7 +759,7 @@ body.is-admin .nav-admin-item{display:block}
 @media (max-width:1099px){
   body.logged-in .nav-account-item{display:block}
 }
-body.auth-mode header,body.auth-mode footer,body.auth-mode .wa-float,body.auth-mode .msg-dialog{display:none}
+body.auth-mode header,body.auth-mode footer,body.auth-mode .wa-float,body.auth-mode .ask-float,body.auth-mode .msg-dialog{display:none}
 body.auth-mode main{padding-top:0}
 .auth-back{display:inline-flex;align-items:center;gap:8px;color:var(--muted);text-decoration:none;font-weight:600;font-size:.9rem;margin-bottom:20px}
 .auth-back:hover{color:var(--accent)}
@@ -980,6 +980,7 @@ body.is-admin .not-admin{display:none}
 body[data-page="admin"] header,
 body[data-page="admin"] footer,
 body[data-page="admin"] .wa-float,
+body[data-page="admin"] .ask-float,
 body[data-page="admin"] .msg-dialog{display:none}
 body[data-page="admin"] main{padding-top:0}
 /* Fixed rail: the sidebar is 100vh and never scrolls with the page; only the
@@ -1374,6 +1375,16 @@ footer .social.dark a:hover{background:var(--accent);color:var(--navy);border-co
 .wa-float svg{width:32px;height:32px;display:block}
 .wa-float:hover{background:#1ebe5b;transform:translateY(-2px);box-shadow:0 14px 32px rgba(37,211,102,.55)}
 @media (max-width:520px){.wa-float{width:54px;height:54px;right:14px;bottom:14px}.wa-float svg{width:28px;height:28px}}
+
+/* ===== FLOATING ASK TOM BUTTON ===== */
+.ask-float{position:fixed;right:94px;bottom:20px;z-index:60;height:60px;padding:0 22px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:9px;cursor:pointer;font:inherit;font-weight:700;font-size:.95rem;
+  color:#fff;background:var(--surface);border:1px solid rgba(198,244,50,.45);
+  box-shadow:0 10px 28px rgba(0,0,0,.5);transition:background .2s,transform .2s,border-color .2s}
+.ask-float svg{width:24px;height:24px;display:block;color:var(--yellow);flex:none}
+.ask-float:hover{background:var(--surface-2);border-color:var(--yellow);transform:translateY(-2px)}
+@media (max-width:520px){.ask-float{right:78px;bottom:14px;height:54px;padding:0 16px;font-size:.85rem}.ask-float svg{width:21px;height:21px}}
+.ask-dialog .ask-intro{color:var(--muted);margin:0 0 4px}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width:800px){
