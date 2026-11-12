@@ -42,6 +42,7 @@ def send_email(to_email, subject, body):
 
     message = EmailMessage()
     message["From"] = config["sender"] or config["user"]
+    message["Reply-To"] = "tomsafaris@gmail.com"
     message["To"] = to_email
     message["Subject"] = subject
     message.set_content(body)
