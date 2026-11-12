@@ -285,6 +285,7 @@ admin report, page routes, redirects, nav state and 404 handling.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/csrf` | CSRF token for mutating API requests (`{csrf_token}`) |
+| GET | `/api/health` | Database backend, `remote`/`ephemeral` flags and a short database fingerprint (no credentials; compare local and deployed to confirm both use the same database) |
 | GET | `/api/me` | Current session user and CSRF token (`{user: null, csrf_token}` when signed out) |
 | POST | `/api/login` | Staff sign-in (returns `user`, `csrf_token`); non-staff are rejected |
 | POST | `/api/logout` | Sign out (returns `ok`, `csrf_token`) |
@@ -394,3 +395,20 @@ Moving an existing Vercel deployment to Turso:
    and adjust the fleet and fares in the portal.
 4. Anything created while the app was on `/tmp` is already gone; export the
    admin pages first if that data still matters.
+
+#### Confirming both sides use the same database
+
+Environment variables and `.env` are independent: it is possible for the laptop
+and the deployment to point at two different Turso databases (or two branches of
+one), which looks exactly like data "resetting" whenever you compare them.
+`GET /api/health` answers the question without exposing credentials:
+
+```powershell
+curl.exe -s https://your-app.vercel.app/api/health
+curl.exe -s http://127.0.0.1:5000/api/health
+```
+
+Both must report the same `fingerprint`. A different fingerprint means a
+different database: copy the deployed `TURSO_DATABASE_URL` and
+`TURSO_AUTH_TOKEN` into `.env` (or the other way round), redeploy, and check
+again. The startup log prints the same fingerprint next to the backend line.

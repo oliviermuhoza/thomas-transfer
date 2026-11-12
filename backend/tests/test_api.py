@@ -108,6 +108,35 @@ def test_me_is_null_without_session(client):
     assert data["csrf_token"]
 
 
+def test_health_reports_database_without_secrets(client, app):
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["ok"] is True
+    assert data["database"] == "sqlite"
+    assert data["remote"] is False
+    assert data["ephemeral"] == app.config["EPHEMERAL_DB"]
+    assert len(data["fingerprint"]) == 12
+    body = response.get_data(as_text=True)
+    assert str(app.config["DATABASE"]) not in body
+    token = app.config.get("DB_AUTH_TOKEN")
+    if token:
+        assert token not in body
+
+
+def test_fingerprint_is_stable_and_hides_credentials():
+    from backend.app import _database_fingerprint
+
+    first = _database_fingerprint(
+        "libsql://user:secret@example-db.turso.io?authToken=abc", driver="libsql"
+    )
+    second = _database_fingerprint(
+        "libsql://other:token@example-db.turso.io", driver="libsql"
+    )
+    assert first == second
+    assert len(first) == 12
+
+
 def test_public_registration_is_disabled(client):
     response = api_post(
         client,

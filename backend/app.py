@@ -35,6 +35,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 try:
     from .db import close_db, get_db, init_db
+    from .dbdriver import resolve_driver
     from .mailer import configured as mail_configured, send_email
     from .pages import format_price, pages
 except ImportError:  # running directly, or loaded as a top-level module by Vercel
@@ -44,10 +45,12 @@ except ImportError:  # running directly, or loaded as a top-level module by Verc
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
         from backend.db import close_db, get_db, init_db
+        from backend.dbdriver import resolve_driver
         from backend.mailer import configured as mail_configured, send_email
         from backend.pages import format_price, pages
     except ImportError:  # deployment root is backend/ itself
         from db import close_db, get_db, init_db
+        from dbdriver import resolve_driver
         from mailer import configured as mail_configured, send_email
         from pages import format_price, pages
 
@@ -171,11 +174,13 @@ def create_app(
 
     app = Flask(__name__, static_folder=None)
     rate_limit_backend = os.environ.get("TT_RATE_LIMIT_BACKEND", "memory").strip().lower()
+    fingerprint = _database_fingerprint(database, db_driver)
     app.config.update(
         PRODUCTION=production,
         DATABASE=database,
         DB_DRIVER=db_driver,
         DB_AUTH_TOKEN=os.environ.get("TURSO_AUTH_TOKEN", "").strip(),
+        DATABASE_FINGERPRINT=fingerprint,
         EPHEMERAL_DB=ephemeral,
         SECRET_KEY=secret_key
         or _load_secret_key(data_dir, production=production, allow_ephemeral=ephemeral),
@@ -216,10 +221,22 @@ def create_app(
 
     if turso_url:
         app.logger.info(
-            "Database backend: libsql (%s)", urlparse(database).hostname or database
+            "Database backend: libsql (%s) fingerprint %s",
+            urlparse(database).hostname or database,
+            fingerprint,
         )
     else:
-        app.logger.info("Database backend: sqlite (%s)", database)
+        app.logger.info(
+            "Database backend: sqlite (%s) fingerprint %s", database, fingerprint
+        )
+
+    if turso_url and not _truthy_env("VERCEL"):
+        app.logger.warning(
+            "This local server is connected to a remote database (fingerprint %s). "
+            "Writes here change live data; compare it with GET /api/health on the "
+            "deployed site before assuming both use the same database.",
+            fingerprint,
+        )
 
     if ephemeral and (production or _truthy_env("VERCEL")):
         app.logger.warning(
@@ -344,6 +361,22 @@ def _probe_writable(directory):
         return True
     except OSError:
         return False
+
+
+def _database_fingerprint(database, driver=None):
+    """Short, stable id for the database target, safe to log and expose."""
+    kind = resolve_driver(database, driver)
+    target = str(database or "").strip()
+    if kind == "libsql":
+        parsed = urlparse(target)
+        # Host and path only: userinfo and query strings may carry credentials.
+        target = f"{(parsed.hostname or '').lower()}{parsed.path}".rstrip("/")
+    else:
+        try:
+            target = os.path.normcase(str(Path(target).resolve()))
+        except (OSError, ValueError):
+            target = os.path.normcase(target)
+    return hashlib.sha256(target.encode("utf-8")).hexdigest()[:12]
 
 
 def _is_ephemeral_db(database):
@@ -769,6 +802,29 @@ def register_routes(app):
     @app.get("/api/csrf")
     def csrf():
         return jsonify({"csrf_token": _ensure_csrf_token()})
+
+    @app.get("/api/health")
+    def health():
+        """Which database this process talks to, without exposing credentials.
+
+        The fingerprint is a short hash of the database target, so two
+        deployments can be compared without revealing URLs or paths.
+        """
+        driver = resolve_driver(app.config["DATABASE"], app.config.get("DB_DRIVER"))
+        payload = {
+            "ok": True,
+            "database": driver,
+            "remote": driver == "libsql",
+            "ephemeral": bool(app.config.get("EPHEMERAL_DB")),
+            "fingerprint": app.config.get("DATABASE_FINGERPRINT"),
+        }
+        try:
+            get_db().execute("SELECT 1").fetchone()
+        except Exception:
+            app.logger.exception("Health check: the database is unreachable")
+            payload["ok"] = False
+            return jsonify(payload), 503
+        return jsonify(payload)
 
     @app.get("/api/me")
     def me():
