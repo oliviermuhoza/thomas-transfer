@@ -39,10 +39,9 @@
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
     try {
-      var headers = {'Content-Type': 'application/json'};
-      if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var res = await fetch('/api/bookings/guest', {
-        method: 'POST', headers: headers,
+      var request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           kind: 'tour',
           tour_name: current || 'Tour package',
@@ -54,10 +53,19 @@
           passengers: Number(document.getElementById('tour-travellers').value),
           notes: document.getElementById('tour-message').value
         })
-      });
-      if (!res.ok) throw new Error('failed');
-      form.reset();
-      status.className = 'status ok'; status.textContent = T('Thank you. Your booking request was received. We will confirm it shortly.');
+      };
+      var res = window.ttFetch
+        ? await window.ttFetch('/api/bookings/guest', request)
+        : await fetch('/api/bookings/guest', request);
+      var data = null;
+      try { data = await res.json(); } catch (err) {}
+      if (!res.ok) {
+        status.className = 'status bad';
+        status.textContent = T((data && data.error) || 'Your request could not be sent. Please try again.');
+      } else {
+        form.reset();
+        status.className = 'status ok'; status.textContent = T('Thank you. Your booking request was received. We will confirm it shortly.');
+      }
     } catch (err) {
       status.className = 'status bad'; status.textContent = T('Your request could not be sent. Please try again.');
     }

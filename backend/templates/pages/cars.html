@@ -27,6 +27,9 @@
         <img class="car-photo" src="{{ card.image }}" alt="{{ card.name }}" loading="lazy">
         <div class="car-info">
           <span class="car-badge">{{ card.type }}</span>
+          {% if card.status and card.status != 'available' %}
+          <span class="car-badge car-badge--{{ card.status }}">{{ card.status|capitalize }}</span>
+          {% endif %}
           <h3>{{ card.name }}</h3>
           <p>{{ card.description }}</p>
           {% if card.specs %}
@@ -49,7 +52,11 @@
               <span class="rate-per">Per day</span>
             </div>
             {% endif %}
+            {% if card.status == 'available' %}
             <button class="reserve-btn" type="button" data-book="{{ card.id }}" data-reserve="{{ card.id }}" data-car-name="{{ card.name }}" data-car-image="{{ card.image }}" data-car-type="{{ card.type }}" data-car-rate="{{ card.price }}">Reserve</button>
+            {% else %}
+            <button class="reserve-btn" type="button" disabled>{{ card.status|capitalize }}</button>
+            {% endif %}
           </div>
         </div>
       </div>

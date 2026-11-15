@@ -36,6 +36,22 @@
   dlg.addEventListener('close', function () { document.body.classList.remove('reserve-open'); });
   dlg.addEventListener('click', function (e) { if (e.target === dlg) { dlg.close(); } });
 
+  function fail(message) {
+    status.className = 'status bad';
+    status.textContent = T(message || 'Your request could not be sent. Please try again.');
+  }
+
+  /* The car is marked booked by the server; reflect that on the card so the
+     next click does not go through a request that can only fail. */
+  function markUnavailable(id, label) {
+    var trigger = document.querySelector('[data-reserve="' + id + '"]');
+    if (!trigger) { return; }
+    trigger.disabled = true;
+    trigger.removeAttribute('data-reserve');
+    trigger.removeAttribute('data-book');
+    trigger.textContent = T(label || 'Unavailable');
+  }
+
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     var date = document.getElementById('reserve-date').value;
@@ -45,6 +61,7 @@
     }
     var btn = form.querySelector('button[type="submit"]');
     status.className = 'status'; status.textContent = T('Sending...'); btn.disabled = true;
+    var carId = idEl.value;
     var lines = [
       'Car: ' + nameEl.textContent + ' (#' + idEl.value + ')',
       'Type: ' + (typeEl ? typeEl.textContent : ''),
@@ -56,10 +73,9 @@
       document.getElementById('reserve-message').value
     ];
     try {
-      var headers = {'Content-Type': 'application/json'};
-      if (window.ttCsrf) { headers['X-CSRF-Token'] = window.ttCsrf; }
-      var res = await fetch('/api/bookings/guest', {
-        method: 'POST', headers: headers,
+      var request = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           kind: 'car',
           car_id: Number(idEl.value),
@@ -71,12 +87,23 @@
           passengers: Number(document.getElementById('reserve-pax').value),
           notes: lines.join('\n')
         })
-      });
-      if (!res.ok) throw new Error('failed');
-      form.reset();
-      status.className = 'status ok'; status.textContent = T('Thank you. Your reservation request was received. We will confirm it shortly.');
+      };
+      /* ttFetch waits for the CSRF token and retries once when it is stale. */
+      var res = window.ttFetch
+        ? await window.ttFetch('/api/bookings/guest', request)
+        : await fetch('/api/bookings/guest', request);
+      var data = null;
+      try { data = await res.json(); } catch (err) {}
+      if (!res.ok) {
+        fail(data && data.error);
+        if (res.status === 409) { markUnavailable(carId); }
+      } else {
+        form.reset();
+        status.className = 'status ok'; status.textContent = T('Thank you. Your reservation request was received. We will confirm it shortly.');
+        markUnavailable(carId, 'Booked');
+      }
     } catch (err) {
-      status.className = 'status bad'; status.textContent = T('Your request could not be sent. Please try again.');
+      fail();
     }
     btn.disabled = false;
   });
