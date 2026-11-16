@@ -170,7 +170,9 @@ body.logged-in .nav-user{display:flex}
 /* ===== SEARCH (navbar) ===== */
 .search{position:relative}
 .search > svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;pointer-events:none;color:var(--muted)}
-.search input{width:100%;height:var(--field-height);padding:0 12px 0 38px;color:var(--white);background:var(--surface-2);
+/* The leading icon needs 38px of clearance. This repeats the global field
+   selector's :not() chain so the shared 16px padding cannot override it. */
+.search input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]){width:100%;height:var(--field-height);padding:0 12px 0 38px;color:var(--white);background:var(--surface-2);
   border:1.5px solid var(--line);border-radius:var(--field-radius);font:inherit;font-size:.9rem}
 .search input::placeholder{color:var(--field-placeholder)}
 .search input:focus{background:var(--surface);border-color:var(--accent);box-shadow:var(--field-focus-ring);outline:none}
@@ -850,7 +852,9 @@ body.auth-mode main{padding-top:0}
 .auth-link:hover{text-decoration:underline}
 .auth-input{position:relative;display:flex;align-items:center}
 .auth-ico{position:absolute;left:15px;width:18px;height:18px;color:var(--muted);pointer-events:none}
-.auth-input input{height:var(--field-height);padding:0 46px 0 44px}
+/* The leading icon and the trailing eye button need room, so this repeats the
+   global field selector's :not() chain to outrank its shared 16px padding. */
+.auth-input input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]){height:var(--field-height);padding:0 46px 0 44px}
 .auth-toggle{position:absolute;right:8px;width:38px;height:38px;display:grid;place-items:center;border:0;border-radius:9px;
   background:transparent;color:var(--muted);cursor:pointer;transition:background .2s,color .2s}
 .auth-toggle:hover{background:rgba(255,255,255,.06);color:var(--heading)}
