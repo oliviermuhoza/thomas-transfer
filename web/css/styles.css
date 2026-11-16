@@ -1107,6 +1107,15 @@ body[data-page="admin"] .admin-view.active{display:block}
 .admin-sub{margin-bottom:14px}
 .admin-filter{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
 .admin-filter input,.admin-filter select{width:auto;flex:0 1 280px;max-width:320px;min-width:180px;font-size:.9rem}
+/* List toolbars: the fields, the status select and the action buttons share one
+   control height, so the ghost "Download CSV" link lines up with the filled
+   "New …" button and the filters instead of sitting shorter. */
+.panel-list .admin-filter input[type="search"],
+.panel-list .admin-filter select,
+.panel-list .admin-filter .tt-sel-btn,
+.panel-list .admin-filter .mini{height:44px;min-height:44px}
+.panel-list .admin-filter .mini{padding-top:0;padding-bottom:0;border-radius:8px}
+.panel-list .admin-filter .mini.ghost{padding:0 15px;border-radius:8px}
 .admin-view .mini{min-height:36px}
 /* Chart classes are namespaced tt-* : bare .bar already means the header row. */
 .tt-bars{display:flex;align-items:flex-end;gap:10px;height:150px;margin:8px 0 20px}
