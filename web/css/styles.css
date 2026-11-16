@@ -1028,19 +1028,20 @@ body[data-page="admin"] main{padding-top:0}
 .admin-nav a:hover .nav-icon,.admin-nav a[aria-current="page"] .nav-icon{opacity:1}
 /* Counts sit in a reserved slot and hide at zero, so no row ever jumps. */
 .nav-count{flex:none;margin-left:auto;min-width:10px;padding:1px 7px;border-radius:999px;background:var(--accent);color:rgb(18,44,86);font-size:.72rem;font-weight:800;line-height:1.5;text-align:center}
-.admin-side-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-/* The footer belongs to the person; the way out reads as an action. The zone is
-   the person row: identity card (avatar + name + email) and the compact language
-   switch share it, actions sit under. */
+/* The footer is one card: who is signed in, the language switch and both ways
+   out live inside it, so "Log out" belongs to the account block instead of
+   floating as a separate outlined button. */
+.admin-side-foot{margin-top:auto;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--paper);display:flex;flex-direction:column;gap:8px}
+/* Person row: avatar + name/email and the compact language switch. */
 .admin-me-zone{display:flex;align-items:center;gap:10px}
-.admin-me{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.admin-me{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;padding:0;border:0;background:transparent}
 .admin-me .avatar{width:30px;height:30px;font-size:.68rem;background:var(--surface-2)}
 .admin-me-text{min-width:0;display:flex;flex-direction:column;gap:1px}
 .admin-me-name{color:var(--heading);font-size:.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .admin-me-mail{color:var(--muted);font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* The rail is 240px: the switch and the two links cannot share one line, so in
-   the footer they stack — language ends the person row, actions go below. */
-.admin-side-links{display:flex;align-items:center;justify-content:space-between;gap:6px}
+/* The rail is 240px: the switch and the two links cannot share one line, so the
+   actions sit on the card's second row, divided by a hairline. */
+.admin-side-links{display:flex;align-items:center;justify-content:space-between;gap:6px;padding-top:8px;border-top:1px solid var(--line-soft)}
 /* Compact language switch: the public header carries one, but the header is
    hidden on the portal, so the rail repeats it here. i18n.js binds any
    `.lang button`, so this control needs no extra wiring. Ends the person row. */
@@ -1050,8 +1051,8 @@ body[data-page="admin"] main{padding-top:0}
 .admin-lang button[aria-pressed="true"]{background:var(--accent);color:#0B0B0C}
 .admin-link{flex:0 1 auto;display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:6px 8px;border:1px solid transparent;border-radius:8px;color:var(--muted);font-size:.82rem;font-weight:600;white-space:nowrap;text-align:center;text-decoration:none}
 .admin-link:hover{background:var(--surface-2);color:var(--heading)}
-.admin-link-out{border-color:var(--line);color:var(--heading)}
-.admin-link-out:hover{background:transparent;border-color:var(--heading)}
+.admin-link-out{border-color:transparent;color:var(--muted)}
+.admin-link-out:hover{background:var(--surface-2);border-color:transparent;color:var(--heading)}
 .admin-main{padding:28px 34px 70px;min-width:0}
 .avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--heading);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;line-height:1}
 /* People cell in the accounts table: initials avatar + name over email. */
@@ -1068,9 +1069,9 @@ body[data-page="admin"] main{padding-top:0}
   .admin-nav a[aria-current="page"]::before{top:7px;bottom:7px}
   .admin-group + .admin-group{margin-top:8px}
   .admin-group-label{margin-bottom:2px;font-size:.64rem}
-  .admin-side-foot{padding-top:8px;gap:6px}
+  .admin-side-foot{padding:8px;gap:6px}
   .admin-me-zone{gap:8px}
-  .admin-me{padding:5px 7px}
+  .admin-me{padding:0}
   .admin-link{min-height:32px}
 }
 @media (max-width:900px){
@@ -1090,7 +1091,7 @@ body[data-page="admin"] main{padding-top:0}
   .admin-nav a[aria-current="page"]::before{display:none}
   .admin-nav a[aria-current="page"]::after{content:"";position:absolute;left:10px;right:10px;bottom:4px;height:3px;border-radius:3px;background:var(--accent)}
   .nav-count{position:absolute;top:4px;right:6px;margin:0;padding:0 5px;font-size:.68rem}
-  .admin-side-foot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 8px;margin-top:0;padding-top:8px}
+  .admin-side-foot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 8px;margin-top:0;padding:8px}
   .admin-me-zone{grid-column:1 / -1;grid-row:1;display:flex;align-items:center;gap:8px;min-width:0}
   .admin-me{padding:4px 6px;border:0;background:transparent;gap:8px}
   .admin-me .avatar{width:26px;height:26px;font-size:.64rem}
